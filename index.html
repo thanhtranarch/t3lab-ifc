@@ -276,9 +276,174 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 @media(max-width:1100px){.app{grid-template-columns:240px 1fr 0}.right-panel{display:none}}
+
+/* ── Auth UI ────────────────────────────────────────────────── */
+/* Full-page overlay shown while auth state is unknown OR user is logged out. */
+/* Uses display:flex by default (covers app on first paint to prevent flash of */
+/* unauthenticated content); JS toggles .hidden once auth state is resolved.  */
+.auth-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#f5f6f8 0%,#e8eaef 100%);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.auth-overlay.hidden{display:none}
+.auth-card{width:100%;max-width:380px;background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:32px 28px;box-shadow:0 12px 40px rgba(0,0,0,.08)}
+.auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.auth-brand .logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--indigo));border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:18px;color:#fff}
+.auth-brand-name{font-family:'Inter';font-weight:600;font-size:18px;color:var(--text)}
+.auth-brand-name span{font-family:'JetBrains Mono';font-weight:400;font-size:11px;color:var(--text-muted);margin-left:6px;text-transform:uppercase;letter-spacing:1px}
+.auth-desc{font-size:13px;color:var(--text-muted);margin:8px 0 22px;line-height:1.5}
+.auth-form{display:flex;flex-direction:column;gap:12px}
+.auth-field{display:flex;flex-direction:column;gap:5px}
+.auth-label{font-family:'JetBrains Mono';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted)}
+.auth-input{height:38px;padding:0 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:'Inter';font-size:14px;color:var(--text);transition:all var(--t);outline:none}
+.auth-input:focus{border-color:var(--blue);background:var(--bg-panel);box-shadow:0 0 0 3px var(--blue-bg)}
+.auth-input:disabled{opacity:.6;cursor:not-allowed}
+.auth-submit{height:40px;margin-top:6px;border-radius:6px;border:none;background:var(--blue);color:#fff;font-family:'Inter';font-size:14px;font-weight:600;cursor:pointer;transition:all var(--t);display:flex;align-items:center;justify-content:center;gap:6px}
+.auth-submit:hover:not(:disabled){background:#1d4fd1}
+.auth-submit:disabled{background:var(--text-muted);cursor:not-allowed;opacity:.7}
+.auth-link{font-size:13px;color:var(--blue);background:none;border:none;cursor:pointer;text-align:left;padding:0;margin-top:4px;font-family:'Inter';transition:opacity var(--t)}
+.auth-link:hover{opacity:.7;text-decoration:underline}
+.auth-msg{padding:9px 12px;border-radius:6px;font-size:13px;line-height:1.4;margin-top:4px;display:none}
+.auth-msg.show{display:block}
+.auth-msg.error{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bg)}
+.auth-msg.info{background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-bg)}
+.auth-msg.success{background:var(--green-lt);color:var(--green);border:1px solid var(--green-bg)}
+.auth-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:auth-spin .7s linear infinite;display:none}
+.auth-submit.loading .auth-spinner{display:inline-block}
+.auth-submit.loading .auth-submit-label{opacity:.7}
+@keyframes auth-spin{to{transform:rotate(360deg)}}
+.auth-foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);text-align:center;line-height:1.5}
+
+/* Email-verification gate: same overlay, different content */
+.auth-verify{display:flex;flex-direction:column;gap:14px;text-align:center}
+.auth-verify-icon{width:48px;height:48px;margin:0 auto;background:var(--amber-lt);color:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.auth-verify-title{font-size:16px;font-weight:600;color:var(--text)}
+.auth-verify-desc{font-size:13px;color:var(--text-dim);line-height:1.5}
+.auth-verify-actions{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+
+/* User badge in header */
+.user-badge{display:flex;align-items:center;gap:8px;padding:0 10px 0 6px;height:32px;border-radius:5px;border:1px solid var(--border);background:var(--bg-panel);cursor:pointer;transition:all var(--t);font-family:'Inter';font-size:13px;color:var(--text-dim)}
+.user-badge:hover{background:var(--bg-hover);border-color:var(--border-hi)}
+.user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--indigo));color:#fff;font-family:'JetBrains Mono';font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;text-transform:uppercase;flex-shrink:0}
+.user-name{font-weight:500;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* User dropdown menu */
+.user-menu{position:fixed;z-index:1100;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:4px 0;min-width:200px;display:none;font-family:'Inter'}
+.user-menu.show{display:block}
+.user-menu-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.user-menu-header-name{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis}
+.user-menu-header-email{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono';overflow:hidden;text-overflow:ellipsis}
+.user-menu-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:13px;color:var(--text-dim);cursor:pointer;transition:background .1s;border:none;background:none;width:100%;text-align:left;font-family:'Inter'}
+.user-menu-item:hover{background:var(--bg-hover);color:var(--red)}
+
+/* Confirm-logout dialog (uses same backdrop pattern as auth overlay but lower z) */
+.confirm-backdrop{position:fixed;inset:0;z-index:1200;background:rgba(15,18,27,.4);display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-backdrop.show{display:flex}
+.confirm-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:22px 22px 18px;max-width:340px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.confirm-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px}
+.confirm-msg{font-size:13px;color:var(--text-dim);line-height:1.5;margin-bottom:16px}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+.confirm-btn{height:34px;padding:0 14px;border-radius:5px;font-family:'Inter';font-size:13px;font-weight:500;cursor:pointer;transition:all var(--t);border:1px solid var(--border);background:var(--bg-panel);color:var(--text-dim)}
+.confirm-btn:hover{background:var(--bg-hover)}
+.confirm-btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+.confirm-btn.danger:hover{background:#b91c1c}
 </style>
 </head>
 <body>
+
+<!-- Auth overlay — covers full viewport while auth state is unknown or user is signed out.
+     Visible by default (no .hidden class) so users never see the app for a flash before
+     Firebase resolves the auth state. JS removes .hidden once user is verified. -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card" id="authCard">
+    <!-- LOGIN VIEW (default) -->
+    <div id="authViewLogin">
+      <div class="auth-brand">
+        <div class="logo-mark">Δ</div>
+        <div class="auth-brand-name">IFC Delta<span>3D Compare</span></div>
+      </div>
+      <div class="auth-desc">Internal team tool — contact admin for access.</div>
+      <form class="auth-form" id="loginForm" autocomplete="on">
+        <div class="auth-field">
+          <label class="auth-label" for="loginEmail">Email</label>
+          <input class="auth-input" type="email" id="loginEmail" name="email" autocomplete="email" required placeholder="you@company.com">
+        </div>
+        <div class="auth-field">
+          <label class="auth-label" for="loginPassword">Password</label>
+          <input class="auth-input" type="password" id="loginPassword" name="password" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+        <div class="auth-msg" id="loginMsg"></div>
+        <button type="submit" class="auth-submit" id="loginSubmit">
+          <span class="auth-spinner"></span>
+          <span class="auth-submit-label">Sign in</span>
+        </button>
+        <button type="button" class="auth-link" onclick="showResetView()">Forgot password?</button>
+      </form>
+      <div class="auth-foot">No account? Contact your administrator.</div>
+    </div>
+
+    <!-- VERIFY-EMAIL VIEW (shown after login if email not verified) -->
+    <div id="authViewVerify" style="display:none">
+      <div class="auth-verify">
+        <div class="auth-verify-icon">✉</div>
+        <div class="auth-verify-title">Verify your email</div>
+        <div class="auth-verify-desc">
+          We sent a verification link to <b id="verifyEmail">—</b>.<br>
+          Click the link in your inbox, then refresh this page.
+        </div>
+        <div class="auth-msg" id="verifyMsg"></div>
+        <div class="auth-verify-actions">
+          <button type="button" class="auth-submit" id="verifyResend">
+            <span class="auth-spinner"></span>
+            <span class="auth-submit-label">Resend verification email</span>
+          </button>
+          <button type="button" class="auth-link" style="text-align:center" onclick="checkVerifiedNow()">I've verified — refresh</button>
+          <button type="button" class="auth-link" style="text-align:center;color:var(--text-muted)" onclick="signOutFromVerify()">Use a different account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSWORD-RESET VIEW -->
+    <div id="authViewReset" style="display:none">
+      <div class="auth-brand">
+        <div class="logo-mark">Δ</div>
+        <div class="auth-brand-name">Reset password</div>
+      </div>
+      <div class="auth-desc">Enter your email and we'll send you a reset link.</div>
+      <form class="auth-form" id="resetForm">
+        <div class="auth-field">
+          <label class="auth-label" for="resetEmail">Email</label>
+          <input class="auth-input" type="email" id="resetEmail" required placeholder="you@company.com">
+        </div>
+        <div class="auth-msg" id="resetMsg"></div>
+        <button type="submit" class="auth-submit" id="resetSubmit">
+          <span class="auth-spinner"></span>
+          <span class="auth-submit-label">Send reset link</span>
+        </button>
+        <button type="button" class="auth-link" onclick="showLoginView()">← Back to sign in</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- User dropdown menu (shown by clicking user badge in header) -->
+<div class="user-menu" id="userMenu">
+  <div class="user-menu-header">
+    <div class="user-menu-header-name" id="userMenuName">—</div>
+    <div class="user-menu-header-email" id="userMenuEmail">—</div>
+  </div>
+  <button class="user-menu-item" onclick="confirmLogout()">⤴ Sign out</button>
+</div>
+
+<!-- Confirm-logout dialog -->
+<div class="confirm-backdrop" id="confirmBackdrop">
+  <div class="confirm-card">
+    <div class="confirm-title">Sign out?</div>
+    <div class="confirm-msg">You'll be returned to the sign-in screen. Any unsaved work in this session will be lost.</div>
+    <div class="confirm-actions">
+      <button class="confirm-btn" onclick="cancelLogout()">Cancel</button>
+      <button class="confirm-btn danger" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
   <header class="header">
     <div class="logo"><div class="logo-mark">Δ</div><div class="logo-name">IFC Delta<span>3D Compare</span></div></div>
@@ -302,6 +467,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       <button class="btn" id="btnShowAll" style="display:none" onclick="showAllHidden()">👁 Show All</button>
       <button class="btn" id="btnWalk" onclick="toggleWalkMode()">🚶 Walk</button>
       <button class="btn" onclick="resetCam()">⌂ Reset</button>
+      <div class="h-sep" style="margin:0 4px"></div>
+      <button class="user-badge" id="userBadge" onclick="toggleUserMenu(event)" style="display:none">
+        <span class="user-avatar" id="userAvatar">·</span>
+        <span class="user-name" id="userName">—</span>
+      </button>
     </div>
   </header>
 
@@ -482,6 +652,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       <span style="font-family:JetBrains Mono;font-size:14px;font-weight:600" id="measureText">Click 2 points to measure</span>
       <button onclick="clearMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-dim);cursor:pointer;margin-left:8px">Clear</button>
       <button onclick="toggleMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid var(--red);border-radius:4px;background:var(--red-bg);color:var(--red);cursor:pointer;margin-left:4px">✕ Exit</button>
+    </div>
     <!-- Walk mode HUD -->
     <div id="walkHUD" style="display:none;position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:15;padding:8px 16px;background:rgba(0,0,0,0.7);border-radius:8px;color:#fff;font-family:'JetBrains Mono';font-size:11px;text-align:center;pointer-events:none;backdrop-filter:blur(4px)">
       <div style="font-size:13px;font-weight:700;margin-bottom:4px">🚶 WALK MODE</div>
@@ -492,8 +663,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.6)"></div>
       <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.6)"></div>
     </div>
-    </div>
   </div>
+
+  <div class="right-panel">
     <div class="ph">Properties</div>
     <div class="prop-area" id="propArea"><div style="padding:30px 14px;text-align:center;color:var(--text-muted);font-size:14px">Click element in 3D to inspect</div></div>
   </div>
@@ -515,6 +687,310 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   <div class="ctx-sep"></div>
   <div class="ctx-item" onclick="ctxAction('showAll')"><span class="ci-icon">👁</span><span class="ci-label">Show All Hidden</span></div>
 </div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     FIREBASE AUTH MODULE
+     Loads Firebase v12 modular SDK from gstatic CDN. Runs BEFORE the main
+     IFC viewer script so we can gate access. The auth overlay is visible by
+     default in HTML; this module hides it once the user is signed in AND
+     email-verified, otherwise it shows the appropriate auth view.
+
+     ⚠️  REPLACE the firebaseConfig object below with values from your
+     Firebase Console (Project Settings → General → Your apps → Web app).
+     The apiKey is safe to expose publicly — security comes from
+     Authentication rules + Firestore Security Rules, not from hiding the key.
+     ════════════════════════════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
+  reload as reloadUser
+} from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js';
+
+// ⚠️  REPLACE THIS CONFIG with your Firebase project's config from
+//     Firebase Console → Project settings → General → Your apps.
+const firebaseConfig = {
+  apiKey: "AIzaSyCrqJiIxlahcHZuwa7xS7KMX8Z5c6Ky3Oo",
+  authDomain: "ifc-delta.firebaseapp.com",
+  projectId: "ifc-delta",
+  storageBucket: "ifc-delta.firebasestorage.app",
+  messagingSenderId: "200458024135",
+  appId: "1:200458024135:web:16c51183d7f8a713463ae2"
+};
+
+// Detect placeholder config so we can show a clear error in the UI
+// instead of a confusing Firebase API error.
+const isConfigPlaceholder = Object.values(firebaseConfig).some(v => String(v).includes('REPLACE_ME'));
+
+let app, auth;
+if(!isConfigPlaceholder){
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  // Persist login across page reloads/tabs (default is also LOCAL but we set
+  // explicitly to be safe across browsers).
+  setPersistence(auth, browserLocalPersistence).catch(e => console.warn('[auth] setPersistence failed:', e));
+}
+
+// ── DOM helpers ────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const overlay = $('authOverlay');
+const viewLogin = $('authViewLogin');
+const viewVerify = $('authViewVerify');
+const viewReset = $('authViewReset');
+
+function showView(which){
+  viewLogin.style.display = which === 'login' ? '' : 'none';
+  viewVerify.style.display = which === 'verify' ? '' : 'none';
+  viewReset.style.display = which === 'reset' ? '' : 'none';
+}
+
+function showMsg(elId, text, kind='error'){
+  const el = $(elId);
+  el.textContent = text;
+  el.className = 'auth-msg show ' + kind;
+}
+function clearMsg(elId){
+  const el = $(elId);
+  el.className = 'auth-msg';
+  el.textContent = '';
+}
+
+function setLoading(btnId, on){
+  const b = $(btnId);
+  if(on){ b.classList.add('loading'); b.disabled = true; }
+  else  { b.classList.remove('loading'); b.disabled = false; }
+}
+
+// Map common Firebase auth error codes to friendly Vietnamese-friendly English
+// (kept in English for consistency with rest of app, can be localized later).
+function friendlyAuthError(e){
+  const c = e?.code || '';
+  switch(c){
+    case 'auth/invalid-email':       return 'Invalid email address.';
+    case 'auth/user-disabled':       return 'This account has been disabled. Contact your admin.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':  return 'Email or password is incorrect.';
+    case 'auth/too-many-requests':   return 'Too many failed attempts. Try again later or reset your password.';
+    case 'auth/network-request-failed': return 'Network error. Check your connection.';
+    case 'auth/missing-password':    return 'Please enter your password.';
+    case 'auth/operation-not-allowed': return 'Email/password sign-in is not enabled in Firebase. Contact your admin.';
+    default: return e?.message || 'Sign-in failed. Please try again.';
+  }
+}
+
+// ── Initial check: if config is missing, lock the overlay with an error ──
+if(isConfigPlaceholder){
+  // Replace login form with a config-missing message
+  viewLogin.innerHTML = '<div class="auth-brand"><div class="logo-mark">Δ</div><div class="auth-brand-name">IFC Delta<span>Setup needed</span></div></div>'
+    + '<div class="auth-msg show error" style="margin-top:18px">'
+    + '<b>Firebase config missing.</b><br>'
+    + 'Open <code>index.html</code>, find the <code>firebaseConfig</code> object near the top of the auth module, and replace the placeholder values with your Firebase project config from the Firebase Console.'
+    + '</div>'
+    + '<div class="auth-foot">See setup instructions in the project README.</div>';
+  console.error('[auth] Firebase config contains REPLACE_ME placeholders. Edit index.html.');
+}
+
+// ── Auth state listener ────────────────────────────────────────────────
+// Drives the gate: hides overlay when user is signed in AND verified;
+// shows verify view when signed in but not verified; shows login otherwise.
+if(auth){
+  onAuthStateChanged(auth, user => {
+    if(!user){
+      // Signed out
+      overlay.classList.remove('hidden');
+      showView('login');
+      $('userBadge').style.display = 'none';
+      $('userMenu').classList.remove('show');
+      return;
+    }
+    // Signed in
+    if(!user.emailVerified){
+      overlay.classList.remove('hidden');
+      showView('verify');
+      $('verifyEmail').textContent = user.email || '';
+      // Auto-send verification on first arrival in verify view (one-shot per session)
+      if(!sessionStorage.getItem('verifySent_'+user.uid)){
+        sendEmailVerification(user)
+          .then(() => {
+            showMsg('verifyMsg', 'Verification email sent. Check your inbox (and spam folder).', 'success');
+            sessionStorage.setItem('verifySent_'+user.uid, '1');
+          })
+          .catch(e => {
+            // Likely too-many-requests — silently swallow, user can click Resend
+            console.warn('[auth] auto sendEmailVerification:', e?.code);
+          });
+      }
+      return;
+    }
+    // Signed in AND verified → grant access
+    overlay.classList.add('hidden');
+    showLoggedInUser(user);
+  });
+}
+
+function showLoggedInUser(user){
+  // User badge: show only the part before @
+  const email = user.email || '';
+  const local = email.split('@')[0] || 'user';
+  // Avatar = first 1-2 letters of local part (uppercased, trimmed)
+  const initials = (local.replace(/[^a-zA-Z0-9]/g,'').slice(0,2) || 'U').toUpperCase();
+  $('userName').textContent = local;
+  $('userAvatar').textContent = initials;
+  $('userBadge').style.display = '';
+  $('userMenuName').textContent = local;
+  $('userMenuEmail').textContent = email;
+}
+
+// ── LOGIN form ──────────────────────────────────────────────────────────
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!auth) return;
+  clearMsg('loginMsg');
+  const email = $('loginEmail').value.trim();
+  const pass  = $('loginPassword').value;
+  if(!email || !pass){ showMsg('loginMsg', 'Please enter both email and password.'); return; }
+  setLoading('loginSubmit', true);
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+    // onAuthStateChanged will take it from here (overlay hides, or verify view shows).
+  }catch(err){
+    showMsg('loginMsg', friendlyAuthError(err));
+  }finally{
+    setLoading('loginSubmit', false);
+  }
+});
+
+// ── VERIFY-EMAIL view actions ───────────────────────────────────────────
+$('verifyResend').addEventListener('click', async () => {
+  if(!auth?.currentUser) return;
+  clearMsg('verifyMsg');
+  setLoading('verifyResend', true);
+  try{
+    await sendEmailVerification(auth.currentUser);
+    showMsg('verifyMsg', 'Verification email sent. Check your inbox.', 'success');
+  }catch(err){
+    showMsg('verifyMsg', friendlyAuthError(err));
+  }finally{
+    setLoading('verifyResend', false);
+  }
+});
+
+// "I've verified — refresh" button: re-fetch user state from server. If the
+// user clicked the verification link in their email, reloadUser() picks up the
+// new emailVerified=true status without requiring a hard page refresh.
+window.checkVerifiedNow = async function(){
+  if(!auth?.currentUser) return;
+  clearMsg('verifyMsg');
+  try{
+    await reloadUser(auth.currentUser);
+    if(auth.currentUser.emailVerified){
+      // Trigger the gate logic by manually invoking the same flow
+      overlay.classList.add('hidden');
+      showLoggedInUser(auth.currentUser);
+    }else{
+      showMsg('verifyMsg', 'Email is not verified yet. Check your inbox and click the link first.', 'info');
+    }
+  }catch(err){
+    showMsg('verifyMsg', friendlyAuthError(err));
+  }
+};
+
+window.signOutFromVerify = async function(){
+  if(!auth) return;
+  try{ await signOut(auth); }catch(e){}
+  // Clear the auto-send flag so next user gets one
+  sessionStorage.clear();
+};
+
+// ── PASSWORD-RESET view ─────────────────────────────────────────────────
+window.showResetView = function(){
+  clearMsg('resetMsg');
+  $('resetEmail').value = $('loginEmail').value;
+  showView('reset');
+};
+window.showLoginView = function(){
+  clearMsg('resetMsg');
+  showView('login');
+};
+
+$('resetForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!auth) return;
+  clearMsg('resetMsg');
+  const email = $('resetEmail').value.trim();
+  if(!email){ showMsg('resetMsg', 'Please enter your email.'); return; }
+  setLoading('resetSubmit', true);
+  try{
+    await sendPasswordResetEmail(auth, email);
+    showMsg('resetMsg', 'Reset link sent. Check your inbox (and spam folder).', 'success');
+  }catch(err){
+    // For privacy, Firebase no longer reveals "user not found" by default;
+    // show a generic success-like message even on user-not-found to avoid leaking
+    // which emails are registered.
+    if(err?.code === 'auth/user-not-found'){
+      showMsg('resetMsg', 'If that email is registered, a reset link has been sent.', 'success');
+    }else{
+      showMsg('resetMsg', friendlyAuthError(err));
+    }
+  }finally{
+    setLoading('resetSubmit', false);
+  }
+});
+
+// ── User menu (dropdown from header badge) ──────────────────────────────
+window.toggleUserMenu = function(ev){
+  ev?.stopPropagation();
+  const menu = $('userMenu');
+  if(menu.classList.contains('show')){ menu.classList.remove('show'); return; }
+  // Position under the badge
+  const badge = $('userBadge').getBoundingClientRect();
+  menu.style.top  = (badge.bottom + 4) + 'px';
+  menu.style.right = (window.innerWidth - badge.right) + 'px';
+  menu.style.left = '';
+  menu.classList.add('show');
+};
+// Click-outside to close
+document.addEventListener('click', e => {
+  const menu = $('userMenu');
+  if(!menu.classList.contains('show')) return;
+  if(e.target.closest('#userMenu') || e.target.closest('#userBadge')) return;
+  menu.classList.remove('show');
+});
+
+// ── LOGOUT confirm flow ─────────────────────────────────────────────────
+window.confirmLogout = function(){
+  $('userMenu').classList.remove('show');
+  $('confirmBackdrop').classList.add('show');
+};
+window.cancelLogout = function(){
+  $('confirmBackdrop').classList.remove('show');
+};
+window.doLogout = async function(){
+  $('confirmBackdrop').classList.remove('show');
+  if(!auth) return;
+  try{
+    await signOut(auth);
+    sessionStorage.clear();
+    // onAuthStateChanged will show the login overlay automatically
+  }catch(e){
+    console.error('[auth] signOut failed:', e);
+  }
+};
+// Esc closes confirm dialog
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && $('confirmBackdrop').classList.contains('show')){
+    cancelLogout();
+  }
+});
+</script>
 
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","three/examples/jsm/utils/BufferGeometryUtils":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js","three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.5.23/build/index.module.js","web-ifc":"https://cdn.jsdelivr.net/npm/web-ifc@0.0.57/web-ifc-api.js","web-ifc-three":"https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.126/IFCLoader.js"}}
@@ -555,7 +1031,7 @@ function initThree(){
   camera=new THREE.PerspectiveCamera(50,c.clientWidth/c.clientHeight,0.01,100000);
   camera.position.set(30,25,30);
 
-  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
   renderer.setSize(c.clientWidth,c.clientHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -3196,14 +3672,21 @@ window.exportBCF=async function(){
   const now=new Date().toISOString();
   const pid=crypto.randomUUID();
   
-  // Model position offset: reverse model.position to get original IFC coords
-  // web-ifc-three preserves IFC coordinate system (Z-up) in the geometry,
-  // but applies a -90° X rotation at the root. model.position is in Three.js space.
-  // For BCF we just reverse the centering offset — no axis swap needed since
-  // BCF coords should match the IFC file's coordinate system.
-  const off={x:0,y:0,z:0};
-  for(let i=0;i<2;i++){if(loadedModels[i]){off.x=-loadedModels[i].position.x;off.y=-loadedModels[i].position.y;off.z=-loadedModels[i].position.z;break}}
-  log('Compare BCF offset: ('+off.x.toFixed(2)+', '+off.y.toFixed(2)+', '+off.z.toFixed(2)+')');
+  // Coord transform: Three.js is Y-up, BCF/IFC is Z-up.
+  // Three (x,y,z) -> IFC (x, z, -y). First reverse the sharedCenterOffset applied on load
+  // (model.position is the Three-space offset), then swap axes.
+  // threeToIfc(v) returns the IFC-space coordinates for a Three-space point v.
+  const mdlPos={x:0,y:0,z:0};
+  for(let i=0;i<2;i++){if(loadedModels[i]){mdlPos.x=loadedModels[i].position.x;mdlPos.y=loadedModels[i].position.y;mdlPos.z=loadedModels[i].position.z;break}}
+  const threeToIfc=(x,y,z)=>{
+    // reverse offset in Three-space first
+    const tx=x-mdlPos.x, ty=y-mdlPos.y, tz=z-mdlPos.z;
+    // Y-up -> Z-up: (x, y, z)_three -> (x, z, -y)_ifc
+    return {x:tx, y:tz, z:-ty};
+  };
+  // Axis swap for direction vectors (no offset)
+  const dirThreeToIfc=(x,y,z)=>({x:x, y:z, z:-y});
+  log('Compare BCF model offset (three-space): ('+mdlPos.x.toFixed(2)+', '+mdlPos.y.toFixed(2)+', '+mdlPos.z.toFixed(2)+')');
   
   // Save camera
   const saveCam=camera.position.clone();
@@ -3217,23 +3700,37 @@ window.exportBCF=async function(){
     const tid=crypto.randomUUID();
     const vid=crypto.randomUUID();
     
-    // Element bbox in app coords → add offset to get original IFC coords
+    // Element bbox center in Three-space → transform to IFC (Z-up) coords
     const bbox=iss.modelIdx!==undefined?getElementBBox(iss.modelIdx,iss.expressID):null;
-    const ix=(bbox?.center?.x||0)+off.x;
-    const iy=(bbox?.center?.y||0)+off.y;
-    const iz=(bbox?.center?.z||0)+off.z;
+    const ifcCenter=bbox?.center?threeToIfc(bbox.center.x,bbox.center.y,bbox.center.z):{x:0,y:0,z:0};
+    const ix=ifcCenter.x, iy=ifcCenter.y, iz=ifcCenter.z;
     const d=bbox?Math.max(bbox.size.x,bbox.size.y,bbox.size.z)*2+5:20;
     
-    // Snapshot: zoom to element, wait for render, capture
+    // Snapshot: zoom to element, highlight it, wait for render, capture.
+    // Highlighting makes the element visible as a colored overlay in the snapshot
+    // thumbnail shown in BCF Manager, so the user can see which element is the issue.
     let snap64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/58BHgAIBwJ+Qil1RAAAAABJRU5ErkJggg==';
     if(bbox?.center){
       camera.position.set(bbox.center.x+d*0.4,bbox.center.y+d*0.3,bbox.center.z+d*0.4);
       controls.target.set(bbox.center.x,bbox.center.y,bbox.center.z);
       controls.update();
+      // Colored highlight so the element pops in the snapshot thumbnail
+      let snapHL=null;
+      try{
+        const hlColor={added:0x16a34a,removed:0xdc2626,modified:0xd97706}[iss.status]||0x2563eb;
+        const hlMat=new THREE.MeshPhongMaterial({color:hlColor,transparent:true,opacity:0.75,side:THREE.DoubleSide,depthTest:true});
+        const mid=loadedModels[iss.modelIdx]?.modelID;
+        if(mid!==undefined){
+          snapHL=ifcLoader.ifcManager.createSubset({modelID:mid,ids:[iss.expressID],material:hlMat,scene,removePrevious:false,customID:'bcfSnap'});
+          if(snapHL){snapHL.position.copy(loadedModels[iss.modelIdx].position);snapHL.updateMatrixWorld(true);}
+        }
+      }catch(e){}
       renderer.render(scene,camera);
       await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
       renderer.render(scene,camera);
       try{snap64=renderer.domElement.toDataURL('image/png').split(',')[1]}catch(e){}
+      // Remove the highlight subset so it doesn't persist between issues
+      if(snapHL){try{scene.remove(snapHL);snapHL.geometry?.dispose();}catch(e){}}
     }
     
     let desc=iss.status.toUpperCase()+': '+(iss.name||'');
@@ -3246,19 +3743,26 @@ window.exportBCF=async function(){
       if(iss.status==='removed')desc+=' | NOTE: This element was REMOVED. It existed at this location in Version A.';
     }
     
-    // BCF camera and section box in IFC coords
-    const camX=ix+d*0.4, camY=iy+d*0.3, camZ=iz+d*0.4;
+    // BCF camera and section box in IFC coords.
+    // Section box padding scales with element size so small objects still get
+    // a reasonable surrounding context in BIMcollab.
+    // Three.js bbox.size axes: IFC-X = Three-X, IFC-Y = Three-Z, IFC-Z = Three-Y.
+    const rawSx=bbox?bbox.size.x/2:5;
+    const rawSy=bbox?bbox.size.z/2:5;
+    const rawSz=bbox?bbox.size.y/2:5;
+    const elMax=Math.max(rawSx,rawSy,rawSz);
+    // padding: at least 2m, or 1.5x element half-size (scales for large elements)
+    const pad=Math.max(2, elMax*1.5);
+    const sx=rawSx+pad, sy=rawSy+pad, sz=rawSz+pad;
+    // Camera sits back from the element at a 3/4 perspective angle.
+    // Distance scales with section-box size so we frame the whole section nicely.
+    const viewR=Math.max(sx,sy,sz)*1.8+3;
+    const camX=ix+viewR*0.55, camY=iy-viewR*0.75, camZ=iz+viewR*0.45;
     const ddx=ix-camX, ddy=iy-camY, ddz=iz-camZ;
     const ln=Math.sqrt(ddx*ddx+ddy*ddy+ddz*ddz)||1;
     const col={added:'FF16A34A',removed:'FFDC2626',modified:'FFD97706'}[iss.status]||'FF2563EB';
     
-    // Section box padding
-    const pad=2;
-    const sx=bbox?(bbox.size.x/2+pad):5;
-    const sy=bbox?(bbox.size.y/2+pad):5;
-    const sz=bbox?(bbox.size.z/2+pad):5;
-    
-    // 6 ClippingPlanes forming a section box around element in IFC coords
+    // 6 ClippingPlanes forming a section box around element in IFC coords.
     // BCF spec: Direction "points in the invisible direction" = outward from box
     const clips=
       '<ClippingPlanes>'+
@@ -3270,48 +3774,60 @@ window.exportBCF=async function(){
       '<ClippingPlane><Location><X>'+(ix).toFixed(6)+'</X><Y>'+(iy).toFixed(6)+'</Y><Z>'+(iz-sz).toFixed(6)+'</Z></Location><Direction><X>0</X><Y>0</Y><Z>-1</Z></Direction></ClippingPlane>'+
       '</ClippingPlanes>';
     
-    // Build component XML — use AuthoringToolId (Revit ElementId) as primary identifier
-    // because IFC GlobalId may differ from Revit's IfcGUID parameter
+    // Build <Component> XML per BCF 2.1 schema (visinfo.xsd).
+    // CRITICAL: IfcGuid is an XML attribute, BUT OriginatingSystem and AuthoringToolId
+    // are CHILD ELEMENTS (not attributes). Writing them as attributes makes the whole
+    // Component non-conformant and BIMcollab BCF Manager silently ignores the extra
+    // attrs — falling back to IfcGuid-only match, which fails for Revit because
+    // Revit's internal IfcGuid param differs from the exported IFC GlobalId by ~1 char.
+    // Result: BCF Manager picks the wrong element (Floor instead of Door) because
+    // it has no reliable key.
     const tag=iss.tag||'';
-    let compAttr='';
-    if(tag){
-      // Prefer AuthoringToolId (matches Revit ElementId reliably)
-      compAttr='AuthoringToolId="'+tag+'" OriginatingSystem="Revit" IfcGuid="'+iss.gid+'"';
-    }else{
-      compAttr='IfcGuid="'+iss.gid+'"';
-    }
+    // buildComponent() emits a schema-valid <Component> with nested child elements.
+    // Same helper is used for Selection, Visibility/Exceptions, and Coloring so all
+    // three component references are identical and unambiguous.
+    const buildComponent=()=>{
+      let x='<Component IfcGuid="'+escXml(iss.gid)+'">';
+      x+='<OriginatingSystem>Autodesk Revit</OriginatingSystem>';
+      if(tag)x+='<AuthoringToolId>'+escXml(tag)+'</AuthoringToolId>';
+      x+='</Component>';
+      return x;
+    };
+    const compXml=buildComponent();
     
-    zip.file(tid+'/markup.bcf','<?xml version="1.0" encoding="UTF-8"?>\n<Markup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n<Topic Guid="'+tid+'" TopicType="Issue" TopicStatus="Active"><Title>'+escXml('#'+iss.num+' '+iss.name+' ['+iss.status.toUpperCase()+']')+'</Title><Description>'+escXml(desc)+'</Description><CreationDate>'+now+'</CreationDate><CreationAuthor>IFC Delta</CreationAuthor><ModifiedDate>'+now+'</ModifiedDate></Topic>\n<Comment Guid="'+crypto.randomUUID()+'"><Date>'+now+'</Date><Author>IFC Delta</Author><Comment>'+escXml(desc)+'</Comment><Viewpoint Guid="'+vid+'"/></Comment>\n<Viewpoints Guid="'+vid+'"><Viewpoint>viewpoint.bcfv</Viewpoint><Snapshot>snapshot.png</Snapshot></Viewpoints>\n</Markup>');
+    // markup.bcf — include Header with IFC filename references so Revit BCF Manager
+    // knows which model the components belong to. Without Header, BIMcollab can't
+    // correlate components to any model and the viewpoint stays empty.
+    const headerXml='<Header>'+
+      (files[0]?'<File IfcProject="" IfcSpatialStructureElement="" isExternal="true"><Filename>'+escXml(files[0].name)+'</Filename><Date>'+now+'</Date></File>':'')+
+      (files[1]?'<File IfcProject="" IfcSpatialStructureElement="" isExternal="true"><Filename>'+escXml(files[1].name)+'</Filename><Date>'+now+'</Date></File>':'')+
+      '</Header>';
     
-    // Viewpoint strategy depends on issue type:
-    // MODIFIED: element exists in Revit → use Selection (BIMcollab auto-zooms to it)
-    // ADDED/REMOVED: element may NOT exist → use camera at element position + clipping planes
-    let viewpointXml;
-    if(iss.status==='modified'||iss.status==='removed'){
-      // Element likely exists in current Revit project → selection-based zoom
-      viewpointXml='<?xml version="1.0" encoding="UTF-8"?>\n<VisualizationInfo Guid="'+vid+'" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+
-        '<Components><Visibility DefaultVisibility="true"><Exceptions/></Visibility>'+
-        '<Selection><Component '+compAttr+'/></Selection>'+
-        '<Coloring><Color Color="'+col+'"><Component '+compAttr+'/></Color></Coloring>'+
-        '</Components>\n'+
-        '<OrthogonalCamera><CameraViewPoint><X>0</X><Y>0</Y><Z>0</Z></CameraViewPoint><CameraDirection><X>0</X><Y>0</Y><Z>-1</Z></CameraDirection><CameraUpVector><X>0</X><Y>1</Y><Z>0</Z></CameraUpVector><ViewToWorldScale>1000</ViewToWorldScale></OrthogonalCamera>\n'+
-        '</VisualizationInfo>';
-    }else{
-      // ADDED: element does NOT exist in Revit → use camera position + section box so user can see the AREA
-      viewpointXml='<?xml version="1.0" encoding="UTF-8"?>\n<VisualizationInfo Guid="'+vid+'" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+
-        '<Components><Visibility DefaultVisibility="true"><Exceptions/></Visibility>'+
-        '<Selection><Component '+compAttr+'/></Selection>'+
-        '<Coloring><Color Color="'+col+'"><Component '+compAttr+'/></Color></Coloring>'+
-        '</Components>\n'+
-        clips+'\n'+
-        '<PerspectiveCamera>'+
-        '<CameraViewPoint><X>'+camX.toFixed(6)+'</X><Y>'+camY.toFixed(6)+'</Y><Z>'+camZ.toFixed(6)+'</Z></CameraViewPoint>'+
-        '<CameraDirection><X>'+(ddx/ln).toFixed(6)+'</X><Y>'+(ddy/ln).toFixed(6)+'</Y><Z>'+(ddz/ln).toFixed(6)+'</Z></CameraDirection>'+
-        '<CameraUpVector><X>0</X><Y>0</Y><Z>1</Z></CameraUpVector>'+
-        '<FieldOfView>60</FieldOfView>'+
-        '</PerspectiveCamera>\n'+
-        '</VisualizationInfo>';
-    }
+    zip.file(tid+'/markup.bcf','<?xml version="1.0" encoding="UTF-8"?>\n<Markup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+headerXml+'\n<Topic Guid="'+tid+'" TopicType="Issue" TopicStatus="Active"><Title>'+escXml('#'+iss.num+' '+iss.name+' ['+iss.status.toUpperCase()+']')+'</Title><Description>'+escXml(desc)+'</Description><CreationDate>'+now+'</CreationDate><CreationAuthor>IFC Delta</CreationAuthor><ModifiedDate>'+now+'</ModifiedDate></Topic>\n<Comment Guid="'+crypto.randomUUID()+'"><Date>'+now+'</Date><Author>IFC Delta</Author><Comment>'+escXml(desc)+'</Comment><Viewpoint Guid="'+vid+'"/></Comment>\n<Viewpoints Guid="'+vid+'"><Viewpoint>viewpoint.bcfv</Viewpoint><Snapshot>snapshot.png</Snapshot></Viewpoints>\n</Markup>');
+    
+    // viewpoint.bcfv — MUST follow BCF 2.1 visinfo.xsd element order:
+    //   Components (optional) → OrthogonalCamera XOR PerspectiveCamera → Lines →
+    //   ClippingPlanes → Bitmap*
+    // AND within Components:
+    //   ViewSetupHints? → Selection? → Visibility (REQUIRED) → Coloring?
+    // Previously we wrote Visibility BEFORE Selection, which breaks the XSD sequence
+    // constraint and causes strict parsers (incl. BIMcollab) to fail silently or
+    // mis-parse the Selection block. Fixing the order is essential for the component
+    // to actually be highlighted in Revit.
+    const viewpointXml='<?xml version="1.0" encoding="UTF-8"?>\n<VisualizationInfo Guid="'+vid+'" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+
+      '<Components>'+
+      '<Selection>'+compXml+'</Selection>'+
+      '<Visibility DefaultVisibility="true"><Exceptions/></Visibility>'+
+      '<Coloring><Color Color="'+col+'">'+compXml+'</Color></Coloring>'+
+      '</Components>\n'+
+      '<PerspectiveCamera>'+
+      '<CameraViewPoint><X>'+camX.toFixed(6)+'</X><Y>'+camY.toFixed(6)+'</Y><Z>'+camZ.toFixed(6)+'</Z></CameraViewPoint>'+
+      '<CameraDirection><X>'+(ddx/ln).toFixed(6)+'</X><Y>'+(ddy/ln).toFixed(6)+'</Y><Z>'+(ddz/ln).toFixed(6)+'</Z></CameraDirection>'+
+      '<CameraUpVector><X>0</X><Y>0</Y><Z>1</Z></CameraUpVector>'+
+      '<FieldOfView>60</FieldOfView>'+
+      '</PerspectiveCamera>\n'+
+      clips+'\n'+
+      '</VisualizationInfo>';
     zip.file(tid+'/viewpoint.bcfv',viewpointXml);
     
     zip.file(tid+'/snapshot.png',snap64,{base64:true});
@@ -4167,27 +4683,32 @@ window.exportClashBCF=async function(){
       '<ClippingPlane><Location><X>'+ix.toFixed(6)+'</X><Y>'+iy.toFixed(6)+'</Y><Z>'+sbMnZ.toFixed(6)+'</Z></Location><Direction><X>0</X><Y>0</Y><Z>-1</Z></Direction></ClippingPlane>'+
       '</ClippingPlanes>';
     
-    // Selection + coloring — prioritize AuthoringToolId (Revit ElementId) for reliable matching
+    // Build schema-valid <Component> XML per BCF 2.1 visinfo.xsd.
+    // IfcGuid is an attribute; OriginatingSystem and AuthoringToolId are CHILD ELEMENTS
+    // (not attributes). Writing them as attrs makes the whole Component malformed and
+    // BIMcollab silently drops them, falling back to IfcGuid-only — which can fail
+    // due to Revit's internal IfcGuid vs exported IFC GlobalId ~1-char difference.
     const tagA=cl.elA.tag||'';
     const tagB=cl.elB.tag||'';
-    const makeAttr=(guid,tag)=>{
-      if(tag)return 'AuthoringToolId="'+tag+'" OriginatingSystem="Revit"'+(guid?' IfcGuid="'+guid+'"':'');
-      return guid?'IfcGuid="'+guid+'"':'';
+    const makeComponent=(guid,tag)=>{
+      if(!guid && !tag)return '';
+      let x='<Component'+(guid?' IfcGuid="'+escXml(guid)+'"':'')+'>';
+      x+='<OriginatingSystem>Autodesk Revit</OriginatingSystem>';
+      if(tag)x+='<AuthoringToolId>'+escXml(tag)+'</AuthoringToolId>';
+      x+='</Component>';
+      return x;
     };
-    let exceptionsXml='';
+    const compA=makeComponent(guidA,tagA);
+    const compB=makeComponent(guidB,tagB);
     let selectionXml='<Selection>';
     let colorXml='<Coloring>';
-    const attrA=makeAttr(guidA,tagA);
-    const attrB=makeAttr(guidB,tagB);
-    if(attrA){
-      exceptionsXml+='<Component '+attrA+' Visible="true"/>';
-      selectionXml+='<Component '+attrA+'/>';
-      colorXml+='<Color Color="FFEF4444"><Component '+attrA+'/></Color>';
+    if(compA){
+      selectionXml+=compA;
+      colorXml+='<Color Color="FFEF4444">'+compA+'</Color>';
     }
-    if(attrB){
-      exceptionsXml+='<Component '+attrB+' Visible="true"/>';
-      selectionXml+='<Component '+attrB+'/>';
-      colorXml+='<Color Color="FFF97316"><Component '+attrB+'/></Color>';
+    if(compB){
+      selectionXml+=compB;
+      colorXml+='<Color Color="FFF97316">'+compB+'</Color>';
     }
     selectionXml+='</Selection>';
     colorXml+='</Coloring>';
@@ -4210,12 +4731,16 @@ window.exportClashBCF=async function(){
       '<Viewpoints Guid="'+vid+'"><Viewpoint>viewpoint.bcfv</Viewpoint><Snapshot>snapshot.png</Snapshot></Viewpoints>\n'+
       '</Markup>');
     
-    // viewpoint.bcfv — Components only, no camera/clips
-    // BIMcollab/Revit BCF Manager will auto-zoom to selected elements
+    // viewpoint.bcfv — per BCF 2.1 visinfo.xsd, Components must contain child
+    // elements in this order: ViewSetupHints? → Selection? → Visibility (REQUIRED) →
+    // Coloring?. Writing Visibility before Selection breaks the XSD sequence and
+    // causes strict parsers (incl. BIMcollab) to mis-parse the Selection block —
+    // which is why the wrong element gets highlighted in Revit.
     zip.file(tid+'/viewpoint.bcfv','<?xml version="1.0" encoding="UTF-8"?>\n<VisualizationInfo Guid="'+vid+'" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+
       '<Components>'+
+      selectionXml+
       '<Visibility DefaultVisibility="true"><Exceptions/></Visibility>'+
-      selectionXml+colorXml+
+      colorXml+
       '</Components>\n'+
       '<OrthogonalCamera><CameraViewPoint><X>0</X><Y>0</Y><Z>0</Z></CameraViewPoint><CameraDirection><X>0</X><Y>0</Y><Z>-1</Z></CameraDirection><CameraUpVector><X>0</X><Y>1</Y><Z>0</Z></CameraUpVector><ViewToWorldScale>1000</ViewToWorldScale></OrthogonalCamera>\n'+
       '</VisualizationInfo>');

@@ -162,6 +162,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 /* Viewport */
 .viewport-area{position:relative;overflow:hidden;background:#e8ecf2}
 .viewport-area canvas{display:block}
+
+/* ── View Cube (Revit-style 3D navigation gizmo) ────────────────────── */
+/* Small canvas anchored top-right of the viewport. Click face/edge/corner
+   to snap main camera to that orthogonal view. Home icon below resets. */
+.view-cube{position:absolute;top:10px;right:10px;width:90px;height:90px;z-index:11;cursor:pointer;user-select:none;pointer-events:auto}
+.view-cube canvas{display:block;width:100%;height:100%;background:transparent}
+.view-cube-home{position:absolute;top:104px;right:38px;width:34px;height:22px;z-index:11;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted);background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all var(--t);backdrop-filter:blur(6px)}
+.view-cube-home:hover{color:var(--blue);border-color:var(--blue);background:var(--blue-lt)}
 .empty-vp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;gap:8px}
 .ev-icon{font-size:47px;opacity:.3}.ev-title{font-size:18px;font-weight:600;color:var(--text-dim)}.ev-hint{font-size:14px;color:var(--text-muted);text-align:center;max-width:260px;line-height:1.5}
 .vp-overlay{position:absolute;top:8px;left:8px;display:none;gap:6px;z-index:10;padding:5px 9px;border-radius:5px;background:rgba(255,255,255,.9);border:1px solid var(--border);backdrop-filter:blur(6px)}
@@ -617,6 +625,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 
   <div class="viewport-area" id="vpArea">
     <div class="empty-vp" id="emptyVP"><div class="ev-icon">🏗️</div><div class="ev-title">IFC 3D Version Compare</div><div class="ev-hint">Upload 2 IFC files and click Compare</div></div>
+    <!-- View cube: click cube face to snap to that orthogonal view. Home below resets. -->
+    <div class="view-cube" id="viewCube" title="Click a face to snap to view"></div>
+    <div class="view-cube-home" id="viewCubeHome" title="Reset view" onclick="resetCam()">⌂</div>
     <div class="vp-overlay" id="vpLegend">
       <div class="leg"><div class="leg-d" style="background:var(--green)"></div>Added</div>
       <div class="leg"><div class="leg-d" style="background:var(--red)"></div>Removed</div>
@@ -1257,8 +1268,183 @@ function initThree(){
     }
   });
 
-  (function loop(){requestAnimationFrame(loop);controls.update();renderer.render(scene,camera)})();
+  // Render loop: update controls, refresh section-box handle sizes so they stay
+  // screen-constant (Revit-like), sync view cube orientation, then draw.
+  // Note: updateSectionBox3DPositions() is only called when sliders change
+  // (via input event handlers) — not every frame — to avoid 60fps DOM reads.
+  // Only the cheap handle-size rescaling runs per frame.
+  (function loop(){
+    requestAnimationFrame(loop);
+    controls.update();
+    if(sectionBox)updateSectionHandleSizes();
+    if(typeof updateViewCube==='function')updateViewCube();
+    renderer.render(scene,camera);
+  })();
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// VIEW CUBE (Revit-style navigation gizmo)
+// A small 90×90 canvas in the top-right corner. Renders a cube that mirrors
+// the main camera's orientation. Clicking a face snaps the main camera to
+// that orthogonal view. Clicking a corner snaps to a 45° isometric-ish view.
+// ══════════════════════════════════════════════════════════════════════
+let viewCube={scene:null,cam:null,renderer:null,mesh:null,pickables:[]};
+
+function initViewCube(){
+  const host=document.getElementById('viewCube');
+  if(!host)return;
+
+  // Dedicated renderer/scene/camera — rendered separately from main scene.
+  // Using its own canvas avoids viewport/clipping-plane conflicts with main viewer.
+  const vr=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:false});
+  vr.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  vr.setSize(host.clientWidth,host.clientHeight);
+  vr.setClearColor(0x000000,0);
+  host.appendChild(vr.domElement);
+
+  const vs=new THREE.Scene();
+  const vc=new THREE.OrthographicCamera(-1.7,1.7,1.7,-1.7,0.1,100);
+  vc.position.set(0,0,5);
+  vc.lookAt(0,0,0);
+
+  // Build the cube with labeled face textures.
+  // Each face gets a canvas-drawn texture with a short label — mirrors Revit.
+  const makeFaceTex=(label)=>{
+    const c=document.createElement('canvas');
+    c.width=c.height=128;
+    const ctx=c.getContext('2d');
+    // Background: off-white with subtle inner border
+    ctx.fillStyle='#f4f5f7';
+    ctx.fillRect(0,0,128,128);
+    ctx.strokeStyle='#b0b8c9';
+    ctx.lineWidth=3;
+    ctx.strokeRect(1.5,1.5,125,125);
+    // Label
+    ctx.fillStyle='#4a5068';
+    ctx.font='600 22px Inter,system-ui,sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(label,64,68);
+    const tex=new THREE.CanvasTexture(c);
+    tex.anisotropy=4;
+    return tex;
+  };
+  // Three.js BoxGeometry face order: +X, -X, +Y, -Y, +Z, -Z
+  // We treat world as Three's Y-up in the main scene, so:
+  //   +Y=TOP  -Y=BOTTOM  -Z=FRONT  +Z=BACK  +X=RIGHT  -X=LEFT
+  const labels=['RIGHT','LEFT','TOP','BOTTOM','BACK','FRONT'];
+  const cubeMats=labels.map(l=>new THREE.MeshBasicMaterial({map:makeFaceTex(l)}));
+  const cubeGeo=new THREE.BoxGeometry(1.3,1.3,1.3);
+  const cubeMesh=new THREE.Mesh(cubeGeo,cubeMats);
+  vs.add(cubeMesh);
+
+  // Edge outline — thin black wire on top of the cube faces for definition
+  const edges=new THREE.LineSegments(
+    new THREE.EdgesGeometry(cubeGeo),
+    new THREE.LineBasicMaterial({color:0x8590a6,transparent:true,opacity:0.6})
+  );
+  cubeMesh.add(edges);
+
+  // Subtle ground ring beneath the cube for visual anchor
+  const ringGeo=new THREE.RingGeometry(1.1,1.25,48);
+  const ringMat=new THREE.MeshBasicMaterial({color:0xd5d9e2,side:THREE.DoubleSide,transparent:true,opacity:0.5});
+  const ring=new THREE.Mesh(ringGeo,ringMat);
+  ring.rotation.x=-Math.PI/2;
+  ring.position.y=-0.82;
+  vs.add(ring);
+
+  viewCube={scene:vs,cam:vc,renderer:vr,mesh:cubeMesh,host};
+
+  // Click handling — raycast against the cube to determine which face was hit.
+  // Each face maps to an orthogonal view direction for the main camera.
+  const ray=new THREE.Raycaster();
+  const m=new THREE.Vector2();
+  host.addEventListener('pointerdown',ev=>{
+    // Drag vs click: track pointer movement; if tiny, treat as click
+    const startX=ev.clientX, startY=ev.clientY;
+    let moved=false;
+    const mv=(e)=>{
+      if(Math.abs(e.clientX-startX)>3||Math.abs(e.clientY-startY)>3)moved=true;
+    };
+    const up=(e)=>{
+      host.removeEventListener('pointermove',mv);
+      host.removeEventListener('pointerup',up);
+      if(moved)return; // drag: ignore (main camera OrbitControls already handles rotate)
+      // Click: raycast the cube
+      const r=host.getBoundingClientRect();
+      m.x=((e.clientX-r.left)/r.width)*2-1;
+      m.y=-((e.clientY-r.top)/r.height)*2+1;
+      ray.setFromCamera(m,vc);
+      const hits=ray.intersectObject(cubeMesh,false);
+      if(!hits.length)return;
+      const faceIdx=Math.floor(hits[0].faceIndex/2); // 12 triangles → 6 faces
+      snapMainCameraToFace(faceIdx);
+    };
+    host.addEventListener('pointermove',mv);
+    host.addEventListener('pointerup',up,{once:true});
+  });
+}
+
+// Map face index (0-5, matching BoxGeometry order +X/-X/+Y/-Y/+Z/-Z) to a main
+// camera direction and snap to it. Preserves look-at target, adjusts distance to
+// keep current framing.
+function snapMainCameraToFace(faceIdx){
+  if(!camera||!controls)return;
+  // Direction FROM target TO camera for each face, in Three-space (Y-up)
+  const dirs=[
+    new THREE.Vector3( 1, 0, 0), // RIGHT  (+X)
+    new THREE.Vector3(-1, 0, 0), // LEFT   (-X)
+    new THREE.Vector3( 0, 1, 0), // TOP    (+Y)
+    new THREE.Vector3( 0,-1, 0), // BOTTOM (-Y)
+    new THREE.Vector3( 0, 0, 1), // BACK   (+Z)
+    new THREE.Vector3( 0, 0,-1), // FRONT  (-Z)
+  ];
+  const dir=dirs[faceIdx]||dirs[5];
+  const target=controls.target.clone();
+  const currentDist=camera.position.distanceTo(target)||20;
+  const newPos=target.clone().addScaledVector(dir,currentDist);
+  // Animate smoothly from current to new position for nicer feel
+  animateCameraTo(newPos, target, 350);
+}
+
+// Tween camera position + target over `duration` ms. Avoids snap-teleport feel.
+function animateCameraTo(endPos, endTarget, duration=300){
+  if(!camera||!controls)return;
+  const startPos=camera.position.clone();
+  const startTarget=controls.target.clone();
+  const t0=performance.now();
+  // Cancel any previous tween so rapid clicks don't fight each other
+  if(window._camTweenId)cancelAnimationFrame(window._camTweenId);
+  const step=()=>{
+    const t=Math.min((performance.now()-t0)/duration,1);
+    // ease-out cubic
+    const e=1-Math.pow(1-t,3);
+    camera.position.lerpVectors(startPos,endPos,e);
+    controls.target.lerpVectors(startTarget,endTarget,e);
+    controls.update();
+    if(t<1)window._camTweenId=requestAnimationFrame(step);
+    else window._camTweenId=null;
+  };
+  step();
+}
+
+// Called every frame from the main render loop — syncs cube orientation with
+// main camera and renders the cube's own scene. The cube rotates INVERSELY to
+// the main camera so it always shows "which face you're currently looking at".
+function updateViewCube(){
+  if(!viewCube.mesh||!viewCube.renderer||!camera||!controls)return;
+  // Orientation: the cube face nearest the main camera should face the viewer.
+  // Equivalent to: rotate cube by inverse of main-camera's view rotation around
+  // its target. We use a matrix-based approach: build a matrix that looks FROM
+  // target to camera, then use its inverse rotation for the cube.
+  const m=new THREE.Matrix4();
+  m.lookAt(camera.position,controls.target,camera.up);
+  // Extract rotation quaternion; cube's orientation = inverse (so facing viewer)
+  const q=new THREE.Quaternion().setFromRotationMatrix(m);
+  viewCube.mesh.quaternion.copy(q.invert());
+  viewCube.renderer.render(viewCube.scene,viewCube.cam);
+}
+
 
 // ══ Lightweight single-element BBox ══
 function getElementBBox(modelIdx,expressID){
@@ -1719,13 +1905,16 @@ async function buildCatFromModels(){
   window._catData={};
   window._catModelIDs={}; // {typeName: {0: [expressIDs], 1: [expressIDs]}}
   
+  // PRODUCT_TYPES for category filter UI.
+  // Spatial structures (Site/Building/Storey/Project/Space) are excluded to match
+  // the compare logic in getAllProps() — no point showing categories that are
+  // never compared.
   const PRODUCT_TYPES=[
     IFCWALL, IFCWALLSTANDARDCASE, IFCSLAB, IFCCOLUMN, IFCBEAM,
     IFCDOOR, IFCWINDOW, IFCROOF, IFCSTAIR, IFCSTAIRFLIGHT,
     IFCRAILING, IFCPLATE, IFCMEMBER, IFCCURTAINWALL, IFCFOOTING,
     IFCBUILDINGELEMENTPROXY, IFCFURNISHINGELEMENT,
     IFCFLOWSEGMENT, IFCFLOWTERMINAL, IFCFLOWFITTING,
-    IFCSITE, IFCBUILDING, IFCBUILDINGSTOREY,
     3024970846,3283111854,1687234759,4136498852,1758889154,
     4237592921,987401354,3132237377,3508470533,
   ];
@@ -1926,7 +2115,7 @@ function createSectionBox3D(){
     new THREE.MeshBasicMaterial({color:0x3b82f6,transparent:true,opacity:0.06,side:THREE.DoubleSide,depthTest:false}), // Z-
   ];
 
-  // Arrow handles for each face
+  // Arrow handle materials — flat, depth-test off so they always render on top
   const arrowMats=[
     new THREE.MeshBasicMaterial({color:0xef4444,depthTest:false}),
     new THREE.MeshBasicMaterial({color:0xef4444,depthTest:false}),
@@ -1937,7 +2126,6 @@ function createSectionBox3D(){
   ];
 
   const sx=b.max.x-b.min.x,sy=b.max.y-b.min.y,sz=b.max.z-b.min.z;
-  const handleSize=Math.max(sx,sy,sz)*0.004;
 
   const faces=[];
   const arrows=[];
@@ -1964,8 +2152,11 @@ function createSectionBox3D(){
     group.add(face);
     faces.push(face);
 
-    // Arrow handle (cone)
-    const coneGeo=new THREE.ConeGeometry(handleSize,handleSize*3,8);
+    // Arrow handle: UNIT-SIZE cone (radius=1, height=2.4).
+    // Actual screen-size is applied per frame by updateSectionHandleSizes()
+    // so arrows stay the same visual size regardless of zoom — matches Revit
+    // triangle-handle behavior where handles never overwhelm the viewport.
+    const coneGeo=new THREE.ConeGeometry(1, 2.4, 12);
     const cone=new THREE.Mesh(coneGeo,arrowMats[i]);
     cone.renderOrder=1000;
     cone.userData={faceIdx:i,axis:cfg.axis,dir:cfg.dir,isHandle:true};
@@ -1983,6 +2174,43 @@ function createSectionBox3D(){
   scene.add(group);
   sectionBox={group,faces,arrows,edges};
   updateSectionBox3DPositions();
+  updateSectionHandleSizes();
+}
+
+// Scale section-box arrow handles so they appear ~constant size on screen
+// regardless of camera distance. Called every frame from the render loop.
+// Target visual size: ~14px radius (Revit-style small triangles).
+function updateSectionHandleSizes(){
+  if(!sectionBox||!camera||!renderer)return;
+  const vh=renderer.domElement.clientHeight||1;
+  const fov=(camera.fov||50)*Math.PI/180;
+  const tanHalfFov=Math.tan(fov/2);
+  const camPos=camera.position;
+  const targetRadiusPx=9;   // cone radius in screen pixels (Revit-small)
+  const targetOffsetPx=16;  // cone tip-to-face distance in screen pixels
+
+  // For each arrow, pin it to its face center, scale to constant screen size,
+  // and push it outward along the face normal by a screen-constant offset.
+  // Face positions were set when sliders changed (updateSectionBox3DPositions).
+  for(let i=0;i<sectionBox.arrows.length;i++){
+    const arrow=sectionBox.arrows[i];
+    const face=sectionBox.faces[i];
+    if(!face)continue;
+    const {axis,dir}=arrow.userData;
+    // Normal in world: axis + dir
+    const n={x:axis==='x'?dir:0, y:axis==='y'?dir:0, z:axis==='z'?dir:0};
+    // Distance camera → face center (stable reference for scaling)
+    const d=camPos.distanceTo(face.position);
+    const worldPerPx=(2*d*tanHalfFov)/vh;
+    const r=worldPerPx*targetRadiusPx;
+    const off=worldPerPx*targetOffsetPx;
+    arrow.scale.set(r,r,r);
+    arrow.position.set(
+      face.position.x + n.x*off,
+      face.position.y + n.y*off,
+      face.position.z + n.z*off
+    );
+  }
 }
 
 function removeSectionBox3D(){
@@ -2016,43 +2244,38 @@ function updateSectionBox3DPositions(){
   sectionBox.edges.scale.set(Math.max(bsx,0.01),Math.max(bsy,0.01),Math.max(bsz,0.01));
   sectionBox.edges.position.set(bcx,bcy,bcz);
 
-  const handleOffset=Math.max(sx,sy,sz)*0.008;
-  // Face positions & arrow positions
+  // Position/rotate face planes. Arrow positions are NOT set here — they are
+  // recomputed every frame by updateSectionHandleSizes() to stay screen-constant
+  // distance from their face.
   // X+ face
   sectionBox.faces[0].position.set(cxp,bcy,bcz);
   sectionBox.faces[0].rotation.set(0,Math.PI/2,0);
   sectionBox.faces[0].scale.set(Math.max(bsz,0.01)/sz,Math.max(bsy,0.01)/sy,1);
-  sectionBox.arrows[0].position.set(cxp+handleOffset,bcy,bcz);
   sectionBox.arrows[0].rotation.set(0,0,-Math.PI/2);
   // X- face
   sectionBox.faces[1].position.set(cxn,bcy,bcz);
   sectionBox.faces[1].rotation.set(0,-Math.PI/2,0);
   sectionBox.faces[1].scale.set(Math.max(bsz,0.01)/sz,Math.max(bsy,0.01)/sy,1);
-  sectionBox.arrows[1].position.set(cxn-handleOffset,bcy,bcz);
   sectionBox.arrows[1].rotation.set(0,0,Math.PI/2);
   // Y+ face
   sectionBox.faces[2].position.set(bcx,cyp,bcz);
   sectionBox.faces[2].rotation.set(-Math.PI/2,0,0);
   sectionBox.faces[2].scale.set(Math.max(bsx,0.01)/sx,Math.max(bsz,0.01)/sz,1);
-  sectionBox.arrows[2].position.set(bcx,cyp+handleOffset,bcz);
   sectionBox.arrows[2].rotation.set(0,0,0);
   // Y- face
   sectionBox.faces[3].position.set(bcx,cyn,bcz);
   sectionBox.faces[3].rotation.set(Math.PI/2,0,0);
   sectionBox.faces[3].scale.set(Math.max(bsx,0.01)/sx,Math.max(bsz,0.01)/sz,1);
-  sectionBox.arrows[3].position.set(bcx,cyn-handleOffset,bcz);
   sectionBox.arrows[3].rotation.set(Math.PI,0,0);
   // Z+ face
   sectionBox.faces[4].position.set(bcx,bcy,czp);
   sectionBox.faces[4].rotation.set(0,0,0);
   sectionBox.faces[4].scale.set(Math.max(bsx,0.01)/sx,Math.max(bsy,0.01)/sy,1);
-  sectionBox.arrows[4].position.set(bcx,bcy,czp+handleOffset);
   sectionBox.arrows[4].rotation.set(Math.PI/2,0,0);
   // Z- face
   sectionBox.faces[5].position.set(bcx,bcy,czn);
   sectionBox.faces[5].rotation.set(0,Math.PI,0);
   sectionBox.faces[5].scale.set(Math.max(bsx,0.01)/sx,Math.max(bsy,0.01)/sy,1);
-  sectionBox.arrows[5].position.set(bcx,bcy,czn-handleOffset);
   sectionBox.arrows[5].rotation.set(-Math.PI/2,0,0);
 }
 
@@ -2290,14 +2513,18 @@ async function getAllProps(modelID){
   const props={};
   const api=ifcLoader.ifcManager.state.api;
   
-  // Product type constants - comprehensive list including MEP/Electrical
+  // Product type constants - comprehensive list including MEP/Electrical.
+  // Spatial structure types (IfcSite, IfcBuilding, IfcBuildingStorey, IfcProject,
+  // IfcSpace) are INTENTIONALLY EXCLUDED — they are abstract containers without
+  // physical geometry. Revit regenerates their GlobalIds on every IFC export,
+  // which would produce phantom "modified" issues that can't be zoomed to.
+  // Industry-standard BIM compare tools (Solibri, BIMcollab Zoom) exclude them.
   const PRODUCT_TYPES=new Set([
     IFCWALL, IFCWALLSTANDARDCASE, IFCSLAB, IFCCOLUMN, IFCBEAM,
     IFCDOOR, IFCWINDOW, IFCROOF, IFCSTAIR, IFCSTAIRFLIGHT,
     IFCRAILING, IFCPLATE, IFCMEMBER, IFCCURTAINWALL, IFCFOOTING,
     IFCBUILDINGELEMENTPROXY, IFCFURNISHINGELEMENT,
     IFCFLOWSEGMENT, IFCFLOWTERMINAL, IFCFLOWFITTING,
-    IFCSITE, IFCBUILDING, IFCBUILDINGSTOREY,
     // Numeric IFC type codes for MEP/Electrical/Plumbing
     3512223829,3588315303,1051757585,3999819293,753842376,
     2082059205,3304561284,2979338954,331165859,4252922144,
@@ -2351,10 +2578,17 @@ async function getAllProps(modelID){
     2391406946, // IfcWasteTerminal
   ].filter(Boolean));
   
+  // Defensive: even if a spatial type slips into PRODUCT_TYPES above,
+  // reject any entity that lacks Representation (3D geometry). This mirrors the
+  // check in Method 2 and guarantees issues always have something to zoom to.
+  const SPATIAL_TYPES=new Set([IFCSITE,IFCBUILDING,IFCBUILDINGSTOREY,IFCPROJECT,IFCSPACE].filter(Boolean));
+  
   // METHOD 1: Scan by type
   let found=0;
   const typeCounts={};
   for(const typeNum of PRODUCT_TYPES){
+    // Hard skip spatial types in case the list gets edited later
+    if(SPATIAL_TYPES.has(typeNum))continue;
     try{
       const lines=api.GetLineIDsWithType(modelID,typeNum);
       const cnt=lines.size();
@@ -2366,6 +2600,10 @@ async function getAllProps(modelID){
         try{
           const p=await ifcLoader.ifcManager.getItemProperties(modelID,eid,false);
           if(p?.GlobalId?.value){
+            // Defensive: only add entities that have actual 3D geometry.
+            // Prevents abstract containers (sans Representation) from becoming
+            // issues that can't be zoomed to. Mirrors the check in Method 2.
+            if(!p.Representation)continue;
             props[p.GlobalId.value]={expressID:eid,globalId:p.GlobalId.value,type:typeName,name:p.Name?.value||'',description:p.Description?.value||'',objectType:p.ObjectType?.value||'',tag:p.Tag?.value||''};
             found++;
           }
@@ -4890,7 +5128,7 @@ function walkLoop(){
   walkAnimId=requestAnimationFrame(walkLoop);
 }
 
-initThree();initSectionDrag();log('Ready');
+initThree();initSectionDrag();initViewCube();log('Ready');
 </script>
 </body>
 </html>

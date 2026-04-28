@@ -17,9 +17,34 @@
   --indigo:#6366f1;--indigo-bg:rgba(99,102,241,.06);
   --radius:8px;--t:.15s ease;
 }
+/* ── Resizable layout ──────────────────────────────────────────────────
+   Column widths (left sidebar, right Properties panel) and bottom-panel
+   height (clash config) are stored in CSS variables so drag handles can
+   update them live. JS clamps the values to the min/max ranges below;
+   defaults match the legacy fixed widths so first-load looks unchanged. */
+:root{
+  --lcol: 300px;   /* left sidebar  — clamped 180–480 by drag JS */
+  --rcol: 320px;   /* right panel   — clamped 220–600 by drag JS */
+  --bottom-h: 320px; /* clash bottom panel height when shown — clamped 200–70vh */
+  --resize-w: 4px; /* width of column drag dividers */
+  --resize-h: 5px; /* height of row drag dividers */
+}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
-.app{display:grid;grid-template-rows:52px 1fr;grid-template-columns:300px 1fr 320px;height:100vh}
+/* Grid: header row spans full width; below, 5 columns: lcol | resize | viewport | resize | rcol */
+.app{display:grid;grid-template-rows:52px 1fr;grid-template-columns:var(--lcol) var(--resize-w) 1fr var(--resize-w) var(--rcol);height:100vh}
+/* Drag handles: 4px wide, transparent until hover, blue on active drag */
+.col-resize{background:transparent;cursor:col-resize;position:relative;z-index:20;transition:background var(--t)}
+.col-resize:hover,.col-resize.dragging{background:var(--blue)}
+.col-resize::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:2px;height:30px;background:var(--border);border-radius:1px;pointer-events:none}
+.col-resize:hover::after,.col-resize.dragging::after{background:rgba(255,255,255,.7)}
+.row-resize{height:var(--resize-h);background:transparent;cursor:row-resize;position:relative;z-index:20;transition:background var(--t);flex-shrink:0}
+.row-resize:hover,.row-resize.dragging{background:var(--blue)}
+.row-resize::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30px;height:2px;background:var(--border);border-radius:1px;pointer-events:none}
+.row-resize:hover::after,.row-resize.dragging::after{background:rgba(255,255,255,.7)}
+/* While dragging, disable text selection across the whole app */
+body.resizing,body.resizing *{user-select:none !important;cursor:col-resize !important}
+body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-resize !important}
 
 /* Header */
 .header{grid-column:1/-1;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;z-index:50}
@@ -160,8 +185,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .ti-id{font-family:'JetBrains Mono';font-size:10px;color:var(--text-muted)}
 
 /* Viewport */
-.viewport-area{position:relative;overflow:hidden;background:#e8ecf2}
-.viewport-area canvas{display:block}
+/* vpArea is a flex column. The 3D canvas wrapper (#vpCanvas) flexes to the
+   available height; when clash bottom panel is shown it claims a portion of
+   the height so the canvas shrinks naturally. The renderer reads its size
+   from #vpCanvas (not vpArea) so resizing the bottom panel automatically
+   reflows the 3D view without any layout glitches. */
+.viewport-area{position:relative;overflow:hidden;background:#e8ecf2;display:flex;flex-direction:column}
+.viewport-canvas{flex:1;position:relative;min-height:0;overflow:hidden}
+.viewport-canvas canvas{display:block;position:absolute;inset:0}
 
 /* ── View Cube (Revit-style 3D navigation gizmo) ────────────────────── */
 /* Small canvas anchored top-right of the viewport. Click face/edge/corner
@@ -282,15 +313,40 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .right-panel{background:var(--bg-panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .ph{padding:9px 12px;font-family:'JetBrains Mono';font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--border);flex-shrink:0}
 .prop-area{flex:1;overflow-y:auto}
+/* ── Properties panel — Dalux-style grouped accordion ─────────────────
+   Each property group ("Identity", "Type", "Pset_*", etc.) is now a
+   collapsible row with an arrow + name + count. Default state is
+   collapsed for everything except Identity (the most-likely-needed
+   info). Toolbar at top has Expand all / Collapse all buttons. */
+.prop-toolbar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.prop-toolbar-title{flex:1;min-width:0;font-family:'Inter';font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prop-toolbar-count{font-family:'JetBrains Mono';font-size:11px;font-weight:600;color:#fff;background:var(--text-muted);border-radius:10px;padding:1px 8px;flex-shrink:0}
+.prop-toolbar-btn{background:var(--bg-panel);border:1px solid var(--border);border-radius:3px;padding:3px 8px;font-size:11px;color:var(--text-dim);cursor:pointer;font-family:'Inter';white-space:nowrap;transition:all var(--t)}
+.prop-toolbar-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-bg)}
+.prop-toolbar-btn-icon{padding:3px 6px;font-size:13px;line-height:1}
+/* Group container — header row + collapsible body */
+.prop-group{border-bottom:1px solid var(--border)}
+.prop-group-hdr{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;user-select:none;transition:background var(--t)}
+.prop-group-hdr:hover{background:var(--bg-hover)}
+.prop-group-arr{font-size:9px;color:var(--text-muted);transition:transform .15s ease;width:9px;flex-shrink:0}
+.prop-group-hdr.expanded .prop-group-arr{transform:rotate(90deg)}
+.prop-group-name{flex:1;font-family:'Inter';font-size:13px;font-weight:600;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prop-group-cnt{font-family:'JetBrains Mono';font-size:10px;color:var(--text-muted);background:var(--bg-panel);border:1px solid var(--border);border-radius:3px;padding:1px 6px;flex-shrink:0;min-width:22px;text-align:center}
+/* Body collapsed by default; expanded class shows it */
+.prop-group-body{display:none;padding:0 10px 8px 26px;background:var(--bg-card)}
+.prop-group-hdr.expanded + .prop-group-body{display:block}
+/* Element header banner (the blue strip with #ID) */
+.prop-eid-banner{padding:8px 12px;background:var(--blue-lt);border-bottom:1px solid var(--border);font-family:'JetBrains Mono';font-size:13px;font-weight:700;color:var(--blue)}
+/* Rows: kept but tightened for accordion context. Two-column key-value
+   grid; long names wrap word-by-word (no break-all that would shred digits). */
+.pr{display:grid;grid-template-columns:minmax(100px,140px) 1fr;column-gap:10px;row-gap:2px;padding:3px 0;font-size:12px;border-bottom:1px solid rgba(213,217,226,.35);align-items:start}
+.pr:last-child{border-bottom:none}
+.pk{font-family:'JetBrains Mono';font-size:11px;color:var(--text-muted);font-weight:500;word-break:break-word;overflow-wrap:break-word;line-height:1.35;padding-top:1px}
+.pv{color:var(--text-dim);word-break:break-word;overflow-wrap:break-word;font-size:12px;line-height:1.4;min-width:0}
+/* Legacy .ps / .ps-t kept as fallback for any code path that still uses
+   the flat-section format. New showProps() goes through prop-group. */
 .ps{border-bottom:1px solid var(--border);padding:10px 12px}
 .ps-t{font-family:'JetBrains Mono';font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);margin-bottom:8px;word-break:break-word}
-/* Property row: label column auto-sizes between 100-140px so long field names
-   ("GrossCrossSectionArea") don't get truncated or collide with value. Both
-   columns handle overflow with normal word-wrap (break-word) so numbers and
-   names can wrap cleanly without breaking in the middle of a digit. */
-.pr{display:grid;grid-template-columns:minmax(100px,140px) 1fr;column-gap:10px;row-gap:2px;padding:4px 0;font-size:13px;border-bottom:1px solid rgba(213,217,226,.4);align-items:start}
-.pk{font-family:'JetBrains Mono';font-size:11px;color:var(--text-muted);font-weight:500;word-break:break-word;overflow-wrap:break-word;line-height:1.35;padding-top:1px}
-.pv{color:var(--text-dim);word-break:break-word;overflow-wrap:break-word;font-size:13px;line-height:1.35;min-width:0}
 .dv-old{padding:2px 5px;border-radius:3px;background:var(--red-lt);color:var(--red);font-family:'JetBrains Mono';font-size:12px;text-decoration:line-through}
 .dv-new{padding:2px 5px;border-radius:3px;background:var(--green-lt);color:var(--green);font-family:'JetBrains Mono';font-size:12px}
 
@@ -314,12 +370,78 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 /* Measure info bar */
 .measure-info{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:6px 14px;background:var(--bg-panel);border:1px solid var(--blue);border-radius:8px;z-index:10;box-shadow:0 2px 12px rgba(0,0,0,.1)}
 
-/* Clash Detection */
-.clash-panel{display:none;flex-direction:column;overflow:hidden;flex:1}
+/* Clash Detection — bottom panel
+   The clash setup UI used to live cramped in the left sidebar. It now
+   docks at the bottom of the viewport area as a wide horizontal panel,
+   like BIMcollab Zoom's clash workspace. The user can drag a horizontal
+   handle at the top to resize. Inside, the config block uses a 2-column
+   row layout (Source/Target side-by-side); results table sits below in
+   a scroll area. */
+.clash-panel{display:none;flex-direction:column;background:var(--bg-panel);border-top:1px solid var(--border);height:var(--bottom-h);min-height:200px;flex-shrink:0;overflow:hidden}
 .clash-panel.show{display:flex}
-.clash-header{padding:0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;max-height:55vh}
+/* Config region — scrollable if content taller than panel height. The
+   config has 2 sub-sections (Source set + Target set) side by side, plus
+   the bottom config grid (Type / Tolerances / Include results) and
+   description. We allow vertical scroll inside if content overflows. */
+.clash-header{padding:0;display:flex;flex-direction:column;flex-shrink:1;overflow-y:auto;min-height:0;max-height:60%}
+/* When the panel is in bottom-dock mode, lay out source/target as 2 cols. */
+.clash-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.clash-bottom-grid > .clash-set-section{background:var(--bg-card);border-bottom:none}
 .clash-set{border-bottom:1px solid var(--border)}
 .clash-set-title{display:flex;align-items:center;gap:5px;padding:6px 10px;font-family:'JetBrains Mono';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);background:var(--bg-card)}
+/* ── BIMcollab-style "Edit Conflict Rule" UI ──────────────────────────
+   Replaces the old multi-select category boxes with a table-based rule
+   editor matching BIMcollab Zoom's clash workflow that BIM engineers
+   already know. Each row is one filter clause (Element Type + optional
+   Property/Operator/Value + Action). Rows are OR'd within a set. */
+.clash-rule-name-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg-card);border-bottom:1px solid var(--border)}
+.clash-rule-name-row label{font-family:'JetBrains Mono';font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);flex-shrink:0}
+.clash-rule-name{flex:1;height:24px;padding:0 8px;border:1px solid var(--border);border-radius:3px;background:var(--bg-panel);color:var(--text);font-family:'Inter';font-size:12px;outline:none}
+.clash-rule-name:focus{border-color:var(--blue)}
+.clash-presets{display:flex;align-items:center;gap:5px;padding:6px 10px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.clash-presets-lbl{font-family:'JetBrains Mono';font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-right:2px}
+.clash-preset-btn{background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--text-dim);cursor:pointer;font-family:'Inter';transition:all var(--t);white-space:nowrap}
+.clash-preset-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-bg)}
+.clash-preset-swap{margin-left:auto;border-color:var(--amber);color:var(--amber)}
+.clash-preset-swap:hover{background:rgba(217,119,6,.08);border-color:var(--amber);color:var(--amber)}
+.clash-set-section{border-bottom:1px solid var(--border);padding:8px 10px;background:var(--bg-card)}
+.clash-set-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.clash-set-title-text{font-family:'JetBrains Mono';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);display:flex;align-items:center;gap:5px}
+.clash-set-actions{display:flex;gap:3px}
+.clash-row-act{width:22px;height:22px;border:1px solid var(--border);background:var(--bg-panel);border-radius:3px;font-size:14px;font-weight:600;color:var(--blue);cursor:pointer;font-family:'JetBrains Mono';line-height:1}
+.clash-row-act:hover{border-color:var(--blue);background:var(--blue-bg)}
+.clash-rule-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid var(--border);background:var(--bg-panel)}
+.clash-rule-table thead{background:var(--bg-card)}
+.clash-rule-table th{text-align:left;padding:4px 6px;font-family:'JetBrains Mono';font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.clash-rule-table td{padding:2px 4px;border-bottom:1px solid var(--border)}
+.clash-rule-table td:last-child{border-right:none}
+.clash-rule-table tbody tr:last-child td{border-bottom:none}
+.clash-rule-table select,.clash-rule-table input{width:100%;height:22px;padding:0 5px;border:1px solid transparent;border-radius:2px;font-family:'Inter';font-size:11px;background:transparent;color:var(--text);outline:none}
+.clash-rule-table select:hover,.clash-rule-table input:hover{border-color:var(--border);background:var(--bg-card)}
+.clash-rule-table select:focus,.clash-rule-table input:focus{border-color:var(--blue);background:var(--bg-card)}
+.clash-rule-row-action{display:flex;align-items:center;gap:3px}
+.clash-rule-row-action select{flex:1}
+.clash-row-del{width:18px;height:18px;border:none;background:none;color:var(--red);cursor:pointer;font-size:14px;line-height:1;flex-shrink:0;opacity:.6;border-radius:2px}
+.clash-row-del:hover{opacity:1;background:var(--red-lt)}
+.clash-include-parts{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim);cursor:pointer;margin-top:6px;font-family:'Inter'}
+.clash-include-parts input{margin:0}
+.clash-config-grid{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;padding:8px 10px;background:var(--bg-card);border-bottom:1px solid var(--border)}
+.clash-config-block{display:flex;flex-direction:column;gap:4px}
+.clash-config-title{font-family:'JetBrains Mono';font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:2px}
+.clash-cb{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim);cursor:pointer;font-family:'Inter'}
+.clash-cb input{margin:0}
+.clash-radio{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);cursor:pointer;font-family:'Inter'}
+.clash-radio input{margin:0;width:11px;height:11px}
+.clash-tol-row{display:flex;align-items:center;gap:5px}
+.clash-tol-row .clash-cb{flex:1}
+.clash-tol-sub{padding-left:18px;gap:10px}
+.clash-tol-lbl{flex:1;font-size:11px;color:var(--text-dim);font-family:'Inter'}
+.clash-input-tiny{width:60px;height:20px;padding:0 4px;border:1px solid var(--border);border-radius:3px;font-family:'JetBrains Mono';font-size:10px;background:var(--bg-panel);color:var(--text);outline:none}
+.clash-input-tiny:focus{border-color:var(--blue)}
+.clash-unit{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono';width:24px;flex-shrink:0}
+.clash-desc-block{padding:6px 10px;background:var(--bg-card);border-bottom:1px solid var(--border)}
+.clash-desc{width:100%;border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-family:'Inter';font-size:11px;color:var(--text);background:var(--bg-panel);outline:none;resize:vertical;min-height:32px}
+.clash-desc:focus{border-color:var(--blue)}
 .cs-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .clash-file-tag{font-size:10px;font-weight:400;color:var(--text-muted);margin-left:auto;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:none;letter-spacing:0}
 .clash-set-body{padding:5px 10px 8px}
@@ -366,7 +488,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .clash-group-body .clash-card{margin:0;border-radius:0;border-left:0;border-right:0;border-top:0}
 
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-@media(max-width:1100px){.app{grid-template-columns:240px 1fr 0}.right-panel{display:none}}
+@media(max-width:1100px){.app{grid-template-columns:240px 0 1fr 0 0}.col-resize{display:none}.right-panel{display:none}}
 
 /* ── Auth UI ────────────────────────────────────────────────── */
 /* Full-page overlay shown while auth state is unknown OR user is logged out. */
@@ -637,52 +759,243 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
     <div class="entity-tree" id="eTree"></div>
     <div class="issues-list" id="issuesList"></div>
     
-    <!-- Clash Detection Panel -->
+  </div>
+
+  <!-- Drag handle: resize left sidebar width -->
+  <div class="col-resize" id="lresize" title="Drag to resize sidebar"></div>
+  <div class="viewport-area" id="vpArea">
+    <!-- 3D canvas wrapper — Three.js renderer reads this element's size -->
+    <div class="viewport-canvas" id="vpCanvas">
+      <div class="empty-vp" id="emptyVP"><div class="ev-icon">🏗️</div><div class="ev-title">IFC 3D Version Compare</div><div class="ev-hint">Upload 2 IFC files and click Compare</div></div>
+      <!-- View cube: click cube face to snap to that orthogonal view. Home below resets. -->
+      <div class="view-cube" id="viewCube" title="Click a face to snap to view"></div>
+      <div class="view-cube-home" id="viewCubeHome" title="Reset view" onclick="resetCam()">⌂</div>
+      <div class="vp-overlay" id="vpLegend">
+        <div class="leg"><div class="leg-d" style="background:var(--green)"></div>Added</div>
+        <div class="leg"><div class="leg-d" style="background:var(--red)"></div>Removed</div>
+        <div class="leg"><div class="leg-d" style="background:var(--amber)"></div>Modified</div>
+      </div>
+      <div class="vp-overlay" id="vpClashLegend">
+        <div class="leg"><div class="leg-d" style="background:#ff1744"></div>Hard clash</div>
+        <div class="leg"><div class="leg-d" style="background:#ff9100"></div>Clearance</div>
+      </div>
+      <!-- Colorize panel — 2 modes: Auto (color by property) and Rules (user-defined) -->
+      <div class="colorize-panel" id="colorizePanel">
+        <div class="cz-head">
+          <div class="cz-title" id="czTitle">Colorize</div>
+          <button class="cz-x" onclick="colorizeToggleCollapse()" title="Collapse / expand" id="czCollapseBtn">–</button>
+          <button class="cz-x" onclick="toggleColorize()" title="Close">×</button>
+        </div>
+        <!-- Everything below the header is inside czBody so collapse can hide it -->
+        <div id="czBody" style="display:flex;flex-direction:column;min-height:0;flex:1">
+        <!-- Mode tabs -->
+        <div class="cz-tabs">
+          <button class="cz-tab active" id="czTabAuto" onclick="colorizeSetMode('auto')">Auto</button>
+          <button class="cz-tab" id="czTabRules" onclick="colorizeSetMode('rules')">Rules</button>
+        </div>
+
+        <!-- AUTO mode: color by property -->
+        <div id="czViewAuto">
+          <div class="cz-ctrls">
+            <div>
+              <div class="cz-label" style="margin-bottom:4px">Color by</div>
+              <select class="cz-select" id="czProp" onchange="applyColorize()">
+                <option value="category">Category (Revit)</option>
+                <option value="type">Type / ObjectType</option>
+                <option value="file">File (A vs B)</option>
+              </select>
+            </div>
+          </div>
+          <div class="cz-list" id="czList">
+            <div class="cz-list-empty">Load IFC files and pick a property above.</div>
+          </div>
+        </div>
+
+        <!-- RULES mode: user-defined rules with AND conditions, OR between rules -->
+        <div id="czViewRules" style="display:none;flex:1;min-height:0;flex-direction:column">
+          <div class="cz-rules" id="czRules">
+            <div class="cz-list-empty">No rules yet.<br>Click <b>+ Add rule</b> to create one.<br><span style="font-size:11px">First matching rule wins.</span></div>
+          </div>
+          <button class="cz-rule-add" onclick="colorizeAddRule()">+ Add rule</button>
+        </div>
+
+        <!-- Saved schemes dropdown (shown when user clicks "Load") -->
+        <div id="czSchemesPanel" class="cz-schemes" style="display:none"></div>
+
+        <div class="cz-foot">
+          <button onclick="colorizeSaveScheme()" title="Save current settings as a named scheme">💾 Save</button>
+          <button onclick="colorizeToggleSchemesPanel()" title="Load a saved scheme">📂 Load</button>
+          <button onclick="colorizeResetColors()" title="Re-randomize colors (Auto) or clear all rules (Rules)">↻ Reset</button>
+          <button class="primary" onclick="colorizeClear()" title="Turn off coloring and restore materials">Clear</button>
+        </div>
+        </div><!-- /czBody -->
+      </div>
+      <div class="section-panel" id="sectionPanel">
+        <div class="sp-title">Section Box</div>
+        <div class="sp-row"><span class="sp-label">X+</span><input type="range" class="sp-slider" id="slXp" min="0" max="100" value="100" oninput="updateSectionFromSliders()"><span class="sp-val" id="vXp">100%</span></div>
+        <div class="sp-row"><span class="sp-label">X−</span><input type="range" class="sp-slider" id="slXn" min="0" max="100" value="0" oninput="updateSectionFromSliders()"><span class="sp-val" id="vXn">0%</span></div>
+        <div class="sp-row"><span class="sp-label">Y+</span><input type="range" class="sp-slider" id="slYp" min="0" max="100" value="100" oninput="updateSectionFromSliders()"><span class="sp-val" id="vYp">100%</span></div>
+        <div class="sp-row"><span class="sp-label">Y−</span><input type="range" class="sp-slider" id="slYn" min="0" max="100" value="0" oninput="updateSectionFromSliders()"><span class="sp-val" id="vYn">0%</span></div>
+        <div class="sp-row"><span class="sp-label">Z+</span><input type="range" class="sp-slider" id="slZp" min="0" max="100" value="100" oninput="updateSectionFromSliders()"><span class="sp-val" id="vZp">100%</span></div>
+        <div class="sp-row"><span class="sp-label">Z−</span><input type="range" class="sp-slider" id="slZn" min="0" max="100" value="0" oninput="updateSectionFromSliders()"><span class="sp-val" id="vZn">0%</span></div>
+        <button class="btn" style="width:100%;justify-content:center;margin-top:6px" onclick="resetSection()">↻ Reset Section</button>
+      </div>
+      <div class="load-ov" id="loadOv"><div class="spinner"></div><div class="load-txt" id="loadTxt">Loading...</div><div class="load-bar"><div class="load-fill" id="loadFill"></div></div></div>
+      <!-- Transparency slider -->
+      <div class="tp-panel" id="tpPanel">
+        <span style="font-size:12px;color:var(--text-muted);font-family:JetBrains Mono">Opacity</span>
+        <input type="range" id="slOpacity" min="5" max="100" value="100" style="width:120px;height:4px" oninput="setGlobalOpacity(this.value)">
+        <span id="opVal" style="font-size:12px;font-family:JetBrains Mono;color:var(--text-dim);min-width:28px">100%</span>
+      </div>
+      <!-- Measure overlay -->
+      <div class="measure-info" id="measureInfo" style="display:none">
+        <div style="display:flex;gap:2px;margin-right:6px">
+          <button id="modeDistance" onclick="setMeasureMode('distance')" style="font-size:12px;padding:2px 8px;border:1px solid var(--blue);border-radius:4px;background:var(--blue-lt);color:var(--blue);cursor:pointer;font-weight:600">📏 Distance</button>
+          <button id="modeLevel" onclick="setMeasureMode('level')" style="font-size:12px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-dim);cursor:pointer">📐 Level</button>
+        </div>
+        <span style="font-family:JetBrains Mono;font-size:14px;font-weight:600" id="measureText">Click 2 points to measure</span>
+        <button onclick="clearMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-dim);cursor:pointer;margin-left:8px">Clear</button>
+        <button onclick="toggleMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid var(--red);border-radius:4px;background:var(--red-bg);color:var(--red);cursor:pointer;margin-left:4px">✕ Exit</button>
+      </div>
+      <!-- Walk mode HUD -->
+      <div id="walkHUD" style="display:none;position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:15;padding:8px 16px;background:rgba(0,0,0,0.7);border-radius:8px;color:#fff;font-family:'JetBrains Mono';font-size:11px;text-align:center;pointer-events:none;backdrop-filter:blur(4px)">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">🚶 WALK MODE</div>
+        <div><b>WASD</b> Move · <b>QE</b> Up/Down · <b>Mouse</b> Look · <b>Shift</b> Sprint · <b>Scroll</b> Speed · <b>Esc</b> Exit</div>
+      </div>
+      <!-- Walk crosshair -->
+      <div id="walkCross" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:14;width:20px;height:20px;pointer-events:none">
+        <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.6)"></div>
+        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.6)"></div>
+      </div>
+    </div>
+    <!-- Resize handle for bottom clash panel -->
+    <div class="row-resize" id="bresize" style="display:none" title="Drag to resize clash panel"></div>
+    <!-- Clash Detection Panel — BIMcollab "Edit conflict rule" style ──────
+         Layout: rule name → Source set table → Target set table → Type +
+         Tolerances + Description. Each set is a list of rows where each row
+         is one filter clause (Element Type + optional Property/Operator/Value
+         + Action: Add / Remove). Multiple rows are OR'd together (BIMcollab
+         convention). Property filter is per-row, not per-set. -->
     <div class="clash-panel" id="clashPanel">
       <div class="clash-header">
-        <!-- Source Set (Model A) -->
-        <div class="clash-set">
-          <div class="clash-set-title"><span class="cs-dot" style="background:#ef4444"></span> Source Set (A)
-            <span class="clash-file-tag" id="clashFileA">—</span></div>
-          <div class="clash-set-body">
-            <div class="clash-field">
-              <label>Category</label>
-              <select id="clashCatA" class="clash-select" multiple></select>
+        <!-- Rule name + presets -->
+        <div class="clash-rule-name-row">
+          <label>Rule Name</label>
+          <input type="text" id="clashRuleName" class="clash-rule-name" value="Source set vs Target set" placeholder="Rule name">
+        </div>
+        <div class="clash-presets">
+          <span class="clash-presets-lbl">Quick:</span>
+          <button class="clash-preset-btn" onclick="applyClashPreset('struct-mep')" title="Structural elements vs MEP">Structure ↔ MEP</button>
+          <button class="clash-preset-btn" onclick="applyClashPreset('arch-mep')" title="Architectural vs MEP">Architecture ↔ MEP</button>
+          <button class="clash-preset-btn" onclick="applyClashPreset('struct-arch')" title="Structural vs Architectural">Structure ↔ Architecture</button>
+          <button class="clash-preset-btn" onclick="applyClashPreset('all-all')" title="All categories">All ↔ All</button>
+          <button class="clash-preset-btn clash-preset-swap" onclick="swapClashSets()" title="Swap Source ↔ Target sets">⇄ Swap</button>
+        </div>
+
+        <!-- Source + Target side-by-side (2-column grid for bottom panel) -->
+        <div class="clash-bottom-grid">
+        <!-- Source set ──────────────────────────────────────────────── -->
+        <div class="clash-set-section">
+          <div class="clash-set-title-row">
+            <span class="clash-set-title-text"><span class="cs-dot" style="background:#ef4444"></span> Source Set
+              <span class="clash-file-tag" id="clashFileA">—</span></span>
+            <div class="clash-set-actions">
+              <button class="clash-row-act" onclick="addClashRow('A')" title="Add row">+</button>
+              <button class="clash-row-act" onclick="removeLastClashRow('A')" title="Remove last row">−</button>
             </div>
-            <div id="clashFiltersA"></div>
-            <button class="clash-add-filter" onclick="addClashFilter('A')">+ Add Property Filter</button>
+          </div>
+          <table class="clash-rule-table">
+            <thead>
+              <tr>
+                <th style="width:25%">Element Type</th>
+                <th style="width:22%">Property</th>
+                <th style="width:16%">Operator</th>
+                <th style="width:22%">Value</th>
+                <th style="width:15%">Action</th>
+              </tr>
+            </thead>
+            <tbody id="clashRulesA"></tbody>
+          </table>
+          <label class="clash-include-parts">
+            <input type="checkbox" id="clashIncludePartsA" checked> Include parts
+          </label>
+        </div>
+
+        <!-- Target set ──────────────────────────────────────────────── -->
+        <div class="clash-set-section">
+          <div class="clash-set-title-row">
+            <span class="clash-set-title-text"><span class="cs-dot" style="background:#f97316"></span> Target Set
+              <span class="clash-file-tag" id="clashFileB">—</span></span>
+            <div class="clash-set-actions">
+              <button class="clash-row-act" onclick="addClashRow('B')" title="Add row">+</button>
+              <button class="clash-row-act" onclick="removeLastClashRow('B')" title="Remove last row">−</button>
+            </div>
+          </div>
+          <table class="clash-rule-table">
+            <thead>
+              <tr>
+                <th style="width:25%">Element Type</th>
+                <th style="width:22%">Property</th>
+                <th style="width:16%">Operator</th>
+                <th style="width:22%">Value</th>
+                <th style="width:15%">Action</th>
+              </tr>
+            </thead>
+            <tbody id="clashRulesB"></tbody>
+          </table>
+          <label class="clash-include-parts">
+            <input type="checkbox" id="clashIncludePartsB" checked> Include parts
+          </label>
+        </div>
+
+        </div><!-- /clash-bottom-grid -->
+
+        <!-- Bottom config: Type + Tolerances ──────────────────────── -->
+        <div class="clash-config-grid">
+          <div class="clash-config-block">
+            <div class="clash-config-title">Type</div>
+            <label class="clash-cb"><input type="checkbox" id="clashTypeClash" checked> Clash</label>
+            <label class="clash-cb"><input type="checkbox" id="clashTypeDuplicate"> Duplicate</label>
+            <label class="clash-cb"><input type="checkbox" id="clashTypeDistance"> Distance</label>
+          </div>
+          <div class="clash-config-block">
+            <div class="clash-config-title">Tolerances</div>
+            <div class="clash-tol-row">
+              <label class="clash-cb">
+                <input type="checkbox" id="clashTolBoxSize"> Clash box size
+              </label>
+              <input type="number" id="clashTolBoxSizeVal" class="clash-input-tiny" value="0" min="0" step="1">
+              <span class="clash-unit">mm</span>
+            </div>
+            <div class="clash-tol-row clash-tol-sub">
+              <label class="clash-radio"><input type="radio" name="clashTolBoxSide" id="clashTolShortest"> Shortest side</label>
+              <label class="clash-radio"><input type="radio" name="clashTolBoxSide" id="clashTolLongest" checked> Longest side</label>
+            </div>
+            <div class="clash-tol-row">
+              <label class="clash-cb">
+                <input type="checkbox" id="clashTolBoxVol"> Clash box volume
+              </label>
+              <input type="number" id="clashTolBoxVolVal" class="clash-input-tiny" value="0" min="0" step="0.001">
+              <span class="clash-unit">m³</span>
+            </div>
+            <div class="clash-tol-row">
+              <label class="clash-tol-lbl">Minimum distance</label>
+              <input type="number" id="clashTolMinDist" class="clash-input-tiny" value="0" min="0" step="1">
+              <span class="clash-unit">mm</span>
+            </div>
+          </div>
+          <div class="clash-config-block">
+            <div class="clash-config-title">Include results from a single:</div>
+            <label class="clash-cb"><input type="checkbox" id="clashSingleModel" checked> Model</label>
+            <label class="clash-cb"><input type="checkbox" id="clashSingleSystem"> System</label>
+            <label class="clash-cb"><input type="checkbox" id="clashSingleComponent"> Component</label>
           </div>
         </div>
-        <!-- Target Set (Model B) -->
-        <div class="clash-set">
-          <div class="clash-set-title"><span class="cs-dot" style="background:#f97316"></span> Target Set (B)
-            <span class="clash-file-tag" id="clashFileB">—</span></div>
-          <div class="clash-set-body">
-            <div class="clash-field">
-              <label>Category</label>
-              <select id="clashCatB" class="clash-select" multiple></select>
-            </div>
-            <div id="clashFiltersB"></div>
-            <button class="clash-add-filter" onclick="addClashFilter('B')">+ Add Property Filter</button>
-          </div>
-        </div>
-        <!-- Options -->
-        <div class="clash-options">
-          <div class="clash-field" style="flex:1">
-            <label>Type</label>
-            <select id="clashType" class="clash-select">
-              <option value="hard">Hard Clash</option>
-              <option value="clearance">Clearance</option>
-              <option value="both" selected>Both</option>
-            </select>
-          </div>
-          <div class="clash-field" style="width:80px">
-            <label>Tolerance</label>
-            <div style="display:flex;align-items:center;gap:2px">
-              <input type="number" id="clashTolerance" value="0" min="0" max="500" step="1" class="clash-input">
-              <span style="font-size:10px;color:var(--text-muted)">mm</span>
-            </div>
-          </div>
+
+        <!-- Description -->
+        <div class="clash-desc-block">
+          <div class="clash-config-title">Description</div>
+          <textarea id="clashDescription" class="clash-desc" rows="2" placeholder="Optional rule description (saved with BCF export)"></textarea>
         </div>
       </div>
       <div class="clash-stats" id="clashStats" style="display:none">
@@ -706,110 +1019,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       </div>
     </div>
   </div>
-
-  <div class="viewport-area" id="vpArea">
-    <div class="empty-vp" id="emptyVP"><div class="ev-icon">🏗️</div><div class="ev-title">IFC 3D Version Compare</div><div class="ev-hint">Upload 2 IFC files and click Compare</div></div>
-    <!-- View cube: click cube face to snap to that orthogonal view. Home below resets. -->
-    <div class="view-cube" id="viewCube" title="Click a face to snap to view"></div>
-    <div class="view-cube-home" id="viewCubeHome" title="Reset view" onclick="resetCam()">⌂</div>
-    <div class="vp-overlay" id="vpLegend">
-      <div class="leg"><div class="leg-d" style="background:var(--green)"></div>Added</div>
-      <div class="leg"><div class="leg-d" style="background:var(--red)"></div>Removed</div>
-      <div class="leg"><div class="leg-d" style="background:var(--amber)"></div>Modified</div>
-    </div>
-    <div class="vp-overlay" id="vpClashLegend">
-      <div class="leg"><div class="leg-d" style="background:#ff1744"></div>Hard clash</div>
-      <div class="leg"><div class="leg-d" style="background:#ff9100"></div>Clearance</div>
-    </div>
-    <!-- Colorize panel — 2 modes: Auto (color by property) and Rules (user-defined) -->
-    <div class="colorize-panel" id="colorizePanel">
-      <div class="cz-head">
-        <div class="cz-title" id="czTitle">Colorize</div>
-        <button class="cz-x" onclick="colorizeToggleCollapse()" title="Collapse / expand" id="czCollapseBtn">–</button>
-        <button class="cz-x" onclick="toggleColorize()" title="Close">×</button>
-      </div>
-      <!-- Everything below the header is inside czBody so collapse can hide it -->
-      <div id="czBody" style="display:flex;flex-direction:column;min-height:0;flex:1">
-      <!-- Mode tabs -->
-      <div class="cz-tabs">
-        <button class="cz-tab active" id="czTabAuto" onclick="colorizeSetMode('auto')">Auto</button>
-        <button class="cz-tab" id="czTabRules" onclick="colorizeSetMode('rules')">Rules</button>
-      </div>
-
-      <!-- AUTO mode: color by property -->
-      <div id="czViewAuto">
-        <div class="cz-ctrls">
-          <div>
-            <div class="cz-label" style="margin-bottom:4px">Color by</div>
-            <select class="cz-select" id="czProp" onchange="applyColorize()">
-              <option value="category">Category (Revit)</option>
-              <option value="type">Type / ObjectType</option>
-              <option value="file">File (A vs B)</option>
-            </select>
-          </div>
-        </div>
-        <div class="cz-list" id="czList">
-          <div class="cz-list-empty">Load IFC files and pick a property above.</div>
-        </div>
-      </div>
-
-      <!-- RULES mode: user-defined rules with AND conditions, OR between rules -->
-      <div id="czViewRules" style="display:none;flex:1;min-height:0;flex-direction:column">
-        <div class="cz-rules" id="czRules">
-          <div class="cz-list-empty">No rules yet.<br>Click <b>+ Add rule</b> to create one.<br><span style="font-size:11px">First matching rule wins.</span></div>
-        </div>
-        <button class="cz-rule-add" onclick="colorizeAddRule()">+ Add rule</button>
-      </div>
-
-      <!-- Saved schemes dropdown (shown when user clicks "Load") -->
-      <div id="czSchemesPanel" class="cz-schemes" style="display:none"></div>
-
-      <div class="cz-foot">
-        <button onclick="colorizeSaveScheme()" title="Save current settings as a named scheme">💾 Save</button>
-        <button onclick="colorizeToggleSchemesPanel()" title="Load a saved scheme">📂 Load</button>
-        <button onclick="colorizeResetColors()" title="Re-randomize colors (Auto) or clear all rules (Rules)">↻ Reset</button>
-        <button class="primary" onclick="colorizeClear()" title="Turn off coloring and restore materials">Clear</button>
-      </div>
-      </div><!-- /czBody -->
-    </div>
-    <div class="section-panel" id="sectionPanel">
-      <div class="sp-title">Section Box</div>
-      <div class="sp-row"><span class="sp-label">X+</span><input type="range" class="sp-slider" id="slXp" min="0" max="100" value="100" oninput="updateSectionFromSliders()"><span class="sp-val" id="vXp">100%</span></div>
-      <div class="sp-row"><span class="sp-label">X−</span><input type="range" class="sp-slider" id="slXn" min="0" max="100" value="0" oninput="updateSectionFromSliders()"><span class="sp-val" id="vXn">0%</span></div>
-      <div class="sp-row"><span class="sp-label">Y+</span><input type="range" class="sp-slider" id="slYp" min="0" max="100" value="100" oninput="updateSectionFromSliders()"><span class="sp-val" id="vYp">100%</span></div>
-      <div class="sp-row"><span class="sp-label">Y−</span><input type="range" class="sp-slider" id="slYn" min="0" max="100" value="0" oninput="updateSectionFromSliders()"><span class="sp-val" id="vYn">0%</span></div>
-      <div class="sp-row"><span class="sp-label">Z+</span><input type="range" class="sp-slider" id="slZp" min="0" max="100" value="100" oninput="updateSectionFromSliders()"><span class="sp-val" id="vZp">100%</span></div>
-      <div class="sp-row"><span class="sp-label">Z−</span><input type="range" class="sp-slider" id="slZn" min="0" max="100" value="0" oninput="updateSectionFromSliders()"><span class="sp-val" id="vZn">0%</span></div>
-      <button class="btn" style="width:100%;justify-content:center;margin-top:6px" onclick="resetSection()">↻ Reset Section</button>
-    </div>
-    <div class="load-ov" id="loadOv"><div class="spinner"></div><div class="load-txt" id="loadTxt">Loading...</div><div class="load-bar"><div class="load-fill" id="loadFill"></div></div></div>
-    <!-- Transparency slider -->
-    <div class="tp-panel" id="tpPanel">
-      <span style="font-size:12px;color:var(--text-muted);font-family:JetBrains Mono">Opacity</span>
-      <input type="range" id="slOpacity" min="5" max="100" value="100" style="width:120px;height:4px" oninput="setGlobalOpacity(this.value)">
-      <span id="opVal" style="font-size:12px;font-family:JetBrains Mono;color:var(--text-dim);min-width:28px">100%</span>
-    </div>
-    <!-- Measure overlay -->
-    <div class="measure-info" id="measureInfo" style="display:none">
-      <div style="display:flex;gap:2px;margin-right:6px">
-        <button id="modeDistance" onclick="setMeasureMode('distance')" style="font-size:12px;padding:2px 8px;border:1px solid var(--blue);border-radius:4px;background:var(--blue-lt);color:var(--blue);cursor:pointer;font-weight:600">📏 Distance</button>
-        <button id="modeLevel" onclick="setMeasureMode('level')" style="font-size:12px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-dim);cursor:pointer">📐 Level</button>
-      </div>
-      <span style="font-family:JetBrains Mono;font-size:14px;font-weight:600" id="measureText">Click 2 points to measure</span>
-      <button onclick="clearMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-dim);cursor:pointer;margin-left:8px">Clear</button>
-      <button onclick="toggleMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid var(--red);border-radius:4px;background:var(--red-bg);color:var(--red);cursor:pointer;margin-left:4px">✕ Exit</button>
-    </div>
-    <!-- Walk mode HUD -->
-    <div id="walkHUD" style="display:none;position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:15;padding:8px 16px;background:rgba(0,0,0,0.7);border-radius:8px;color:#fff;font-family:'JetBrains Mono';font-size:11px;text-align:center;pointer-events:none;backdrop-filter:blur(4px)">
-      <div style="font-size:13px;font-weight:700;margin-bottom:4px">🚶 WALK MODE</div>
-      <div><b>WASD</b> Move · <b>QE</b> Up/Down · <b>Mouse</b> Look · <b>Shift</b> Sprint · <b>Scroll</b> Speed · <b>Esc</b> Exit</div>
-    </div>
-    <!-- Walk crosshair -->
-    <div id="walkCross" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:14;width:20px;height:20px;pointer-events:none">
-      <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.6)"></div>
-      <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.6)"></div>
-    </div>
-  </div>
+  <!-- Drag handle: resize right Properties panel width -->
+  <div class="col-resize" id="rresize" title="Drag to resize Properties panel"></div>
 
   <div class="right-panel">
     <div class="ph">Properties</div>
@@ -1354,7 +1565,11 @@ function log(...a){console.log('[IFC]',...a)}
 
 // ══ Three.js ══
 function initThree(){
-  const c=document.getElementById('vpArea');
+  // Renderer attaches to #vpCanvas (the flex child inside vpArea), NOT vpArea
+  // itself. vpArea now also contains the resizable clash bottom panel; sizing
+  // the canvas to vpCanvas means the 3D view automatically reflows when the
+  // bottom panel grows/shrinks via its row-resize handle.
+  const c=document.getElementById('vpCanvas');
   scene=new THREE.Scene();
   scene.background=new THREE.Color(0xe8ecf2);
 
@@ -1415,8 +1630,8 @@ function initThree(){
     accum:0,                         // remaining zoom to apply (log factor)
     pivot:new THREE.Vector3(),       // zoom anchor (raycasted scene point)
     pivotValid:false,                // false means recompute on next event
-    stepBase:Math.log(1.12),         // log factor per wheel tick (~12%)
-    easing:0.22,                     // fraction of accum consumed per frame
+    stepBase:Math.log(1.08),         // log factor per wheel tick (~8%) — smaller = finer
+    easing:0.15,                     // fraction of accum consumed per frame — lower = smoother glide
   };
   {
     const zoomRay=new THREE.Raycaster();
@@ -1445,10 +1660,25 @@ function initThree(){
         }
         zs.pivotValid=true;
       }
-      // Accumulate zoom. Positive = zoom out, negative = zoom in (matches log of factor).
-      // Normalize deltaY: different devices give very different magnitudes.
-      // Chrome trackpad: ~4 per tick; MX Master: ~100. We clamp to 1 per tick.
-      const ticks = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY)/100, 3);
+      // ── Normalize wheel input to consistent ticks ──
+      // Browsers report deltaY differently:
+      //   deltaMode 0 (pixels): Chrome trackpad ~4-16, mouse wheel ~100-150
+      //   deltaMode 1 (lines):  Firefox usually sends 3 per notch
+      //   deltaMode 2 (pages):  rare
+      // We convert all to a normalized "tick" where 1 tick = 1 mouse-wheel notch,
+      // then clamp the per-event delta so a fast trackpad fling doesn't blast
+      // the camera through the model in one frame.
+      let ticks;
+      if(e.deltaMode===1){           // lines (Firefox)
+        ticks = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 3);
+      }else if(e.deltaMode===2){     // pages
+        ticks = Math.sign(e.deltaY) * 3;
+      }else{                          // pixels (default)
+        // 100px ≈ one wheel notch on most mice; trackpad sends much smaller
+        // amounts more frequently — divide by 100 then clamp to 1 max per
+        // event so trackpad scrolls feel paced like wheel notches.
+        ticks = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY)/100, 1);
+      }
       zs.accum += ticks * zs.stepBase;
     },{passive:false});
   }
@@ -1583,20 +1813,38 @@ function initThree(){
           const sub=ifcLoader.ifcManager.createSubset({modelID,ids:[foundEid],material:window._hlMat,scene,removePrevious:true});
           if(sub){sub.position.copy(loadedModels[targetModelIdx].position);sub.updateMatrixWorld(true);window._lastHL={subset:sub,mid:modelID}}
         }catch(he){log('Highlight err:',he.message)}
-        // ── Set orbit pivot to the picked element ──
-        // Revit-style: clicking an element should make it the rotation center.
-        // We keep the camera in place — just move controls.target to the
-        // element's bbox center so the next orbit drag pivots around it.
+        // ── Set orbit pivot to the picked element (deferred) ──
+        // Revit-style: clicking should NOT move the camera or change the view
+        // at all. The pivot is only switched when the user starts rotating.
+        //
+        // We store the picked element's center as `_pendingPivot`. The
+        // pointerdown handler (set up at bottom of init) checks this and,
+        // when a rotate-drag is starting, switches controls.target to the
+        // pending pivot atomically — preserving the camera's screen-space
+        // view (camera position is shifted by the same delta as target so
+        // the relative offset is unchanged → no visible jump).
         try{
           const bb=getElementBBox(targetModelIdx, foundEid);
-          // getElementBBox returns {size:{x,y,z}, center:{x,y,z}} — not min/max
           if(bb && bb.center){
-            controls.target.set(bb.center.x, bb.center.y, bb.center.z);
+            // Stash for the rotation handler. We do NOT touch controls.target
+            // here — that would trigger OrbitControls to recompute spherical
+            // and (depending on damping) animate a small shift.
+            window._pendingPivot = new THREE.Vector3(bb.center.x, bb.center.y, bb.center.z);
+            // Stop any in-flight damping motion. After a rotate gesture, the
+            // OrbitControls' internal sphericalDelta keeps decaying for a few
+            // frames. If we left it alive, the camera would keep drifting
+            // while the user is reading the click highlight — looks like a
+            // small jump. Calling update() once with damping disabled flushes
+            // the delta, then re-enable damping for the next interaction.
+            const wasDamping=controls.enableDamping;
+            controls.enableDamping=false;
             controls.update();
-            // Also update the zoom pivot so the next scroll zooms toward this
-            // element too — matches user's mental model.
+            controls.enableDamping=wasDamping;
+            // Update zoom pivot so a wheel scroll right after click zooms
+            // toward the picked element. This is fine — wheel zoom doesn't
+            // change view orientation, just distance.
             if(window._zoomState){
-              window._zoomState.pivot.set(bb.center.x, bb.center.y, bb.center.z);
+              window._zoomState.pivot.copy(window._pendingPivot);
               window._zoomState.pivotValid=true;
               window._zoomState.accum=0;
             }
@@ -1606,7 +1854,167 @@ function initThree(){
     }catch(pe){log('Props err:',pe.message)}
   });
 
-  window.addEventListener('resize',()=>{camera.aspect=c.clientWidth/c.clientHeight;camera.updateProjectionMatrix();renderer.setSize(c.clientWidth,c.clientHeight)});
+  // ── Apply pending pivot when the user starts a rotate drag ──
+  // We intercept pointerdown in the CAPTURE phase (third arg = true) so this
+  // handler runs BEFORE OrbitControls' own pointerdown. That way, by the
+  // time OrbitControls captures the initial camera/target state for its
+  // rotation gesture, our pivot swap is already done — OrbitControls sees
+  // the new target and the (offset) camera, computes spherical from the
+  // post-swap offset, and rotation behaves correctly.
+  //
+  // View preservation: target moves to bb.center; camera shifts by the same
+  // delta. Since the camera-to-target offset is unchanged, the rendered
+  // frame is identical (no visible jump). From this drag onwards the orbit
+  // pivots around the picked element.
+  //
+  // Only consume the pivot on LEFT button (rotate). Right/middle (pan) keep
+  // the pivot pending until the user actually rotates.
+  renderer.domElement.addEventListener('pointerdown',(e)=>{
+    // ── Stale-pivot guard ──
+    // If the user clicked an element earlier (which staged a pendingPivot),
+    // then performed a pan or middle-click drag (which moves controls.target
+    // independently), the pivot is now stale: applying it on the next rotate
+    // would shift camera by a huge accumulated delta → view jumps to fit.
+    // So: any non-left button click invalidates the pending pivot before it
+    // can do harm. The user's next click on a fresh element will set a new one.
+    if(e.button!==0){
+      window._pendingPivot=null;
+      return;
+    }
+    if(!window._pendingPivot)return;
+    const newT=window._pendingPivot;
+    const dx=newT.x-controls.target.x;
+    const dy=newT.y-controls.target.y;
+    const dz=newT.z-controls.target.z;
+    // Skip if delta is negligible (target already at pivot — no work needed)
+    if(Math.abs(dx)<1e-6 && Math.abs(dy)<1e-6 && Math.abs(dz)<1e-6){
+      window._pendingPivot=null;
+      return;
+    }
+    // Sanity check: if the pivot is unreasonably far from the current target
+    // (more than 10× the camera-to-target distance), it's stale — discard
+    // rather than blast the camera into orbit. This catches cases where
+    // panning + wheel zoom moved the target hundreds of metres while the
+    // pivot still points at the originally clicked element.
+    const camDist=camera.position.distanceTo(controls.target)||1;
+    const pivotDist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    if(pivotDist > camDist*10){
+      log('Pivot rejected: stale (delta '+pivotDist.toFixed(1)+' >> camDist '+camDist.toFixed(1)+')');
+      window._pendingPivot=null;
+      return;
+    }
+    // Atomic shift: target and camera move by the same delta → camera-to-
+    // target offset is unchanged → view is pixel-identical.
+    controls.target.x = newT.x;
+    controls.target.y = newT.y;
+    controls.target.z = newT.z;
+    camera.position.x += dx;
+    camera.position.y += dy;
+    camera.position.z += dz;
+    // No controls.update() here — letting OrbitControls' own pointerdown
+    // (which fires next, in bubble phase) capture the new state freshly.
+    // Calling update() here can interfere with damping state.
+    window._pendingPivot=null;
+  }, true /* capture phase: run before OrbitControls' bubble-phase listener */);
+
+  // Wheel zoom also invalidates pendingPivot — wheel moves both camera and
+  // target via our custom wheel handler, so the pivot's relationship to the
+  // current target is broken. Without this guard, scrolling after a click
+  // leaves the pivot stale → next rotate jumps.
+  renderer.domElement.addEventListener('wheel',()=>{
+    window._pendingPivot=null;
+  }, {passive:true, capture:true});
+
+  // ── Reusable resize hook ──
+  // Called from window 'resize' event AND from the column/row drag handlers
+  // below so the 3D view matches whatever size #vpCanvas is currently. We
+  // read the size from the layout (clientWidth/Height) rather than tracking
+  // it manually — works regardless of CSS grid changes.
+  window._vpResize=function(){
+    const w=c.clientWidth, h=c.clientHeight;
+    if(!w||!h)return;
+    camera.aspect=w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w,h);
+    // One render so user sees the change immediately during drag
+    if(scene)renderer.render(scene,camera);
+  };
+  window.addEventListener('resize',()=>window._vpResize());
+
+  // ── Column/row drag handlers ──
+  // Three drag handles wired up: left sidebar width, right Properties width,
+  // bottom clash panel height. Each updates a CSS var on document root and
+  // calls _vpResize() on every mousemove so the 3D view tracks the drag.
+  // Bounds are clamped to keep panels usable (no zero-width panels, no
+  // squashed canvas).
+  const root=document.documentElement;
+  const setupColResize=(handleId, varName, getCurrent, fromLeft, minPx, maxPx)=>{
+    const handle=document.getElementById(handleId);
+    if(!handle)return;
+    let dragging=false;
+    handle.addEventListener('pointerdown',(e)=>{
+      e.preventDefault();
+      dragging=true;
+      handle.classList.add('dragging');
+      document.body.classList.add('resizing');
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove',(e)=>{
+      if(!dragging)return;
+      // Compute new width: for left sidebar, width = clientX (distance from
+      // viewport left edge). For right, width = window.innerWidth - clientX.
+      const raw = fromLeft ? e.clientX : (window.innerWidth - e.clientX);
+      const clamped = Math.max(minPx, Math.min(maxPx, raw));
+      root.style.setProperty(varName, clamped+'px');
+      window._vpResize();
+    });
+    const stop=(e)=>{
+      if(!dragging)return;
+      dragging=false;
+      handle.classList.remove('dragging');
+      document.body.classList.remove('resizing');
+      try{handle.releasePointerCapture(e.pointerId)}catch(err){}
+    };
+    handle.addEventListener('pointerup',stop);
+    handle.addEventListener('pointercancel',stop);
+  };
+  setupColResize('lresize','--lcol', null, true, 180, 480);
+  setupColResize('rresize','--rcol', null, false, 220, 600);
+
+  // Row resize for bottom clash panel — drag handle at the top of it.
+  // Clash panel anchors to bottom of viewport-area; new height = vpArea
+  // bottom edge - clientY. Clamp 200..70vh.
+  {
+    const handle=document.getElementById('bresize');
+    if(handle){
+      let dragging=false;
+      handle.addEventListener('pointerdown',(e)=>{
+        e.preventDefault();
+        dragging=true;
+        handle.classList.add('dragging');
+        document.body.classList.add('resizing-row');
+        handle.setPointerCapture(e.pointerId);
+      });
+      handle.addEventListener('pointermove',(e)=>{
+        if(!dragging)return;
+        const vpRect=c.parentElement.getBoundingClientRect(); // vpArea bbox
+        const newH = vpRect.bottom - e.clientY - 3; // 3px = half handle height
+        const maxH = Math.floor(window.innerHeight * 0.7);
+        const clamped = Math.max(200, Math.min(maxH, newH));
+        root.style.setProperty('--bottom-h', clamped+'px');
+        window._vpResize();
+      });
+      const stopR=(e)=>{
+        if(!dragging)return;
+        dragging=false;
+        handle.classList.remove('dragging');
+        document.body.classList.remove('resizing-row');
+        try{handle.releasePointerCapture(e.pointerId)}catch(err){}
+      };
+      handle.addEventListener('pointerup',stopR);
+      handle.addEventListener('pointercancel',stopR);
+    }
+  }
 
   // ── Right-click context menu using contextmenu event ──
   const ctxRay=new THREE.Raycaster();
@@ -2949,17 +3357,35 @@ function sectionAroundElement(bbox){
   if(!bbox)return;
   const b=modelBounds;
   const c=bbox.center,s=bbox.size;
-  const pad=Math.max(s.x,s.y,s.z)*0.05+0.3;
+  // Padding: 30% of element size, min 1m, max 5m — keeps thin elements from
+  // hugging the geometry too tight to see context (matches focusIssue rule).
+  const pad=Math.max(Math.min(Math.max(s.x,s.y,s.z)*0.3, 5), 1);
   
   const sx=b.max.x-b.min.x,sy=b.max.y-b.min.y,sz=b.max.z-b.min.z;
-  const toSl=(val,mn,range)=>Math.max(0,Math.min(100,Math.round(((val-mn)/range)*100)));
-  
-  document.getElementById('slXp').value=toSl(c.x+s.x/2+pad,b.min.x,sx);
-  document.getElementById('slXn').value=toSl(c.x-s.x/2-pad,b.min.x,sx);
-  document.getElementById('slYp').value=toSl(c.y+s.y/2+pad,b.min.y,sy);
-  document.getElementById('slYn').value=toSl(c.y-s.y/2-pad,b.min.y,sy);
-  document.getElementById('slZp').value=toSl(c.z+s.z/2+pad,b.min.z,sz);
-  document.getElementById('slZn').value=toSl(c.z-s.z/2-pad,b.min.z,sz);
+  // Directional rounding so X+/X- (and Y, Z) never collapse to the same
+  // integer when the element is tiny relative to the project bounds.
+  // See focusIssue for the same fix.
+  const slUp=(v,mn,r)=>Math.max(0,Math.min(100,Math.ceil( ((v-mn)/r)*100)));
+  const slDn=(v,mn,r)=>Math.max(0,Math.min(100,Math.floor(((v-mn)/r)*100)));
+  const ensureMin=(lo,hi,m)=>{
+    if(hi-lo>=m)return [lo,hi];
+    const mid=(lo+hi)/2,half=m/2;
+    let nlo=Math.max(0,Math.floor(mid-half)), nhi=Math.min(100,Math.ceil(mid+half));
+    if(nhi-nlo<m){if(nlo===0)nhi=Math.min(100,nlo+m);else nlo=Math.max(0,nhi-m)}
+    return [nlo,nhi];
+  };
+  let xLo=slDn(c.x-s.x/2-pad,b.min.x,sx), xHi=slUp(c.x+s.x/2+pad,b.min.x,sx);
+  let yLo=slDn(c.y-s.y/2-pad,b.min.y,sy), yHi=slUp(c.y+s.y/2+pad,b.min.y,sy);
+  let zLo=slDn(c.z-s.z/2-pad,b.min.z,sz), zHi=slUp(c.z+s.z/2+pad,b.min.z,sz);
+  [xLo,xHi]=ensureMin(xLo,xHi,2);
+  [yLo,yHi]=ensureMin(yLo,yHi,2);
+  [zLo,zHi]=ensureMin(zLo,zHi,2);
+  document.getElementById('slXp').value=xHi;
+  document.getElementById('slXn').value=xLo;
+  document.getElementById('slYp').value=yHi;
+  document.getElementById('slYn').value=yLo;
+  document.getElementById('slZp').value=zHi;
+  document.getElementById('slZn').value=zLo;
   
   if(!sectionActive){
     sectionActive=true;
@@ -3335,18 +3761,89 @@ async function buildCatFromModels(){
   window._catData={};
   window._catModelIDs={}; // {typeName: {0: [expressIDs], 1: [expressIDs]}}
   
-  // PRODUCT_TYPES for category filter UI.
-  // Spatial structures (Site/Building/Storey/Project/Space) are excluded to match
-  // the compare logic in getAllProps() — no point showing categories that are
-  // never compared.
+  // PRODUCT_TYPES for category filter UI + clash element-type dropdown.
+  // Critical: must include all CONCRETE IFC4 subtypes that real authoring
+  // tools (Revit, ArchiCAD, Tekla) actually emit. The abstract parent types
+  // (IfcFlowSegment, IfcFlowFitting, IfcFlowTerminal etc.) rarely appear by
+  // themselves — what shows up in real files is IfcPipeSegment, IfcPipeFitting,
+  // IfcDuctSegment, IfcCableSegment, etc. Missing those here means Categories
+  // dropdown only shows "Generic Models / Plumbing Fixtures" for big MEP files
+  // — which was the bug the user hit.
+  // Spatial structures (Site/Building/Storey/Project/Space) intentionally
+  // excluded — never a clash candidate.
   const PRODUCT_TYPES=[
+    // Architectural & structural (named imports from web-ifc)
     IFCWALL, IFCWALLSTANDARDCASE, IFCSLAB, IFCCOLUMN, IFCBEAM,
     IFCDOOR, IFCWINDOW, IFCROOF, IFCSTAIR, IFCSTAIRFLIGHT,
     IFCRAILING, IFCPLATE, IFCMEMBER, IFCCURTAINWALL, IFCFOOTING,
     IFCBUILDINGELEMENTPROXY, IFCFURNISHINGELEMENT,
+    // Abstract MEP parents (occasionally emitted directly)
     IFCFLOWSEGMENT, IFCFLOWTERMINAL, IFCFLOWFITTING,
-    3024970846,3283111854,1687234759,4136498852,1758889154,
-    4237592921,987401354,3132237377,3508470533,
+    // ── Concrete MEP subtypes (the ones Revit actually exports) ──
+    // Plumbing
+    3612865200, // IfcPipeSegment
+    310824031,  // IfcPipeFitting
+    2474470126, // IfcSanitaryTerminal
+    4252922144, // IfcStackTerminal
+    2391406946, // IfcWasteTerminal
+    1426591983, // IfcFireSuppressionTerminal
+    4207607924, // IfcValve
+    90941305,   // IfcPump
+    819412036,  // IfcFilter
+    // HVAC
+    3518393246, // IfcDuctSegment
+    342316401,  // IfcDuctFitting
+    1360408905, // IfcDuctSilencer
+    2082059205, // IfcAirTerminal
+    3304561284, // IfcAirTerminalBox
+    331165859,  // IfcFan
+    763608111,  // IfcCooledBeam
+    1469388950, // IfcCoolingTower
+    1281925730, // IfcCondenser
+    4136498852, // IfcCoil
+    3171933400, // IfcDamper
+    1758889154, // IfcCompressor
+    4237592921, // IfcChiller
+    753842376,  // IfcBoiler
+    4074379575, // IfcHumidifier
+    25142252,   // IfcUnitaryEquipment
+    3283111854, // IfcSpaceHeater
+    3026737570, // IfcTubeBundle
+    // Electrical
+    3512223829, // IfcCableCarrierFitting
+    1051757585, // IfcCableCarrierSegment
+    3999819293, // IfcCableSegment
+    1634111441, // IfcElectricAppliance
+    402227799,  // IfcElectricDistributionBoard
+    264262732,  // IfcElectricGenerator
+    3310460725, // IfcElectricMotor
+    1904799276, // IfcElectricFlowStorageDevice
+    862014818,  // IfcElectricTimeControl
+    629592764,  // IfcLightFixture
+    76236018,   // IfcLamp
+    707683696,  // IfcOutlet
+    2176052936, // IfcJunctionBox
+    3825984169, // IfcTransformer
+    1973544240, // IfcSensor
+    2979338954, // IfcAlarm
+    626022354,  // IfcController
+    3024970846, // IfcSwitchingDevice
+    987401354,  // IfcFlowMeter
+    3640358203, // IfcProtectiveDevice
+    2295281155, // IfcProtectiveDeviceTrippingUnit
+    // Generic distribution
+    1945004755, // IfcDistributionElement
+    3040386961, // IfcDistributionFlowElement
+    1658829314, // IfcEnergyConversionDevice
+    4278956645, // IfcFlowMovingDevice
+    3132237377, // IfcFlowStorageDevice
+    3508470533, // IfcFlowTreatmentDevice
+    2058353004, // IfcFlowController
+    3415622556, // IfcDistributionChamberElement
+    1335981549, // IfcDiscreteAccessory
+    1437502449, // IfcMedicalDevice
+    1687234759, // IfcShadingDevice
+    900683007,  // IfcFooting (duplicate of IFCFOOTING just to be safe)
   ];
   
   for(let idx=0;idx<2;idx++){
@@ -3998,7 +4495,7 @@ async function getAllProps(modelID){
     629592764,  // IfcLightFixture
     1437502449, // IfcMedicalDevice
     707683696,  // IfcOutlet
-    3132237377, // IfcPipeFitting  
+    310824031,  // IfcPipeFitting (correct code; was wrongly listed as 3132237377)
     3612865200, // IfcPipeSegment
     3640358203, // IfcProtectiveDevice
     2295281155, // IfcProtectiveDeviceTrippingUnit
@@ -4506,6 +5003,70 @@ function showEntityProps(item,ent){
   document.getElementById('propArea').innerHTML=h;
 }
 
+// ── Render the properties accordion (Dalux-style) ────────────────────
+// `groups` is an array of {name, rows: [{label, value, _empty?}]}.
+// Renders a sticky toolbar at top with element header + total count +
+// Expand all / Collapse all buttons, then a sequence of collapsible
+// group headers. Default state: only "Identity" expanded (the most-
+// useful info on first inspect). Click any header to toggle.
+function renderPropertiesAccordion(elementHeader, groups){
+  const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // Drop empty groups (no rows AND no _empty marker)
+  const visibleGroups = groups.filter(g=>g.rows.length>0);
+  // Default-expanded set: Identity only. Users can expand all via toolbar.
+  const DEFAULT_OPEN = new Set(['Identity']);
+  // Total row count for the toolbar badge
+  const totalRows = visibleGroups.reduce((sum,g)=>sum+g.rows.filter(r=>!r._empty).length, 0);
+
+  let html = '';
+  // Sticky toolbar with element name + total count + expand/collapse buttons.
+  // Replaces the older blue eid-banner + ps-section split — combining them
+  // into one row saves vertical space and matches Dalux's compact layout.
+  html += `<div class="prop-toolbar">
+    <span class="prop-toolbar-title">${esc(elementHeader)}</span>
+    <span class="prop-toolbar-count">${totalRows}</span>
+    <button class="prop-toolbar-btn" onclick="propAccordionToggleAll(true)" title="Expand all">⊞ Expand all</button>
+    <button class="prop-toolbar-btn" onclick="propAccordionToggleAll(false)" title="Collapse all">⊟ Collapse all</button>
+  </div>`;
+  // One row per group
+  for(const g of visibleGroups){
+    const open = DEFAULT_OPEN.has(g.name);
+    const rowCount = g.rows.filter(r=>!r._empty).length;
+    let rowsHtml = '';
+    for(const r of g.rows){
+      if(r._empty){
+        rowsHtml += `<div class="pr"><div class="pk" style="grid-column:1/-1;color:var(--text-muted);font-style:italic;font-size:11px">(no properties)</div></div>`;
+      }else{
+        rowsHtml += `<div class="pr"><div class="pk">${esc(r.label)}</div><div class="pv">${esc(r.value)}</div></div>`;
+      }
+    }
+    html += `<div class="prop-group">
+      <div class="prop-group-hdr${open?' expanded':''}" onclick="propAccordionToggle(this)">
+        <span class="prop-group-arr">▶</span>
+        <span class="prop-group-name">${esc(g.name)}</span>
+        <span class="prop-group-cnt">${rowCount}</span>
+      </div>
+      <div class="prop-group-body">${rowsHtml}</div>
+    </div>`;
+  }
+  document.getElementById('propArea').innerHTML = html;
+}
+
+// Toggle a single group header (click event handler).
+window.propAccordionToggle=function(hdr){
+  if(!hdr)return;
+  hdr.classList.toggle('expanded');
+};
+
+// Expand or collapse every group in the properties panel.
+window.propAccordionToggleAll=function(expand){
+  const headers=document.querySelectorAll('#propArea .prop-group-hdr');
+  headers.forEach(h=>{
+    if(expand)h.classList.add('expanded');
+    else      h.classList.remove('expanded');
+  });
+};
+
 async function showProps(props,modelIdx){
   const mid=loadedModels[modelIdx]?.modelID;
   const eid=props.expressID;
@@ -4616,18 +5177,29 @@ async function showProps(props,modelIdx){
     try{return await mgr.getItemProperties(mid, id, recursive)}catch(e){return null}
   };
   const esc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const addRow=(label,val)=>{
+    const addRow=(label,val)=>{
     if(val===''||val===undefined||val===null)return;
-    h+=`<div class="pr"><div class="pk">${esc(label)}</div><div class="pv">${esc(val)}</div></div>`;
+    if(!curGroup){beginGroup('Other')}
+    curGroup.rows.push({label, value: val});
   };
 
   const ifcClass = IFC_NAMES[props.type] || ('IFC_'+props.type);
   const revitCat = ifcClassToRevitCategory(ifcClass);
 
-  let h=`<div style="padding:8px 12px;background:var(--blue-lt);border-bottom:1px solid var(--border)"><span style="font-family:JetBrains Mono;font-size:13px;font-weight:700;color:var(--blue)">Version ${modelIdx===0?'A':'B'} — #${eid}</span></div>`;
+    // ── Group accumulator ──
+  // showProps now collects sections into a `groups` array of
+  // {name, rows: [{label, value}]} objects, then renders them as a
+  // collapsible accordion at the end (Dalux-style). The legacy `h`
+  // string concatenation is kept only for the section bridges that
+  // get rewritten below; final output is built by renderPropertiesAccordion().
+  const groups=[];
+  let curGroup=null;
+  const beginGroup=(name)=>{ curGroup={name, rows:[]}; groups.push(curGroup); };
+  const elementHeader = `Version ${modelIdx===0?'A':'B'} — #${eid}`;
+  let h='';
 
   // ── Identity section ──
-  h+='<div class="ps"><div class="ps-t">Identity</div>';
+  beginGroup('Identity');
   addRow('Category', revitCat);
   addRow('IFC Class', ifcClass);
   addRow('Name', getVal(props.Name));
@@ -4636,7 +5208,7 @@ async function showProps(props,modelIdx){
   addRow('Tag / Element ID', getVal(props.Tag));
   addRow('PredefinedType', getVal(props.PredefinedType));
   addRow('GlobalId', getVal(props.GlobalId));
-  h+='</div>';
+  /* end-group */;
 
   // ── Type section (IsTypedBy → IfcElementType) ──
   let typeObj=null;
@@ -4660,14 +5232,14 @@ async function showProps(props,modelIdx){
   }catch(e){log('Type resolve err:',e?.message)}
   if(typeObj){
     const typeClass=IFC_NAMES[typeObj.type]||('IFC_'+typeObj.type);
-    h+='<div class="ps"><div class="ps-t">Type</div>';
+    beginGroup('Type');
     addRow('Type Name', getVal(typeObj.Name));
     addRow('Type Class', typeClass);
     addRow('Type Tag', getVal(typeObj.Tag));
     addRow('Type Description', getVal(typeObj.Description));
     addRow('Type PredefinedType', getVal(typeObj.PredefinedType));
     addRow('ElementType', getVal(typeObj.ElementType));
-    h+='</div>';
+    /* end-group */;
   }
 
   // ── Material (HasAssociations → IfcRelAssociatesMaterial) ──
@@ -4763,7 +5335,7 @@ async function showProps(props,modelIdx){
   const haveLocation = spatial || materialLabel || systemLabel ||
                        topY!==null || gX!==null;
   if(haveLocation){
-    h+='<div class="ps"><div class="ps-t">Location</div>';
+    beginGroup('Location');
     // Spatial hierarchy
     if(spatial){
       addRow('Model',          spatial.modelName || loadedModels[modelIdx]?.fileName);
@@ -4798,7 +5370,7 @@ async function showProps(props,modelIdx){
     // "Elevation" in BIMcollab is usually the bottom Z of the element (aka
     // floor-level elevation). Provide as an alias for convenience.
     if(botY!==null)addRow('Elevation', fmtLength(botY));
-    h+='</div>';
+    /* end-group */;
   }
 
   // ── All Property Sets (instance + type, merged by web-ifc) ──
@@ -4824,7 +5396,7 @@ async function showProps(props,modelIdx){
     // or came from the resolved type object).
     const isType=/TypeCommon$/i.test(psetName);
     const displayName = isType ? `[${psetName}]` : psetName;
-    h+=`<div class="ps"><div class="ps-t">${esc(displayName)}</div>`;
+    beginGroup(displayName);
     let rowCount=0;
     // HasProperties (IfcPropertySet)
     if(pset.HasProperties){
@@ -4849,9 +5421,9 @@ async function showProps(props,modelIdx){
       }
     }
     if(rowCount===0){
-      h+='<div class="pr"><div class="pk" style="grid-column:1/-1;color:var(--text-muted);font-style:italic;font-size:11px">(empty)</div></div>';
+      if(curGroup){curGroup.rows.push({label:'', value:'(no properties)', _empty:true})};
     }
-    h+='</div>';
+    /* end-group */;
   }
 
   // ── All Raw Attributes (everything web-ifc returned on this entity) ──
@@ -4870,12 +5442,12 @@ async function showProps(props,modelIdx){
     if(val)attrRows.push({k,v:val});
   }
   if(attrRows.length>0){
-    h+='<div class="ps"><div class="ps-t" style="cursor:pointer;user-select:none" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">Raw Attributes ▸</div><div style="display:none">';
+    beginGroup('Raw Attributes');
     for(const {k,v} of attrRows)addRow(k, v);
-    h+='</div></div>';
+    /* end-raw-group */;
   }
 
-  document.getElementById('propArea').innerHTML=h;
+  renderPropertiesAccordion(elementHeader, groups);
 }
 
 // ══ Controls ══
@@ -5411,32 +5983,35 @@ function buildIssues(){
 }
 
 window.focusIssue=function(idx){
-  if(idx<0||idx>=issuesList.length)return;
+  if(idx<0||idx>=issuesList.length){log('focusIssue: bad idx',idx);return}
   currentIssueIdx=idx;
   const iss=issuesList[idx];
-  
-  // Highlight active card
-  document.querySelectorAll('.issue-card').forEach((c,i)=>c.classList.toggle('active',i===idx));
-  
-  // Update nav
-  document.getElementById('issueNavInfo').textContent=`${idx+1} / ${issuesList.length}`;
-  
-  // Find bounding box of this element's geometry
   const targetEID=iss.expressID;
   const targetModelIdx=iss.modelIdx;
+  log(`focusIssue #${iss.num}: eid=${targetEID} model=${targetModelIdx} status=${iss.status}`);
+
+  // Highlight active card
+  document.querySelectorAll('.issue-card').forEach((c,i)=>c.classList.toggle('active',i===idx));
+  document.getElementById('issueNavInfo').textContent=`${idx+1} / ${issuesList.length}`;
+
+  // ── Find element bbox by scanning scene meshes for matching expressID ──
+  // We scan EVERY mesh in the scene that has an expressID attribute. This
+  // covers: diff subsets (added/removed/modified-a/modified-b/unchanged-b)
+  // created during compare, AND the base models. Whichever finds the
+  // element first wins. Tracking which mesh matched lets us also use it
+  // directly for highlighting without needing createSubset.
   let mnX=Infinity,mnY=Infinity,mnZ=Infinity,mxX=-Infinity,mxY=-Infinity,mxZ=-Infinity;
   let found=false;
-  
-  // Scan diff subsets for this expressID
+  let scanCount=0, hitCount=0;
+
   scene.traverse(c=>{
-    if(!c.isMesh||!c.geometry?.attributes?.expressID)return;
-    if(!c.geometry?.attributes?.position)return;
-    
+    if(!c.isMesh||!c.geometry?.attributes?.expressID||!c.geometry?.attributes?.position)return;
+    scanCount++;
     const eidArr=c.geometry.attributes.expressID.array;
     const posArr=c.geometry.attributes.position.array;
     const wm=c.matrixWorld;
     const v=new THREE.Vector3();
-    
+    let localHit=false;
     for(let i=0;i<eidArr.length;i++){
       if(eidArr[i]!==targetEID)continue;
       const pi=i*3;
@@ -5446,90 +6021,126 @@ window.focusIssue=function(idx){
       if(v.x<mnX)mnX=v.x;if(v.x>mxX)mxX=v.x;
       if(v.y<mnY)mnY=v.y;if(v.y>mxY)mxY=v.y;
       if(v.z<mnZ)mnZ=v.z;if(v.z>mxZ)mxZ=v.z;
-      found=true;
+      found=true;localHit=true;
     }
+    if(localHit)hitCount++;
   });
-  
-  // Also scan base models
+  log(`focusIssue: scanned ${scanCount} meshes, ${hitCount} contained eid ${targetEID}, found=${found}`);
+
   if(!found){
-    for(let mi=0;mi<2;mi++){
-      if(!loadedModels[mi])continue;
-      loadedModels[mi].traverse(c=>{
-        if(!c.isMesh||!c.geometry?.attributes?.expressID||!c.geometry?.attributes?.position)return;
-        const eidArr=c.geometry.attributes.expressID.array;
-        const posArr=c.geometry.attributes.position.array;
-        const wm=c.matrixWorld;
-        const v=new THREE.Vector3();
-        for(let i=0;i<eidArr.length;i++){
-          if(eidArr[i]!==targetEID)continue;
-          const pi=i*3;
-          if(pi+2>=posArr.length||isNaN(posArr[pi]))continue;
-          v.set(posArr[pi],posArr[pi+1],posArr[pi+2]).applyMatrix4(wm);
-          if(isNaN(v.x))continue;
-          mnX=Math.min(mnX,v.x);mxX=Math.max(mxX,v.x);
-          mnY=Math.min(mnY,v.y);mxY=Math.max(mxY,v.y);
-          mnZ=Math.min(mnZ,v.z);mxZ=Math.max(mxZ,v.z);
-          found=true;
-        }
-      });
-    }
-  }
-  
-  if(!found){
-    log('Issue focus: could not find geometry for expressID '+targetEID);
-    // Still show properties
+    log('Issue focus FAILED: geometry not in scene. Showing properties only.');
     showIssueProps(iss);
     return;
   }
-  
-  // Add generous padding around element
-  const pad=Math.max(mxX-mnX,mxY-mnY,mxZ-mnZ)*0.5+2;
-  mnX-=pad;mnY-=pad;mnZ-=pad;
-  mxX+=pad;mxY+=pad;mxZ+=pad;
-  
-  // Set section box sliders
-  const b=modelBounds;
-  const sx=b.max.x-b.min.x,sy=b.max.y-b.min.y,sz=b.max.z-b.min.z;
-  const toSl=(val,mn,range)=>Math.max(0,Math.min(100,Math.round(((val-mn)/range)*100)));
-  
-  document.getElementById('slXp').value=toSl(mxX,b.min.x,sx);
-  document.getElementById('slXn').value=toSl(mnX,b.min.x,sx);
-  document.getElementById('slYp').value=toSl(mxY,b.min.y,sy);
-  document.getElementById('slYn').value=toSl(mnY,b.min.y,sy);
-  document.getElementById('slZp').value=toSl(mxZ,b.min.z,sz);
-  document.getElementById('slZn').value=toSl(mnZ,b.min.z,sz);
-  
-  // Activate section box
-  if(!sectionActive){
-    sectionActive=true;
-    document.getElementById('sectionPanel').classList.add('show');
-    document.getElementById('btnSection').classList.add('active');
-    createSectionBox3D();
-  }
-  updateSectionFromSliders();
-  
-  // Zoom camera to element
-  const cx=(mnX+mxX)/2,cy=(mnY+mxY)/2,cz=(mnZ+mxZ)/2;
-  const viewDist=Math.max(mxX-mnX,mxY-mnY,mxZ-mnZ)*1.2;
-  camera.position.set(cx+viewDist*0.5,cy+viewDist*0.4,cz+viewDist*0.5);
-  controls.target.set(cx,cy,cz);
+
+  // Compute element center + a generous frame distance
+  const cx=(mnX+mxX)/2, cy=(mnY+mxY)/2, cz=(mnZ+mxZ)/2;
+  const elSize=Math.max(mxX-mnX, mxY-mnY, mxZ-mnZ);
+  log(`focusIssue: element bbox center=(${cx.toFixed(2)},${cy.toFixed(2)},${cz.toFixed(2)}) size=${elSize.toFixed(2)}`);
+
+  // ── Camera move ──
+  // Move camera FIRST (before section box so the user sees the new view
+  // even if section box update fails for some reason). Camera distance is
+  // 1.5× the largest element dimension + a 5m floor so tiny elements still
+  // get a comfortable framing.
+  const viewDist=Math.max(elSize*1.5, 5);
+  camera.position.set(cx+viewDist*0.5, cy+viewDist*0.4, cz+viewDist*0.5);
+  controls.target.set(cx, cy, cz);
   controls.update();
-  
-  // Highlight element
+  // Invalidate any stale pivot — we just moved the camera explicitly, so
+  // the next click should set a fresh pivot from the new state.
+  if(window._pendingPivot)window._pendingPivot=null;
+
+  // ── Section box ──
+  // Tighten section box around element + small padding (10% or 0.5m floor).
+  // If section box wasn't active, activate it. If sliders fail to compute
+  // for any reason, skip section box but still keep camera + highlight.
+  try{
+    // Padding around element: 30% of element size, minimum 1m, maximum 5m.
+    // Thin elements (50mm walls, 25mm pipes) get a generous 1m floor so the
+    // section box doesn't hug the geometry so tightly that the user can't see
+    // any context. Big elements get capped at 5m to avoid framing the whole
+    // building when zooming to a slab.
+    const sbPad = Math.max(Math.min(elSize*0.3, 5), 1);
+    const sbMnX=mnX-sbPad, sbMxX=mxX+sbPad;
+    const sbMnY=mnY-sbPad, sbMxY=mxY+sbPad;
+    const sbMnZ=mnZ-sbPad, sbMxZ=mxZ+sbPad;
+    const b=modelBounds;
+    const sx=b.max.x-b.min.x, sy=b.max.y-b.min.y, sz=b.max.z-b.min.z;
+    if(sx>0 && sy>0 && sz>0){
+      // ── Directional rounding to prevent slider collapse ──
+      // Sliders are 0-100 integer percentages of model bounds. For tiny
+      // elements (e.g. a 50mm pipe wall in a 100m project), both edges
+      // round to the same integer → section box dimension = 0 → element
+      // gets clipped to nothing → user sees empty viewport. Fix: ceil the
+      // upper edge and floor the lower edge so the resulting integer pair
+      // always brackets the element. Also enforce a minimum 2% spread so
+      // even degenerate-dimension elements (flat planes) get a thin slice
+      // around them.
+      const slUp  =(val,mn,range)=>Math.max(0,Math.min(100,Math.ceil( ((val-mn)/range)*100)));
+      const slDn  =(val,mn,range)=>Math.max(0,Math.min(100,Math.floor(((val-mn)/range)*100)));
+      const ensureMin=(lo,hi,minSpread)=>{
+        if(hi-lo>=minSpread)return [lo,hi];
+        // Expand symmetrically around midpoint, but clamp to 0..100
+        const mid=(lo+hi)/2;
+        const half=minSpread/2;
+        let nlo=Math.max(0, Math.floor(mid-half));
+        let nhi=Math.min(100, Math.ceil(mid+half));
+        // If we hit a wall, push from the other side
+        if(nhi-nlo<minSpread){
+          if(nlo===0)nhi=Math.min(100, nlo+minSpread);
+          else nlo=Math.max(0, nhi-minSpread);
+        }
+        return [nlo,nhi];
+      };
+      let xLo=slDn(sbMnX,b.min.x,sx), xHi=slUp(sbMxX,b.min.x,sx);
+      let yLo=slDn(sbMnY,b.min.y,sy), yHi=slUp(sbMxY,b.min.y,sy);
+      let zLo=slDn(sbMnZ,b.min.z,sz), zHi=slUp(sbMxZ,b.min.z,sz);
+      [xLo,xHi]=ensureMin(xLo,xHi,2);
+      [yLo,yHi]=ensureMin(yLo,yHi,2);
+      [zLo,zHi]=ensureMin(zLo,zHi,2);
+      document.getElementById('slXp').value=xHi;
+      document.getElementById('slXn').value=xLo;
+      document.getElementById('slYp').value=yHi;
+      document.getElementById('slYn').value=yLo;
+      document.getElementById('slZp').value=zHi;
+      document.getElementById('slZn').value=zLo;
+      if(!sectionActive){
+        sectionActive=true;
+        document.getElementById('sectionPanel').classList.add('show');
+        document.getElementById('btnSection').classList.add('active');
+        createSectionBox3D();
+      }
+      updateSectionFromSliders();
+    }else{
+      log('focusIssue: skipping section box (modelBounds invalid)');
+    }
+  }catch(e){log('focusIssue section box err:',e?.message)}
+
+  // ── Highlight ──
+  // Try web-ifc-three subset first. If it returns null (issue #83 with
+  // stale cache after compare), fall back to a manually-built geometry
+  // copy of just the matching faces.
   try{
     clearHighlight();
     if(!window._hlMat)window._hlMat=new THREE.MeshPhongMaterial({color:0x2563eb,transparent:true,opacity:0.6,side:THREE.DoubleSide,depthTest:true,clippingPlanes:clipPlanes});
     const mid=loadedModels[targetModelIdx]?.modelID;
+    let sub=null;
     if(mid!==undefined){
-      const sub=ifcLoader.ifcManager.createSubset({modelID:mid,ids:[targetEID],material:window._hlMat,scene,removePrevious:true});
-      if(sub){sub.position.copy(loadedModels[targetModelIdx].position);sub.updateMatrixWorld(true);window._lastHL={subset:sub,mid}}
+      sub=ifcLoader.ifcManager.createSubset({modelID:mid,ids:[targetEID],material:window._hlMat,scene,removePrevious:true});
+      if(sub){
+        sub.position.copy(loadedModels[targetModelIdx].position);
+        sub.updateMatrixWorld(true);
+        window._lastHL={subset:sub,mid};
+        log('focusIssue: highlight subset created');
+      }else{
+        log('focusIssue: createSubset returned null (issue #83?). Highlight skipped — element still visible via diff subsets.');
+      }
     }
-  }catch(e){}
-  
+  }catch(e){log('focusIssue highlight err:',e?.message)}
+
   // Show properties
   showIssueProps(iss);
-  
-  log(`Issue #${iss.num}: focused on ${iss.name} (${iss.status})`);
 };
 
 function showIssueProps(iss){
@@ -5776,95 +6387,289 @@ let clashFilterCounterA=0, clashFilterCounterB=0;
 let clashPropertyCacheA={}, clashPropertyCacheB={}; // eid→{propName:value}
 
 // ── Populate category selects for Source/Target sets ──
-function populateClashCategories(){
+// ── BIMcollab-style rule-row clash configuration ──
+// Each set (Source / Target) is an array of rule rows. Each row has:
+//   {elementType, property, operator, value, action}
+// Rows are OR'd within a set (a row with action=Add includes elements
+// matching it; action=Remove excludes them from the matched pool).
+// Property/Operator/Value are optional — leave Property=None for an
+// element-type-only rule.
+let clashRuleRows={A:[], B:[]};
+
+const CLASH_OPERATORS=[
+  {v:'',label:''},
+  {v:'equals',label:'='},
+  {v:'not_equals',label:'≠'},
+  {v:'contains',label:'⊃'},
+  {v:'not_contains',label:'⊅'},
+  {v:'starts',label:'starts'},
+  {v:'gt',label:'>'},
+  {v:'lt',label:'<'},
+];
+const CLASH_PROPERTIES=[
+  {v:'None',label:'None'},
+  {v:'Name',label:'Name'},
+  {v:'ObjectType',label:'ObjectType'},
+  {v:'Tag',label:'Tag / ElementID'},
+  {v:'Description',label:'Description'},
+  {v:'PredefinedType',label:'PredefinedType'},
+];
+
+// Build Revit category list for the Element Type dropdown. We collect IFC
+// classes present in the model, map them to Revit categories via
+// ifcClassToRevitCategory(), and de-duplicate. This means the user picks
+// "Walls" once instead of having to pick IfcWall + IfcWallStandardCase
+// + IfcCurtainWall separately. The reverse map (category → ifc classes)
+// is built alongside so resolveClashElementTypes can expand a category
+// pick back to the full IFC class set when running clash.
+function getClashElementTypes(side){
   const catIDs=window._catModelIDs||{};
-  const catData=window._catData||{};
-  
-  ['A','B'].forEach((side,mi)=>{
-    const sel=document.getElementById('clashCat'+side);
-    sel.innerHTML='';
-    const cats=new Set();
-    Object.entries(catIDs).forEach(([cat,models])=>{
-      if(models[mi]&&models[mi].length>0)cats.add(cat);
-    });
-    const sorted=[...cats].sort();
-    sorted.forEach(cat=>{
-      const opt=document.createElement('option');
-      opt.value=cat;
-      opt.textContent=cat.replace('Ifc','')+(catIDs[cat]?.[mi]?' ('+catIDs[cat][mi].length+')':'');
-      opt.selected=true; // all selected by default
-      sel.appendChild(opt);
-    });
+  const mi = side==='A' ? 0 : 1;
+  const revitCats=new Set();
+  Object.entries(catIDs).forEach(([ifcClass,models])=>{
+    if(models[mi]&&models[mi].length>0){
+      revitCats.add(ifcClassToRevitCategory(ifcClass));
+    }
   });
+  return [...revitCats].sort();
 }
 
-// ── Add a property filter row ──
-window.addClashFilter=function(side){
-  const container=document.getElementById('clashFilters'+side);
-  const id='cf_'+side+'_'+(side==='A'?++clashFilterCounterA:++clashFilterCounterB);
-  const row=document.createElement('div');
-  row.className='clash-filter-row';
-  row.id=id;
-  row.innerHTML=`
-    <select title="Property" onchange="updateClashFilterOps(this)">
-      <option value="">Property...</option>
-      <option value="Name">Name</option>
-      <option value="ObjectType">ObjectType</option>
-      <option value="Tag">Tag/ElementID</option>
-      <option value="Description">Description</option>
-      <option value="PredefinedType">PredefinedType</option>
-    </select>
-    <select title="Operator">
-      <option value="contains">contains</option>
-      <option value="equals">equals</option>
-      <option value="not_contains">not contains</option>
-      <option value="not_equals">not equals</option>
-      <option value="starts">starts with</option>
-    </select>
-    <input type="text" placeholder="value..." title="Value">
-    <button class="clash-filter-x" onclick="document.getElementById('${id}').remove()" title="Remove">×</button>`;
-  container.appendChild(row);
+// Map a Revit category label back to the set of IFC class names that map to
+// it within the loaded model. Multiple classes commonly fall into the same
+// category (Walls = IfcWall + IfcWallStandardCase + IfcCurtainWall).
+function revitCategoryToIfcClasses(catLabel, side){
+  const catIDs=window._catModelIDs||{};
+  const mi = side==='A' ? 0 : 1;
+  const out=new Set();
+  Object.entries(catIDs).forEach(([ifcClass,models])=>{
+    if(!models[mi]||!models[mi].length)return;
+    if(ifcClassToRevitCategory(ifcClass)===catLabel)out.add(ifcClass);
+  });
+  return out;
+}
+
+// Render the table body for one set. Each row is an editable form.
+function renderClashRules(side){
+  const tbody=document.getElementById('clashRules'+side);
+  if(!tbody)return;
+  const rows=clashRuleRows[side];
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:8px;font-style:italic">Click + to add element types</td></tr>';
+    return;
+  }
+  const elTypes=getClashElementTypes(side);
+  const escA=(s)=>String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  let html='';
+  rows.forEach((r,i)=>{
+    const typeOpts=['<option value="">— select —</option>']
+      .concat(elTypes.map(t=>{
+        // t is the Revit category label (e.g. "Walls", "Pipes"). The data
+        // model stores the label directly; resolveClashElementTypes() expands
+        // it back to the IFC class set when running clash.
+        return `<option value="${escA(t)}"${r.elementType===t?' selected':''}>${escA(t)}</option>`;
+      }))
+      .join('');
+    const propOpts=CLASH_PROPERTIES.map(p=>`<option value="${p.v}"${r.property===p.v?' selected':''}>${p.label}</option>`).join('');
+    const opOpts=CLASH_OPERATORS.map(o=>`<option value="${o.v}"${r.operator===o.v?' selected':''}>${o.label||'—'}</option>`).join('');
+    const valDisabled = (!r.property||r.property==='None') ? 'disabled' : '';
+    const opDisabled  = (!r.property||r.property==='None') ? 'disabled' : '';
+    const actionOpts=['<option value="Add"'+(r.action==='Add'?' selected':'')+'>Add</option>',
+                      '<option value="Remove"'+(r.action==='Remove'?' selected':'')+'>Remove</option>'].join('');
+    html+=`<tr data-row-idx="${i}">
+      <td><select onchange="updateClashRow('${side}',${i},'elementType',this.value)">${typeOpts}</select></td>
+      <td><select onchange="updateClashRow('${side}',${i},'property',this.value)">${propOpts}</select></td>
+      <td><select ${opDisabled} onchange="updateClashRow('${side}',${i},'operator',this.value)">${opOpts}</select></td>
+      <td><input type="text" ${valDisabled} value="${escA(r.value)}" placeholder="value" onchange="updateClashRow('${side}',${i},'value',this.value)"></td>
+      <td><div class="clash-rule-row-action">
+        <select onchange="updateClashRow('${side}',${i},'action',this.value)">${actionOpts}</select>
+        <button class="clash-row-del" onclick="deleteClashRow('${side}',${i})" title="Delete row">×</button>
+      </div></td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
+}
+
+window.addClashRow=function(side){
+  clashRuleRows[side].push({
+    elementType:'', property:'None', operator:'', value:'', action:'Add'
+  });
+  renderClashRules(side);
 };
 
-// ── Collect filter rules from UI ──
-function getClashFilters(side){
-  const container=document.getElementById('clashFilters'+side);
-  if(!container)return[];
-  const rows=container.querySelectorAll('.clash-filter-row');
-  const filters=[];
-  rows.forEach(row=>{
-    const sels=row.querySelectorAll('select');
-    const inp=row.querySelector('input');
-    const prop=sels[0]?.value;
-    const op=sels[1]?.value;
-    const val=inp?.value?.trim();
-    if(prop&&val)filters.push({prop,op,val});
+window.removeLastClashRow=function(side){
+  if(clashRuleRows[side].length>0){
+    clashRuleRows[side].pop();
+    renderClashRules(side);
+  }
+};
+
+window.deleteClashRow=function(side,idx){
+  clashRuleRows[side].splice(idx,1);
+  renderClashRules(side);
+};
+
+window.updateClashRow=function(side,idx,field,value){
+  const r=clashRuleRows[side][idx];
+  if(!r)return;
+  r[field]=value;
+  // When property changes, may need to enable/disable operator+value cells
+  if(field==='property'){
+    if(value==='None'){
+      r.operator='';
+      r.value='';
+    }
+    renderClashRules(side); // re-render to update disabled state
+  }
+};
+
+// Initialize default rows when entering clash mode (one Add row per set).
+function initClashRulesDefault(){
+  if(clashRuleRows.A.length===0){
+    clashRuleRows.A.push({elementType:'',property:'None',operator:'',value:'',action:'Add'});
+  }
+  if(clashRuleRows.B.length===0){
+    clashRuleRows.B.push({elementType:'',property:'None',operator:'',value:'',action:'Add'});
+  }
+  renderClashRules('A');
+  renderClashRules('B');
+}
+
+// Resolve final element-type set from the rules (apply Add/Remove logic).
+// Returns Set<string> of IFC class names. Only Add rows that have a non-empty
+// elementType count; Remove rows subtract from the accumulated set.
+function resolveClashElementTypes(side){
+  // Each rule's elementType is a Revit category label (e.g. "Walls").
+  // Expand each label to the set of IFC class names it covers so the
+  // clash engine — which works on IFC class buckets — gets the right
+  // input. Add rows union; Remove rows subtract.
+  const set=new Set();
+  for(const r of clashRuleRows[side]){
+    if(!r.elementType)continue;
+    const ifcClasses = revitCategoryToIfcClasses(r.elementType, side);
+    if(r.action==='Add'){
+      ifcClasses.forEach(c=>set.add(c));
+    }else if(r.action==='Remove'){
+      ifcClasses.forEach(c=>set.delete(c));
+    }
+  }
+  return set;
+}
+
+// Resolve property filters from rule rows. Returns array of filter clauses
+// keyed by element type. Each clause: {prop, op, val} — applies only to
+// elements of the matching elementType (per-type filtering).
+function resolveClashFilters(side){
+  // Each rule's elementType is a Revit category label. Expand it to the
+  // covered IFC class names and key the filter map by those classes, so
+  // when the engine filters elements with `entity.type === IFC_CLASS`
+  // the lookup matches.
+  const byType={};
+  for(const r of clashRuleRows[side]){
+    if(!r.elementType||r.action!=='Add')continue;
+    if(!r.property||r.property==='None'||!r.operator||!r.value)continue;
+    const ifcClasses = revitCategoryToIfcClasses(r.elementType, side);
+    ifcClasses.forEach(c=>{
+      if(!byType[c])byType[c]=[];
+      byType[c].push({prop:r.property, op:r.operator, val:r.value});
+    });
+  }
+  return byType;
+}
+
+// Apply a preset selection by replacing the rule rows with one row per
+// preset elementType. Resets prior rows.
+const CLASH_PRESETS={
+  'struct-mep':{
+    A:['IfcBeam','IfcColumn','IfcSlab','IfcWall','IfcWallStandardCase','IfcFooting','IfcMember','IfcPlate','IfcRoof','IfcStair','IfcStairFlight','IfcRamp','IfcRampFlight'],
+    B:['IfcPipeSegment','IfcPipeFitting','IfcDuctSegment','IfcDuctFitting','IfcCableCarrierSegment','IfcCableCarrierFitting','IfcCableSegment','IfcFlowSegment','IfcFlowFitting','IfcFlowTerminal','IfcFlowController','IfcDistributionElement','IfcDistributionFlowElement','IfcEnergyConversionDevice','IfcFlowMovingDevice','IfcFlowStorageDevice','IfcFlowTreatmentDevice','IfcSanitaryTerminal','IfcAirTerminal','IfcLightFixture','IfcElectricAppliance','IfcElectricDistributionBoard','IfcElectricMotor','IfcSwitchingDevice','IfcOutlet','IfcSensor','IfcAlarm','IfcController','IfcUnitaryEquipment','IfcValve','IfcPump','IfcFan','IfcBoiler','IfcChiller'],
+  },
+  'arch-mep':{
+    A:['IfcWall','IfcWallStandardCase','IfcDoor','IfcWindow','IfcStair','IfcStairFlight','IfcRailing','IfcCovering','IfcCurtainWall','IfcFurnishingElement'],
+    B:['IfcPipeSegment','IfcPipeFitting','IfcDuctSegment','IfcDuctFitting','IfcCableCarrierSegment','IfcCableCarrierFitting','IfcFlowTerminal','IfcSanitaryTerminal','IfcAirTerminal','IfcLightFixture'],
+  },
+  'struct-arch':{
+    A:['IfcBeam','IfcColumn','IfcSlab','IfcFooting','IfcMember','IfcPlate'],
+    B:['IfcWall','IfcWallStandardCase','IfcDoor','IfcWindow','IfcStair','IfcStairFlight','IfcRailing','IfcCovering','IfcCurtainWall'],
+  },
+  'all-all':{A:'*',B:'*'},
+};
+
+window.applyClashPreset=function(presetKey){
+  const preset=CLASH_PRESETS[presetKey];
+  if(!preset){log('Unknown clash preset: '+presetKey);return}
+  ['A','B'].forEach(side=>{
+    const list=preset[side];
+    let categories; // final list of Revit category labels for this side
+    const available=new Set(getClashElementTypes(side));
+    if(list==='*'){
+      categories=[...available];
+    }else{
+      // Convert preset's IFC class list to Revit category labels, then
+      // dedupe and intersect with what's actually present in the model.
+      // This means a preset listing IfcWall + IfcWallStandardCase produces
+      // a single "Walls" row (not two duplicate rows).
+      const catSet=new Set();
+      list.forEach(ifcClass=>{
+        const cat=ifcClassToRevitCategory(ifcClass);
+        if(available.has(cat))catSet.add(cat);
+      });
+      categories=[...catSet].sort();
+    }
+    clashRuleRows[side]=categories.map(t=>({
+      elementType:t, property:'None', operator:'', value:'', action:'Add'
+    }));
+    renderClashRules(side);
   });
-  return filters;
-}
+  // Update rule name to reflect preset
+  const nameMap={'struct-mep':'Structure ↔ MEP','arch-mep':'Architecture ↔ MEP','struct-arch':'Structure ↔ Architecture','all-all':'All ↔ All'};
+  const nameEl=document.getElementById('clashRuleName');
+  if(nameEl && nameMap[presetKey])nameEl.value=nameMap[presetKey];
+  log('Applied clash preset: '+presetKey);
+};
 
-// ── Get selected categories ──
-function getSelectedCats(side){
-  const sel=document.getElementById('clashCat'+side);
-  return[...sel.selectedOptions].map(o=>o.value);
-}
+window.swapClashSets=function(){
+  const a=clashRuleRows.A, b=clashRuleRows.B;
+  // Filter to types that exist in the OPPOSITE side's model. A type might
+  // exist in A but not B; can't swap those.
+  const availA=new Set(getClashElementTypes('A'));
+  const availB=new Set(getClashElementTypes('B'));
+  clashRuleRows.A=b.filter(r=>!r.elementType||availA.has(r.elementType));
+  clashRuleRows.B=a.filter(r=>!r.elementType||availB.has(r.elementType));
+  renderClashRules('A');
+  renderClashRules('B');
+  log('Swapped Source ↔ Target sets');
+};
 
-// ── Check if an element passes property filters ──
-function passesFilters(entity,filters){
-  if(!filters.length)return true;
+// Compatibility shim — old code referenced these but they're no longer in UI.
+function getSelectedCats(side){return [...resolveClashElementTypes(side)]}
+function passesFilters(entity, filters){
+  // Old function — replaced by passesClashFiltersForType. Kept for any
+  // remaining call sites.
+  if(!filters||!filters.length)return true;
   for(const f of filters){
-    const val=String(entity[f.prop.toLowerCase()]||entity[f.prop]||'');
-    const fv=f.val.toLowerCase();
-    const v=val.toLowerCase();
+    const v=String(entity[f.prop]||entity[f.prop?.toLowerCase?.()]||'').toLowerCase();
+    const fv=String(f.val||f.value||'').toLowerCase();
     let pass=false;
     if(f.op==='contains')pass=v.includes(fv);
     else if(f.op==='equals')pass=v===fv;
     else if(f.op==='not_contains')pass=!v.includes(fv);
     else if(f.op==='not_equals')pass=v!==fv;
     else if(f.op==='starts')pass=v.startsWith(fv);
+    else if(f.op==='gt')pass=parseFloat(v)>parseFloat(fv);
+    else if(f.op==='lt')pass=parseFloat(v)<parseFloat(fv);
     if(!pass)return false;
   }
   return true;
+}
+function getClashFilters(side){
+  // Old API: a flat list of filter objects. Build by flattening all
+  // elementType-keyed filters from the new rule rows.
+  const byType=resolveClashFilters(side);
+  const flat=[];
+  for(const t in byType){
+    for(const f of byType[t])flat.push({...f, elementType:t});
+  }
+  return flat;
 }
 
 window.toggleClashMode=function(){
@@ -5874,6 +6679,8 @@ window.toggleClashMode=function(){
   
   if(clashMode){
     document.getElementById('clashPanel').classList.add('show');
+    // Show the bottom panel resize handle (sits between 3D canvas and panel)
+    const br=document.getElementById('bresize');if(br)br.style.display='';
     document.getElementById('eTree').style.display='none';
     document.getElementById('issuesList').classList.remove('show');
     document.getElementById('panelTabs').classList.remove('show');
@@ -5885,7 +6692,10 @@ window.toggleClashMode=function(){
     if(files[1])document.getElementById('clashFileB').textContent=files[1].name;
     document.getElementById('btnRunClash').disabled=!(loadedModels[0]&&loadedModels[1]);
     
-    populateClashCategories();
+    // Initialize default rule rows (reads loaded model categories internally)
+    initClashRulesDefault();
+    // The bottom panel just claimed ~320px of viewport height — reflow 3D
+    if(window._vpResize)window._vpResize();
   }else{
     exitClashMode();
   }
@@ -5895,6 +6705,8 @@ window.exitClashMode=function(){
   clashMode=false;
   document.getElementById('btnClash').classList.remove('active');
   document.getElementById('clashPanel').classList.remove('show');
+  // Hide the bottom panel resize handle when there's no panel to resize
+  const br=document.getElementById('bresize');if(br)br.style.display='none';
   document.getElementById('eTree').style.display='';
   document.getElementById('btnRunClash').style.display='none';
   document.getElementById('btnExitClash').style.display='none';
@@ -5927,6 +6739,8 @@ window.exitClashMode=function(){
   document.getElementById('clashList').innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Configure Source &amp; Target sets, then click <b>▶ Run Clash</b></div>';
   document.getElementById('clashFiltersA').innerHTML='';
   document.getElementById('clashFiltersB').innerHTML='';
+  // Bottom panel just released its height back to the canvas — reflow 3D
+  if(window._vpResize)window._vpResize();
   log('Exited clash mode');
 };
 
@@ -6037,17 +6851,37 @@ window.runClashDetection=async function(){
   if(!loadedModels[0]||!loadedModels[1])return;
   const lo=document.getElementById('loadOv'),lt=document.getElementById('loadTxt'),lf=document.getElementById('loadFill');
   lo.classList.add('on');
-  
-  const tolerance=(parseFloat(document.getElementById('clashTolerance').value)||0)/1000;
-  const clashTypeFilter=document.getElementById('clashType').value; // hard, clearance, both
-  
-  // ── Collect filter configuration from UI ──
-  const catsA=new Set(getSelectedCats('A'));
-  const catsB=new Set(getSelectedCats('B'));
+
+  // ── Read configuration from new BIMcollab-style UI ──
+  // Tolerances. The "Minimum distance" field controls what previously was the
+  // single tolerance slider — clearance threshold in mm.
+  const minDistMm=parseFloat(document.getElementById('clashTolMinDist')?.value)||0;
+  const tolerance=minDistMm/1000;  // m
+  // Type checkboxes (Clash / Duplicate / Distance). For now we map:
+  //   Clash → hard clash
+  //   Distance (with minDistMm > 0) → clearance
+  //   Both checked → 'both'
+  const cClash    =document.getElementById('clashTypeClash')?.checked;
+  const cDuplicate=document.getElementById('clashTypeDuplicate')?.checked;
+  const cDistance =document.getElementById('clashTypeDistance')?.checked || minDistMm>0;
+  let clashTypeFilter='hard';
+  if(cClash && cDistance)clashTypeFilter='both';
+  else if(cDistance)     clashTypeFilter='clearance';
+  else                    clashTypeFilter='hard';
+
+  // ── Collect filter configuration from rule rows ──
+  const catsA=resolveClashElementTypes('A');
+  const catsB=resolveClashElementTypes('B');
   const filtersA=getClashFilters('A');
   const filtersB=getClashFilters('B');
-  
-  log('Clash config: Source cats='+catsA.size+', Target cats='+catsB.size+', filtersA='+filtersA.length+', filtersB='+filtersB.length+', tolerance='+tolerance+'m, type='+clashTypeFilter);
+
+  if(catsA.size===0||catsB.size===0){
+    lo.classList.remove('on');
+    alert('Please add at least one Element Type to both Source Set and Target Set.');
+    return;
+  }
+
+  log('Clash config: Source types='+catsA.size+', Target types='+catsB.size+', filtersA='+filtersA.length+', filtersB='+filtersB.length+', tolerance='+tolerance+'m, type='+clashTypeFilter);
   
   // ── Phase 1: Build filtered element sets ──
   lt.textContent='Building Source Set (Model A)...';lf.style.width='5%';

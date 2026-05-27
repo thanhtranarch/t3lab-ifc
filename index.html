@@ -47,7 +47,8 @@ body.resizing,body.resizing *{user-select:none !important;cursor:col-resize !imp
 body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-resize !important}
 
 /* Header */
-.header{grid-column:1/-1;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;z-index:50}
+.header{grid-column:1/-1;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;z-index:50;overflow-x:auto;scrollbar-width:none}
+.header::-webkit-scrollbar{display:none}
 .logo{display:flex;align-items:center;gap:7px}
 .logo-mark{width:24px;height:24px;background:linear-gradient(135deg,var(--blue),var(--indigo));border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:16px;color:#fff}
 .logo-name{font-weight:600;font-size:17px;color:var(--text)}
@@ -84,9 +85,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 .uc-status{font-size:10px;margin-top:2px;font-weight:600}
 .uc-status.ok{color:var(--green)}.uc-status.err{color:var(--red)}.uc-status.prog{color:var(--amber)}
 /* Federation file slots */
-.fed-section{border-top:1px solid var(--border);padding:6px 8px}
-.fed-title{font-family:'JetBrains Mono';font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.fed-title .fed-count{background:var(--blue);color:#fff;border-radius:8px;padding:0 6px;font-size:9px;min-width:16px;text-align:center}
+.fed-section{padding:4px 8px}
 .fed-slots{display:flex;flex-direction:column;gap:4px}
 .fed-slot{display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);font-size:11px}
 .fed-slot.loaded{border-color:var(--green);background:#f0fdf4}
@@ -185,6 +184,36 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 
 /* Tree */
 .entity-tree{flex:1;overflow-y:auto;padding:2px 0}
+/* ── Element Search panel ── */
+.search-panel{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.search-panel.show{display:flex}
+.search-bar{padding:6px 8px;display:flex;flex-direction:column;gap:5px;border-bottom:1px solid var(--border);flex-shrink:0}
+.search-input{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'Inter';font-size:12px;background:var(--bg);color:var(--text);outline:none}
+.search-input:focus{border-color:var(--blue)}
+.search-input::placeholder{color:var(--text-muted)}
+.search-filters{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.search-type-select{padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius);font-family:'JetBrains Mono';font-size:10px;background:var(--bg);color:var(--text);cursor:pointer}
+.search-chip{padding:2px 8px;border-radius:10px;border:1px solid var(--border);font-family:'JetBrains Mono';font-size:9px;cursor:pointer;background:var(--bg);color:var(--text-muted);transition:all var(--t);white-space:nowrap}
+.search-chip:hover{border-color:var(--blue);color:var(--blue)}
+.search-chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.search-adv{display:none;padding:0 8px 6px;border-bottom:1px solid var(--border);flex-shrink:0}
+.search-adv.show{display:flex;flex-direction:column;gap:4px}
+.search-adv-row{display:flex;gap:4px;align-items:center;font-size:11px}
+.search-adv-select{padding:3px 4px;border:1px solid var(--border);border-radius:var(--radius);font-family:'JetBrains Mono';font-size:10px;background:var(--bg);color:var(--text);max-width:120px}
+.search-adv-val{padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius);font-family:'JetBrains Mono';font-size:10px;background:var(--bg);color:var(--text);width:80px}
+.search-adv-label{color:var(--text-muted);font-family:'JetBrains Mono';font-size:10px;white-space:nowrap}
+.search-stats{padding:4px 8px;font-family:'JetBrains Mono';font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;flex-shrink:0}
+.search-results{flex:1;overflow-y:auto;padding:2px 0}
+.search-item{padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--border);transition:background var(--t)}
+.search-item:hover{background:var(--bg-hover)}
+.search-item.selected{background:rgba(37,99,235,.1);border-left:3px solid var(--blue)}
+.search-item-name{font-family:'JetBrains Mono';font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-item-meta{font-size:10px;color:var(--text-muted);display:flex;gap:8px;margin-top:1px}
+.search-item-tag{font-family:'JetBrains Mono';font-size:9px;padding:0 4px;border-radius:3px;background:var(--bg);border:1px solid var(--border)}
+.search-actions{padding:4px 8px;border-top:1px solid var(--border);display:flex;gap:4px;flex-shrink:0}
+.search-act-btn{padding:3px 8px;border:1px solid var(--border);border-radius:var(--radius);font-family:'Inter';font-size:10px;background:var(--bg);color:var(--text);cursor:pointer;transition:all var(--t)}
+.search-act-btn:hover{border-color:var(--blue);color:var(--blue)}
+.search-act-btn.danger:hover{border-color:var(--red);color:var(--red)}
 .tg-hdr{display:flex;align-items:center;gap:5px;padding:5px 10px;cursor:pointer;transition:background var(--t);user-select:none}
 .tg-hdr:hover{background:var(--bg-hover)}
 .tg-arr{font-size:10px;color:var(--text-muted);transition:transform var(--t);width:12px;text-align:center}
@@ -632,6 +661,137 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 @media(max-width:1100px){.app{grid-template-columns:240px 0 1fr 0 0}.col-resize{display:none}.right-panel{display:none}}
 
+/* ══════════════════════════════════════════════════════════════════
+   FIELD MODE — tablet-optimized layout for on-site BIM review
+   Activated via 📱 Field button or auto on touch + screen ≤ 1200px
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Field mode toggle button in header (always visible) */
+.field-toggle{margin-left:auto;padding:6px 10px;border-radius:6px;border:1.5px solid var(--border);background:none;cursor:pointer;font-size:13px;font-family:'Inter';color:var(--text-muted);transition:all var(--t)}
+.field-toggle:hover{border-color:var(--green);color:var(--green)}
+body.field-mode .field-toggle{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* ── Field mode overrides ── */
+body.field-mode .app{
+  grid-template-columns:0 0 1fr 0 0 !important;
+  grid-template-rows:0 1fr !important; /* hide header row */
+}
+body.field-mode .header{display:none !important}
+body.field-mode .left-panel{display:none !important}
+body.field-mode .right-panel{display:none !important}
+body.field-mode .col-resize{display:none !important}
+body.field-mode .sg-panel{display:none !important}
+body.field-mode .viewport-area{grid-column:1/-1 !important;grid-row:1/-1 !important}
+body.field-mode .empty-vp .ev-title{font-size:18px}
+body.field-mode .empty-vp .ev-hint{font-size:13px}
+
+/* ── Field toolbar: fixed bottom bar ── */
+.field-bar{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(24,24,27,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid rgba(255,255,255,.1);
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  gap:4px;justify-content:center;flex-wrap:wrap;
+}
+body.field-mode .field-bar{display:flex}
+
+.field-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:54px;min-height:54px;padding:6px 8px;
+  border:none;border-radius:10px;background:transparent;
+  color:rgba(255,255,255,.7);cursor:pointer;
+  font-family:'Inter';font-size:9px;font-weight:500;letter-spacing:.3px;
+  transition:all .15s;gap:2px;-webkit-tap-highlight-color:transparent;
+}
+.field-btn:active{transform:scale(.92);background:rgba(255,255,255,.12)}
+.field-btn.on{color:#4ade80;background:rgba(74,222,128,.12)}
+.field-btn-icon{font-size:22px;line-height:1}
+.field-btn-label{white-space:nowrap}
+.field-sep{width:1px;height:36px;background:rgba(255,255,255,.12);margin:0 2px;align-self:center}
+
+/* ── Field properties sheet: slide-up from bottom ── */
+.field-sheet{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:250;
+  background:var(--bg-panel);border-top:1px solid var(--border);
+  border-radius:16px 16px 0 0;
+  max-height:55vh;overflow-y:auto;overflow-x:hidden;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.9,.3,1);
+  padding-bottom:calc(68px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 30px rgba(0,0,0,.25);
+}
+body.field-mode .field-sheet{display:block}
+.field-sheet.open{transform:translateY(0)}
+.field-sheet-handle{
+  width:36px;height:4px;background:var(--border);border-radius:2px;
+  margin:10px auto 4px;
+}
+.field-sheet-hdr{
+  display:flex;align-items:center;padding:6px 16px 10px;gap:8px;
+  position:sticky;top:0;background:var(--bg-panel);z-index:1;
+  border-bottom:1px solid var(--border);
+}
+.field-sheet-title{font-family:'JetBrains Mono';font-size:12px;font-weight:600;color:var(--text);flex:1}
+.field-sheet-close{background:none;border:none;font-size:18px;color:var(--text-muted);cursor:pointer;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.field-sheet-body{padding:8px 12px}
+
+/* ── Field file loader overlay ── */
+.field-loader{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.6);align-items:center;justify-content:center;
+}
+body.field-mode .field-loader.show{display:flex}
+.field-loader-card{
+  background:var(--bg-panel);border-radius:16px;padding:32px;
+  width:90%;max-width:420px;text-align:center;
+}
+.field-loader-card h3{font-size:16px;margin-bottom:16px;color:var(--text)}
+.field-loader-drop{
+  border:2.5px dashed var(--border);border-radius:12px;padding:40px 20px;
+  cursor:pointer;transition:all .2s;margin-bottom:16px;
+}
+.field-loader-drop:active{border-color:var(--green);background:#f0fdf4}
+.field-loader-drop-icon{font-size:40px;margin-bottom:8px}
+.field-loader-drop-text{font-size:14px;color:var(--text-muted)}
+.field-loader-status{font-size:12px;color:var(--green);margin-top:8px;min-height:18px}
+.field-loader-close{
+  background:none;border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 24px;font-size:14px;font-family:'Inter';color:var(--text);cursor:pointer;margin-top:8px;
+  min-height:44px;
+}
+
+/* ── Field mode info toast ── */
+.field-toast{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:300;
+  background:rgba(24,24,27,.9);color:#fff;padding:8px 16px;border-radius:8px;
+  font-size:12px;font-family:'Inter';pointer-events:none;
+  opacity:0;transition:opacity .3s;
+}
+.field-toast.show{opacity:1}
+
+/* ── Field storey selector: horizontal pill strip ── */
+.field-storeys{
+  display:none;position:fixed;top:12px;left:12px;right:12px;z-index:180;
+  overflow-x:auto;overflow-y:hidden;white-space:nowrap;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;padding:4px 0;
+}
+.field-storeys::-webkit-scrollbar{display:none}
+body.field-mode .field-storeys.show{display:flex;gap:6px}
+.field-storey-pill{
+  display:inline-flex;align-items:center;padding:7px 14px;
+  border-radius:20px;border:1.5px solid rgba(255,255,255,.2);
+  background:rgba(24,24,27,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  color:rgba(255,255,255,.7);font-family:'JetBrains Mono';font-size:11px;font-weight:500;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;transition:all .15s;
+}
+.field-storey-pill:active{transform:scale(.95)}
+.field-storey-pill.on{background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.5);color:#4ade80}
+
+/* ── Long-press context menu for touch ── */
+body.field-mode .ctx-menu{border-radius:12px;min-width:200px}
+body.field-mode .ctx-menu .ctx-item{padding:12px 16px;font-size:14px;min-height:44px;display:flex;align-items:center}
+
 /* ── Auth UI ────────────────────────────────────────────────── */
 /* Full-page overlay shown while auth state is unknown OR user is logged out. */
 /* Uses display:flex by default (covers app on first paint to prevent flash of */
@@ -825,6 +985,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
       <button class="btn" id="btnPlan" onclick="togglePlanOverlay()" title="Show 2D plan overlay (top-down view of current storey)">⊟ Plan</button>
       <button class="btn" id="btnSGCheck" style="border-color:#dc2626;color:#dc2626" onclick="toggleSGCheckPanel()" title="CORENET X / IFC-SG pre-submission validation (Singapore)">🇸🇬 SG Check</button>
       <button class="btn" onclick="resetCam()">⌂ Reset</button>
+      <button class="field-toggle" id="fieldModeBtn" onclick="fieldEnterMode()" title="Field Mode — tablet-optimized for on-site review">📱 Field</button>
       <div class="h-sep" style="margin:0 4px"></div>
       <button class="user-badge" id="userBadge" onclick="toggleUserMenu(event)" style="display:none">
         <span class="user-avatar" id="userAvatar">·</span>
@@ -861,9 +1022,8 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
       </div>
       <!-- Federation files (slots 2+) -->
       <div class="fed-section" id="fedSection">
-        <div class="fed-title">Federation Files <span class="fed-count" id="fedCount">0</span></div>
         <div class="fed-slots" id="fedSlots"></div>
-        <button class="fed-add-btn" id="fedAddBtn" onclick="fedAddSlot()" title="Load additional IFC file (MEP, Structure, etc.)">+ Add discipline file</button>
+        <button class="fed-add-btn" id="fedAddBtn" onclick="fedAddSlot()" title="Load additional IFC files to view together">+ Add more files</button>
         <input type="file" id="fedFileInput" accept=".ifc" style="display:none" onchange="fedHandleFile(event)">
       </div>
     </div>
@@ -899,6 +1059,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
     <div class="panel-tabs" id="panelTabs">
       <div class="ptab on" onclick="switchTab('tree')">Entity Tree</div>
       <div class="ptab" onclick="switchTab('issues')">Issues <span class="ptab-count" id="issueCount">0</span></div>
+      <div class="ptab" onclick="switchTab('search')">🔍 Search <span class="ptab-count" id="searchCount" style="display:none">0</span></div>
     </div>
     <div class="issue-nav" id="issueNav">
       <span class="issue-nav-info" id="issueNavInfo">0 / 0</span>
@@ -909,6 +1070,51 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
     </div>
     <div class="entity-tree" id="eTree"></div>
     <div class="issues-list" id="issuesList"></div>
+    <!-- Element Search Panel -->
+    <div class="search-panel" id="searchPanel">
+      <div class="search-bar">
+        <input class="search-input" id="searchInput" placeholder="Search by name, type, tag…" oninput="searchDebounce()" onkeydown="if(event.key==='Enter')searchRun()">
+        <div class="search-filters">
+          <select class="search-type-select" id="searchTypeFilter" onchange="searchRun()">
+            <option value="">All types</option>
+          </select>
+          <div class="search-chip" onclick="searchToggleChip(this,'missing')" title="Elements missing a specific property">❌ Missing prop</div>
+          <div class="search-chip" onclick="searchToggleChip(this,'has')" title="Elements that have a specific property">✓ Has prop</div>
+          <div class="search-chip" onclick="searchToggleAdvanced()" title="Advanced property filter">⚙ Advanced</div>
+        </div>
+      </div>
+      <div class="search-adv" id="searchAdv">
+        <div class="search-adv-row">
+          <span class="search-adv-label">Where</span>
+          <input class="search-adv-val" id="searchAdvProp" placeholder="Property name" style="width:110px" list="searchPropList">
+          <datalist id="searchPropList"></datalist>
+          <select class="search-adv-select" id="searchAdvOp" style="max-width:80px">
+            <option value="exists">exists</option>
+            <option value="empty">is empty</option>
+            <option value="eq">equals</option>
+            <option value="neq">not equals</option>
+            <option value="contains">contains</option>
+            <option value="gt">greater than</option>
+            <option value="lt">less than</option>
+            <option value="gte">≥</option>
+            <option value="lte">≤</option>
+          </select>
+          <input class="search-adv-val" id="searchAdvVal" placeholder="Value">
+          <button class="search-act-btn" onclick="searchRun()" style="padding:3px 10px">Go</button>
+        </div>
+      </div>
+      <div class="search-stats" id="searchStats">
+        <span id="searchStatsText">Load a model to search</span>
+        <span id="searchStatsActions"></span>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+      <div class="search-actions" id="searchActions" style="display:none">
+        <button class="search-act-btn" onclick="searchIsolateAll()" title="Isolate all results in 3D">👁 Isolate all</button>
+        <button class="search-act-btn" onclick="searchHideAll()" title="Hide all results">🚫 Hide all</button>
+        <button class="search-act-btn" onclick="searchSelectAll()" title="Select all for export">☑ Select all</button>
+        <button class="search-act-btn danger" onclick="searchClear()">✕ Clear</button>
+      </div>
+    </div>
     
   </div>
 
@@ -1275,6 +1481,55 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 </div>
 
 <!-- ── SG JSON Loader Dialog ── -->
+
+<!-- ══ FIELD MODE UI ELEMENTS ══ -->
+<!-- Bottom toolbar -->
+<div class="field-bar" id="fieldBar">
+  <button class="field-btn" onclick="fieldOpenLoader()"><span class="field-btn-icon">📂</span><span class="field-btn-label">Open</span></button>
+  <div class="field-sep"></div>
+  <button class="field-btn" id="fieldBtnSection" onclick="fieldToggleSection()"><span class="field-btn-icon">✂️</span><span class="field-btn-label">Section</span></button>
+  <button class="field-btn" id="fieldBtnMeasure" onclick="fieldToggleMeasure()"><span class="field-btn-icon">📏</span><span class="field-btn-label">Measure</span></button>
+  <button class="field-btn" onclick="fieldScreenshot()"><span class="field-btn-icon">📸</span><span class="field-btn-label">Photo</span></button>
+  <button class="field-btn" id="fieldBtnWalk" onclick="fieldToggleWalk()"><span class="field-btn-icon">🚶</span><span class="field-btn-label">Walk</span></button>
+  <div class="field-sep"></div>
+  <button class="field-btn" id="fieldBtnStoreys" onclick="fieldToggleStoreys()"><span class="field-btn-icon">🏢</span><span class="field-btn-label">Storeys</span></button>
+  <button class="field-btn" onclick="zoomFit()"><span class="field-btn-icon">⊞</span><span class="field-btn-label">Fit</span></button>
+  <button class="field-btn" onclick="fieldShowAll()"><span class="field-btn-icon">👁</span><span class="field-btn-label">Show All</span></button>
+  <div class="field-sep"></div>
+  <button class="field-btn" onclick="fieldExitMode()"><span class="field-btn-icon">🖥</span><span class="field-btn-label">Desktop</span></button>
+</div>
+
+<!-- Properties slide-up sheet -->
+<div class="field-sheet" id="fieldSheet">
+  <div class="field-sheet-handle"></div>
+  <div class="field-sheet-hdr">
+    <div class="field-sheet-title" id="fieldSheetTitle">Properties</div>
+    <button class="field-sheet-close" onclick="fieldCloseSheet()">✕</button>
+  </div>
+  <div class="field-sheet-body" id="fieldSheetBody">
+    <div class="prop-empty">Tap an element to inspect</div>
+  </div>
+</div>
+
+<!-- File loader overlay -->
+<div class="field-loader" id="fieldLoader">
+  <div class="field-loader-card">
+    <h3>Load IFC Model</h3>
+    <div class="field-loader-drop" id="fieldLoaderDrop" onclick="document.getElementById('fieldFileInput').click()">
+      <div class="field-loader-drop-icon">📐</div>
+      <div class="field-loader-drop-text">Tap to select .ifc file</div>
+    </div>
+    <div class="field-loader-status" id="fieldLoaderStatus"></div>
+    <input type="file" id="fieldFileInput" accept=".ifc" style="display:none" onchange="fieldLoadFile(event)">
+    <button class="field-loader-close" onclick="fieldCloseLoader()">Close</button>
+  </div>
+</div>
+
+<!-- Storey pills strip -->
+<div class="field-storeys" id="fieldStoreys"></div>
+
+<!-- Info toast -->
+<div class="field-toast" id="fieldToast"></div>
 <div class="sg-json-overlay" id="sgJsonOverlay">
   <div class="sg-json-dialog">
     <div class="sg-json-dialog-hdr">
@@ -4222,6 +4477,8 @@ async function buildCatFromModels(){
   
   log('Categories found:',Object.keys(window._catData).length,'types');
   document.getElementById('catFilter').classList.add('show');
+  // Show panel tabs so Search is accessible even without compare
+  document.getElementById('panelTabs').classList.add('show');
   activeCategories=new Set();
   buildCatDropdown();
   updateCatTags();
@@ -4741,7 +4998,6 @@ function fedRecomputeBounds(){
 
 function fedRenderSlots(){
   const container = document.getElementById('fedSlots');
-  const countEl = document.getElementById('fedCount');
   let html = '';
   let count = 0;
   for(let i=2; i<loadedModels.length || i<files.length; i++){
@@ -4749,7 +5005,6 @@ function fedRenderSlots(){
     count++;
     const colorIdx = (i-2) % FED_COLORS.length;
     const color = FED_COLORS[colorIdx];
-    const label = FED_LABELS[colorIdx] || String.fromCharCode(65+i);
     const loaded = !!loadedModels[i];
     const fname = files[i]?.name || '(unknown)';
     const size = files[i] ? (files[i].size/1048576).toFixed(1)+'MB' : '';
@@ -4758,7 +5013,7 @@ function fedRenderSlots(){
     html += `<div class="fed-slot ${loaded?'loaded':''}">
       <div class="fed-slot-color" style="background:${color}"></div>
       <div class="fed-slot-info">
-        <div class="fed-slot-name" title="${escapeHtml(fname)}">${label}: ${escapeHtml(fname)}</div>
+        <div class="fed-slot-name" title="${escapeHtml(fname)}">${escapeHtml(fname)}</div>
         <div class="fed-slot-status"><span style="${statusCls}">${statusText}</span> ${size}</div>
       </div>
       <input type="checkbox" class="fed-slot-vis" id="fedVis${i}" ${loaded?'checked':''} onchange="fedToggleVis(${i})" title="Toggle visibility">
@@ -4766,7 +5021,6 @@ function fedRenderSlots(){
     </div>`;
   }
   container.innerHTML = html;
-  countEl.textContent = count;
 }
 
 // Helper: get total number of loaded models (any slot)
@@ -6386,10 +6640,13 @@ let issuesList=[];
 let currentIssueIdx=-1;
 
 window.switchTab=function(tab){
-  document.querySelectorAll('.ptab').forEach((t,i)=>t.classList.toggle('on',i===(tab==='tree'?0:1)));
+  const tabs = document.querySelectorAll('.ptab');
+  tabs.forEach((t,i)=>t.classList.toggle('on', (tab==='tree'&&i===0)||(tab==='issues'&&i===1)||(tab==='search'&&i===2)));
   document.getElementById('eTree').style.display=tab==='tree'?'':'none';
   document.getElementById('issuesList').classList.toggle('show',tab==='issues');
   document.getElementById('issueNav').classList.toggle('show',tab==='issues');
+  document.getElementById('searchPanel').classList.toggle('show',tab==='search');
+  if(tab==='search') searchInit();
 };
 
 function buildIssues(){
@@ -11121,6 +11378,656 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+
+// ══════════════════════════════════════════════════════════════════════
+// ── ELEMENT SEARCH & FILTER ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// Search elements across all loaded models by name, type, tag, property.
+// Results can be clicked to highlight+zoom, or bulk isolated/hidden.
+
+let _searchCache = null;     // {elements[], propNames[], typeNames[], key}
+let _searchResults = [];     // filtered subset
+let _searchTimer = null;
+let _searchSelectedIdx = -1;
+
+// Build search cache from all loaded models (reuses getAllProps)
+async function searchBuildCache(){
+  const key = loadedModels.map(m=>m?.modelID).join('-');
+  if(_searchCache && _searchCache.key === key) return _searchCache;
+
+  const elements = [];
+  const typeSet = new Set();
+  const propNameSet = new Set();
+
+  for(let mi=0; mi<loadedModels.length; mi++){
+    const m = loadedModels[mi];
+    if(!m) continue;
+    const props = await getAllProps(m.modelID);
+
+    // Also batch-read psets for property search
+    const mgr = ifcLoader?.ifcManager;
+    const api = mgr?.state?.api;
+    const psetLookup = new Map();
+    if(api){
+      try{
+        const relIDs = api.GetLineIDsWithType(m.modelID, 4186316022);
+        for(let ri=0; ri<relIDs.size(); ri++){
+          try{
+            const rel = await mgr.getItemProperties(m.modelID, relIDs.get(ri), false);
+            if(!rel?.RelatingPropertyDefinition) continue;
+            const pdefID = rel.RelatingPropertyDefinition.value ?? rel.RelatingPropertyDefinition;
+            if(typeof pdefID !== 'number') continue;
+            let relatedEIDs = [];
+            if(Array.isArray(rel.RelatedObjects)) relatedEIDs = rel.RelatedObjects.map(o=>o.value??o).filter(v=>typeof v==='number');
+            else if(rel.RelatedObjects?.value) relatedEIDs = [rel.RelatedObjects.value];
+            let pset;
+            try{pset = await mgr.getItemProperties(m.modelID, pdefID, true);}catch(e){continue;}
+            if(!pset) continue;
+            for(const eid of relatedEIDs){
+              if(!psetLookup.has(eid)) psetLookup.set(eid, []);
+              psetLookup.get(eid).push(pset);
+            }
+          }catch(e){}
+        }
+      }catch(e){}
+    }
+
+    for(const gid in props){
+      const p = props[gid];
+      const typeName = IFC_NAMES[p.type] || sgIfcCodeToClass(p.type);
+      typeSet.add(typeName);
+
+      // Collect property names + values from psets
+      const psets = psetLookup.get(p.expressID) || [];
+      const propMap = new Map(); // propName → {value, psetName}
+      for(const ps of psets){
+        const psetName = ps.Name?.value || '';
+        const hps = Array.isArray(ps.HasProperties) ? ps.HasProperties : (ps.HasProperties ? [ps.HasProperties] : []);
+        for(const hp of hps){
+          if(!hp?.Name?.value) continue;
+          const pn = hp.Name.value;
+          propNameSet.add(pn);
+          const nv = hp.NominalValue;
+          propMap.set(pn, { value: nv?.value ?? nv ?? null, psetName });
+        }
+        const qs = Array.isArray(ps.Quantities) ? ps.Quantities : (ps.Quantities ? [ps.Quantities] : []);
+        for(const q of qs){
+          if(!q?.Name?.value) continue;
+          propNameSet.add(q.Name.value);
+          const val = q.LengthValue?.value ?? q.AreaValue?.value ?? q.VolumeValue?.value ?? q.CountValue?.value ?? null;
+          propMap.set(q.Name.value, { value: val, psetName: ps.Name?.value || '' });
+        }
+      }
+
+      elements.push({
+        eid: p.expressID,
+        globalId: gid,
+        name: (p.name || '').trim(),
+        type: typeName,
+        typeCode: p.type,
+        tag: p.tag || '',
+        modelIdx: mi,
+        modelID: m.modelID,
+        props: propMap,
+        // Searchable text: concatenate name + type + tag + all prop values
+        _text: [(p.name||''), typeName, (p.tag||''), ...Array.from(propMap.values()).map(v=>String(v.value||''))].join(' ').toLowerCase()
+      });
+    }
+  }
+
+  _searchCache = {
+    elements,
+    propNames: Array.from(propNameSet).sort(),
+    typeNames: Array.from(typeSet).sort(),
+    key
+  };
+  log(`Search cache: ${elements.length} elements, ${propNameSet.size} property names, ${typeSet.size} types`);
+  return _searchCache;
+}
+
+// Initialize search panel: populate type dropdown and property datalist
+async function searchInit(){
+  if(!loadedModels.some(m=>!!m)){
+    document.getElementById('searchStatsText').textContent = 'Load a model to search';
+    return;
+  }
+  document.getElementById('searchStatsText').textContent = '⏳ Building search index…';
+  await new Promise(r=>setTimeout(r, 10));
+
+  const cache = await searchBuildCache();
+
+  // Populate type dropdown
+  const sel = document.getElementById('searchTypeFilter');
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="">All types (' + cache.typeNames.length + ')</option>';
+  for(const t of cache.typeNames){
+    sel.innerHTML += '<option value="' + escapeHtml(t) + '">' + t.replace('Ifc','') + '</option>';
+  }
+  sel.value = curVal;
+
+  // Populate property datalist for advanced filter
+  const dl = document.getElementById('searchPropList');
+  dl.innerHTML = cache.propNames.slice(0, 200).map(n => '<option value="' + escapeHtml(n) + '">').join('');
+
+  document.getElementById('searchStatsText').textContent = cache.elements.length + ' elements indexed';
+}
+
+// Debounced search trigger
+function searchDebounce(){
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(searchRun, 250);
+}
+
+// Run search with current filters
+async function searchRun(){
+  if(!_searchCache) await searchBuildCache();
+  if(!_searchCache) return;
+
+  const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const typeFilter = document.getElementById('searchTypeFilter').value;
+  const advProp = (document.getElementById('searchAdvProp').value || '').trim();
+  const advOp = document.getElementById('searchAdvOp').value;
+  const advVal = (document.getElementById('searchAdvVal').value || '').trim();
+  const advActive = document.getElementById('searchAdv').classList.contains('show') && advProp;
+
+  // Check chip states
+  const chips = document.querySelectorAll('#searchPanel .search-chip');
+  const missingMode = chips[0]?.classList.contains('on');
+  const hasMode = chips[1]?.classList.contains('on');
+  const chipProp = missingMode || hasMode ? advProp : '';
+
+  let results = _searchCache.elements;
+
+  // Text search
+  if(query){
+    const terms = query.split(/\s+/);
+    results = results.filter(e => terms.every(t => e._text.includes(t)));
+  }
+
+  // Type filter
+  if(typeFilter){
+    results = results.filter(e => e.type === typeFilter);
+  }
+
+  // Missing/Has property chip
+  if(chipProp && (missingMode || hasMode)){
+    results = results.filter(e => {
+      const has = e.props.has(chipProp);
+      const val = e.props.get(chipProp)?.value;
+      const hasValue = has && val !== null && val !== undefined && val !== '';
+      return missingMode ? !hasValue : hasValue;
+    });
+  }
+
+  // Advanced property filter
+  if(advActive && !missingMode && !hasMode){
+    results = results.filter(e => {
+      const p = e.props.get(advProp);
+      const val = p?.value;
+      switch(advOp){
+        case 'exists': return val !== null && val !== undefined && val !== '';
+        case 'empty': return val === null || val === undefined || val === '';
+        case 'eq': return String(val).toLowerCase() === advVal.toLowerCase();
+        case 'neq': return String(val).toLowerCase() !== advVal.toLowerCase();
+        case 'contains': return String(val||'').toLowerCase().includes(advVal.toLowerCase());
+        case 'gt': return Number(val) > Number(advVal);
+        case 'lt': return Number(val) < Number(advVal);
+        case 'gte': return Number(val) >= Number(advVal);
+        case 'lte': return Number(val) <= Number(advVal);
+        default: return true;
+      }
+    });
+  }
+
+  _searchResults = results;
+  _searchSelectedIdx = -1;
+  searchRenderResults();
+}
+
+function searchRenderResults(){
+  const container = document.getElementById('searchResults');
+  const statsText = document.getElementById('searchStatsText');
+  const countBadge = document.getElementById('searchCount');
+  const actionsBar = document.getElementById('searchActions');
+
+  const total = _searchCache?.elements?.length || 0;
+  const count = _searchResults.length;
+  statsText.textContent = count + ' / ' + total + ' elements';
+  countBadge.textContent = count;
+  countBadge.style.display = count > 0 ? '' : 'none';
+  actionsBar.style.display = count > 0 ? '' : 'none';
+
+  // Render max 500 results
+  const maxShow = Math.min(count, 500);
+  let html = '';
+  for(let i=0; i<maxShow; i++){
+    const e = _searchResults[i];
+    const shortType = e.type.replace('Ifc','');
+    const tagHtml = e.tag ? '<span class="search-item-tag">#'+escapeHtml(e.tag)+'</span>' : '';
+    html += `<div class="search-item" onclick="searchSelect(${i})" data-idx="${i}">
+      <div class="search-item-name">${escapeHtml(e.name || '(unnamed)')}</div>
+      <div class="search-item-meta"><span>${shortType}</span>${tagHtml}<span style="opacity:.5">M${e.modelIdx}</span></div>
+    </div>`;
+  }
+  if(count > maxShow) html += `<div class="search-item" style="text-align:center;color:var(--text-muted);font-size:10px">… and ${count-maxShow} more (narrow your search)</div>`;
+  if(count === 0) html = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">No elements match</div>';
+  container.innerHTML = html;
+}
+
+// Select and focus a search result
+window.searchSelect = async function(idx){
+  if(idx < 0 || idx >= _searchResults.length) return;
+  _searchSelectedIdx = idx;
+  const e = _searchResults[idx];
+
+  // Update selection styling
+  document.querySelectorAll('.search-item').forEach((el,i)=> el.classList.toggle('selected', i===idx));
+
+  // Highlight element in 3D
+  if(!loadedModels[e.modelIdx]) return;
+  const modelID = loadedModels[e.modelIdx].modelID;
+
+  // Show properties
+  try{
+    const props = await ifcLoader.ifcManager.getItemProperties(modelID, e.eid, true);
+    if(props) showProps(props, e.modelIdx);
+  }catch(err){}
+
+  // Highlight
+  try{
+    clearHighlight();
+    if(!window._hlMat) window._hlMat = new THREE.MeshPhongMaterial({color:0x2563eb,transparent:true,opacity:0.6,side:THREE.DoubleSide,depthTest:true,clippingPlanes:clipPlanes});
+    const sub = ifcLoader.ifcManager.createSubset({modelID, ids:[e.eid], material:window._hlMat, scene, removePrevious:true, customID:'userHighlight'});
+    if(sub){sub.position.copy(loadedModels[e.modelIdx].position); sub.updateMatrixWorld(true); window._lastHL={subset:sub,mid:modelID};}
+  }catch(err){}
+
+  // Zoom to element
+  const bbox = getElementBBox(e.modelIdx, e.eid);
+  if(bbox?.center){
+    const size = Math.max(bbox.size.x, bbox.size.y, bbox.size.z);
+    const d = Math.max(size*2.5, 3);
+    camera.position.set(bbox.center.x+d*0.5, bbox.center.y+d*0.4, bbox.center.z+d*0.5);
+    controls.target.copy(bbox.center);
+    controls.update();
+  }
+};
+
+// Bulk actions on search results
+window.searchIsolateAll = function(){
+  if(!_searchResults.length) return;
+  // Hide everything, then show only results
+  forEachModel((model)=>{
+    model.traverse(c=>{if(c.isMesh) c.visible=false});
+  });
+  // Show matched elements via subsets
+  const byModel = new Map();
+  for(const e of _searchResults){
+    if(!byModel.has(e.modelIdx)) byModel.set(e.modelIdx, []);
+    byModel.get(e.modelIdx).push(e.eid);
+  }
+  for(const [mi, eids] of byModel){
+    if(!loadedModels[mi]) continue;
+    try{
+      const mat = new THREE.MeshPhongMaterial({color:0x22c55e,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthTest:true,clippingPlanes:clipPlanes});
+      const sub = ifcLoader.ifcManager.createSubset({modelID:loadedModels[mi].modelID, ids:eids, material:mat, scene, removePrevious:false, customID:'searchIsolate_'+mi});
+      if(sub){sub.position.copy(loadedModels[mi].position); sub.updateMatrixWorld(true);}
+    }catch(e){}
+  }
+  document.getElementById('btnShowAll').style.display='';
+  log(`Search: isolated ${_searchResults.length} elements`);
+};
+
+window.searchHideAll = function(){
+  if(!_searchResults.length) return;
+  const hideSet = new Set(_searchResults.map(e=>e.eid));
+  forEachModel((model)=>{
+    model.traverse(c=>{
+      if(!c.isMesh) return;
+      if(c.geometry?.attributes?.expressID){
+        const arr = c.geometry.attributes.expressID.array;
+        const eids = new Set();
+        for(let i=0; i<arr.length; i++) eids.add(arr[i]);
+        for(const eid of eids){
+          if(hideSet.has(eid)){ c.visible=false; break; }
+        }
+      }
+    });
+  });
+  document.getElementById('btnShowAll').style.display='';
+  log(`Search: hidden ${_searchResults.length} elements`);
+};
+
+window.searchSelectAll = function(){
+  // Select all results — scroll to first
+  if(_searchResults.length > 0) searchSelect(0);
+};
+
+window.searchClear = function(){
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchTypeFilter').value = '';
+  document.getElementById('searchAdvProp').value = '';
+  document.getElementById('searchAdvVal').value = '';
+  document.querySelectorAll('#searchPanel .search-chip').forEach(c=>c.classList.remove('on'));
+  document.getElementById('searchAdv').classList.remove('show');
+  _searchResults = [];
+  _searchSelectedIdx = -1;
+  document.getElementById('searchResults').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px">Type to search elements</div>';
+  document.getElementById('searchCount').style.display = 'none';
+  document.getElementById('searchActions').style.display = 'none';
+  document.getElementById('searchStatsText').textContent = (_searchCache?.elements?.length||0) + ' elements indexed';
+};
+
+window.searchToggleChip = function(el, mode){
+  // Toggle chip, ensure mutual exclusivity between missing/has
+  const wasOn = el.classList.contains('on');
+  document.querySelectorAll('#searchPanel .search-chip').forEach(c=>c.classList.remove('on'));
+  if(!wasOn){
+    el.classList.add('on');
+    // Show advanced panel for property name input
+    document.getElementById('searchAdv').classList.add('show');
+    document.getElementById('searchAdvProp').focus();
+    // Set appropriate operator
+    document.getElementById('searchAdvOp').value = mode === 'missing' ? 'empty' : 'exists';
+  }
+  searchRun();
+};
+
+window.searchToggleAdvanced = function(){
+  document.getElementById('searchAdv').classList.toggle('show');
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// ── FIELD MODE — tablet-optimized on-site BIM review ────────────────
+// ══════════════════════════════════════════════════════════════════════
+// Activated via 📱 Field button. Hides desktop UI (header, sidebars),
+// shows full-viewport 3D with bottom toolbar and slide-up property sheet.
+// Touch-optimized: 54px button targets, long-press context menu, swipe
+// sheet, storey pill strip.
+
+let fieldActive = false;
+let _fieldLongPressTimer = null;
+let _fieldToastTimer = null;
+
+window.fieldEnterMode = function(){
+  fieldActive = true;
+  document.body.classList.add('field-mode');
+  // Resize renderer to fill viewport
+  setTimeout(()=>{
+    if(renderer){
+      const vp = document.getElementById('vpCanvas');
+      renderer.setSize(vp.clientWidth, vp.clientHeight);
+      camera.aspect = vp.clientWidth / vp.clientHeight;
+      camera.updateProjectionMatrix();
+    }
+  }, 100);
+  fieldToast('Field Mode — tap elements to inspect');
+  // Setup long-press for context menu on touch devices
+  fieldSetupLongPress();
+  log('Field mode activated');
+};
+
+window.fieldExitMode = function(){
+  fieldActive = false;
+  document.body.classList.remove('field-mode');
+  fieldCloseSheet();
+  document.getElementById('fieldStoreys').classList.remove('show');
+  // Resize renderer back
+  setTimeout(()=>{
+    if(renderer){
+      const vp = document.getElementById('vpCanvas');
+      renderer.setSize(vp.clientWidth, vp.clientHeight);
+      camera.aspect = vp.clientWidth / vp.clientHeight;
+      camera.updateProjectionMatrix();
+    }
+  }, 100);
+  log('Field mode deactivated');
+};
+
+// ── Field toast notification ──
+function fieldToast(msg, duration=2500){
+  const el = document.getElementById('fieldToast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_fieldToastTimer);
+  _fieldToastTimer = setTimeout(()=> el.classList.remove('show'), duration);
+}
+
+// ── Field file loader ──
+window.fieldOpenLoader = function(){
+  document.getElementById('fieldLoader').classList.add('show');
+};
+window.fieldCloseLoader = function(){
+  document.getElementById('fieldLoader').classList.remove('show');
+};
+window.fieldLoadFile = async function(ev){
+  const f = ev.target?.files?.[0];
+  if(!f) return;
+  const statusEl = document.getElementById('fieldLoaderStatus');
+  statusEl.textContent = '⏳ Loading ' + f.name + '...';
+  // Load into slot 0 (field mode = single model viewer)
+  files[0] = f;
+  if(!ifcLoader){ if(!await initIFC()){ statusEl.textContent = '✕ Init failed'; return; }}
+  try{
+    await loadIFC(0);
+    statusEl.textContent = '✓ ' + f.name + ' loaded';
+    setTimeout(fieldCloseLoader, 800);
+    fieldBuildStoreys();
+  }catch(e){
+    statusEl.textContent = '✕ ' + (e?.message || 'Load failed');
+  }
+  ev.target.value = '';
+};
+
+// ── Field properties sheet ──
+window.fieldCloseSheet = function(){
+  document.getElementById('fieldSheet').classList.remove('open');
+};
+window.fieldOpenSheet = function(html, title){
+  const sheet = document.getElementById('fieldSheet');
+  document.getElementById('fieldSheetTitle').textContent = title || 'Properties';
+  document.getElementById('fieldSheetBody').innerHTML = html;
+  sheet.classList.add('open');
+};
+
+// Hook into showProps to also update field sheet when in field mode
+const _origShowProps = window.showProps;
+if(typeof showProps === 'function'){
+  const _showPropsOrig = showProps;
+  // We can't reassign a function declaration, so we patch the property panel
+  // rendering to also mirror content into the field sheet.
+  // The field sheet reads from the propArea after showProps runs.
+  const _propObserver = new MutationObserver(()=>{
+    if(!fieldActive) return;
+    const propArea = document.getElementById('propArea');
+    if(!propArea) return;
+    const content = propArea.innerHTML;
+    if(content && !content.includes('prop-empty')){
+      fieldOpenSheet(content, 'Element Properties');
+    }
+  });
+  // Start observing after DOM is ready
+  setTimeout(()=>{
+    const propArea = document.getElementById('propArea');
+    if(propArea) _propObserver.observe(propArea, {childList:true, subtree:true});
+  }, 500);
+}
+
+// ── Field toolbar button handlers ──
+window.fieldToggleSection = function(){
+  toggleSectionBox();
+  const btn = document.getElementById('fieldBtnSection');
+  btn.classList.toggle('on', sectionActive);
+  fieldToast(sectionActive ? 'Section box ON' : 'Section box OFF');
+};
+
+window.fieldToggleMeasure = function(){
+  toggleMeasure();
+  const btn = document.getElementById('fieldBtnMeasure');
+  btn.classList.toggle('on', measureMode);
+  fieldToast(measureMode ? 'Measure mode ON — tap 2 points' : 'Measure OFF');
+};
+
+window.fieldToggleWalk = function(){
+  toggleWalkMode();
+  const btn = document.getElementById('fieldBtnWalk');
+  btn.classList.toggle('on', walkMode);
+  fieldToast(walkMode ? 'Walk mode ON' : 'Walk mode OFF');
+};
+
+window.fieldScreenshot = function(){
+  captureScreenshot();
+  fieldToast('Screenshot saved');
+};
+
+window.fieldShowAll = function(){
+  if(window.showAllHidden) showAllHidden();
+  fieldToast('All elements visible');
+};
+
+// ── Field storey selector ──
+window.fieldToggleStoreys = function(){
+  const el = document.getElementById('fieldStoreys');
+  const wasShown = el.classList.contains('show');
+  el.classList.toggle('show');
+  const btn = document.getElementById('fieldBtnStoreys');
+  btn.classList.toggle('on', !wasShown);
+  if(!wasShown) fieldBuildStoreys();
+};
+
+function fieldBuildStoreys(){
+  const container = document.getElementById('fieldStoreys');
+  // Collect storeys from all loaded models
+  let allStoreys = [];
+  for(let i=0; i<loadedModels.length; i++){
+    const m = loadedModels[i];
+    if(!m?.spatial?.storeys) continue;
+    for(const s of m.spatial.storeys){
+      allStoreys.push({ name: s.name, elevation: s.elevation });
+    }
+  }
+  // Deduplicate by elevation (±0.1m)
+  const unique = [];
+  for(const s of allStoreys){
+    if(!unique.some(u => Math.abs(u.elevation - s.elevation) < 0.1)){
+      unique.push(s);
+    }
+  }
+  unique.sort((a,b)=>a.elevation - b.elevation);
+
+  if(unique.length === 0){
+    container.innerHTML = '<span class="field-storey-pill" style="opacity:.5">No storeys found</span>';
+    return;
+  }
+
+  container.innerHTML = unique.map((s,i) =>
+    `<button class="field-storey-pill" data-elev="${s.elevation}" onclick="fieldSelectStorey(${i},${s.elevation})">${s.name}</button>`
+  ).join('');
+}
+
+window.fieldSelectStorey = function(idx, elevation){
+  // Update pill selection
+  const pills = document.querySelectorAll('.field-storey-pill');
+  pills.forEach((p,i)=> p.classList.toggle('on', i===idx));
+
+  // Set section box to show only this storey (±1.5m from elevation)
+  if(!sectionActive) toggleSectionBox();
+  const h = 4; // storey height estimate
+  // Section box: set Y (up) range around the storey elevation, offset by model centering
+  const cy = sharedCenterOffset?.y || 0;
+  const yBot = elevation - cy;
+  const yTop = yBot + h;
+  // Update section box planes
+  if(clipPlanes.length >= 6){
+    // Planes 2,3 are Y+ and Y- (top/bottom)
+    clipPlanes[2].constant = yTop;
+    clipPlanes[3].constant = -yBot;
+    // Expand X,Z to full model bounds
+    clipPlanes[0].constant = modelBounds.max.x + 10;
+    clipPlanes[1].constant = -modelBounds.min.x + 10;
+    clipPlanes[4].constant = modelBounds.max.z + 10;
+    clipPlanes[5].constant = -modelBounds.min.z + 10;
+  }
+  // Move camera to look at this storey
+  const cx = (modelBounds.min.x + modelBounds.max.x)/2;
+  const cz = (modelBounds.min.z + modelBounds.max.z)/2;
+  const span = Math.max(modelBounds.max.x - modelBounds.min.x, modelBounds.max.z - modelBounds.min.z);
+  camera.position.set(cx + span*0.4, yBot + h*0.6, cz + span*0.4);
+  controls.target.set(cx, yBot + h*0.3, cz);
+  controls.update();
+
+  fieldToast(`Storey: ${document.querySelectorAll('.field-storey-pill')[idx]?.textContent || ''}`);
+};
+
+// ── Long-press for context menu (touch devices) ──
+function fieldSetupLongPress(){
+  const canvas = renderer?.domElement;
+  if(!canvas) return;
+  let lpTimer = null;
+  let lpPos = {x:0, y:0};
+  let lpMoved = false;
+
+  canvas.addEventListener('touchstart', (e)=>{
+    if(!fieldActive) return;
+    if(e.touches.length !== 1) return;
+    lpPos = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+    lpMoved = false;
+    lpTimer = setTimeout(()=>{
+      if(!lpMoved){
+        // Simulate right-click context menu
+        const ev = new MouseEvent('contextmenu', {
+          bubbles:true, clientX:lpPos.x, clientY:lpPos.y
+        });
+        canvas.dispatchEvent(ev);
+        // Prevent the subsequent touchend from also triggering a click
+        e.preventDefault();
+      }
+    }, 600);
+  }, {passive:false});
+
+  canvas.addEventListener('touchmove', (e)=>{
+    if(!fieldActive || !lpTimer) return;
+    const dx = e.touches[0].clientX - lpPos.x;
+    const dy = e.touches[0].clientY - lpPos.y;
+    if(Math.abs(dx) > 10 || Math.abs(dy) > 10){
+      lpMoved = true;
+      clearTimeout(lpTimer);
+      lpTimer = null;
+    }
+  });
+
+  canvas.addEventListener('touchend', ()=>{
+    clearTimeout(lpTimer);
+    lpTimer = null;
+  });
+
+  canvas.addEventListener('touchcancel', ()=>{
+    clearTimeout(lpTimer);
+    lpTimer = null;
+  });
+}
+
+// ── Auto-detect touch device → suggest field mode ──
+if('ontouchstart' in window && window.innerWidth <= 1200){
+  // On touch tablets, show a hint after first model load
+  const _origLoadIFC = loadIFC;
+  // We'll check after first successful load
+  let _fieldHinted = false;
+  const _checkFieldHint = ()=>{
+    if(_fieldHinted || fieldActive) return;
+    if(loadedModels.some(m=>!!m)){
+      _fieldHinted = true;
+      setTimeout(()=>{
+        if(!fieldActive && confirm('Touch device detected. Switch to Field Mode for easier on-site viewing?')){
+          fieldEnterMode();
+        }
+      }, 1500);
+    }
+  };
+  // Hook into the controls change to detect post-load
+  setTimeout(()=>{
+    if(controls) controls.addEventListener('change', ()=>{ if(!_fieldHinted) _checkFieldHint(); });
+  }, 2000);
+}
 
 initThree();initSectionDrag();initViewCube();log('Ready');
 </script>

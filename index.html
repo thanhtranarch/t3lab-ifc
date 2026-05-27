@@ -796,15 +796,16 @@ body.field-mode .ctx-menu .ctx-item{padding:12px 16px;font-size:14px;min-height:
 
 /* ── Touch walk controls (Field Mode only) ── */
 .walk-touch{display:none;position:fixed;bottom:80px;left:0;right:0;z-index:210;pointer-events:none}
-body.field-mode .walk-touch.show{display:block}
-.walk-joy{position:absolute;bottom:20px;left:24px;width:120px;height:120px;pointer-events:auto;touch-action:none}
-.walk-joy-bg{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.walk-joy-knob{position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.45);border:1.5px solid rgba(255,255,255,.5);top:38px;left:38px;transition:none;pointer-events:none}
-.walk-look-zone{position:absolute;bottom:0;right:0;width:calc(100% - 168px);height:100%;pointer-events:auto;touch-action:none}
-.walk-speed-pill{position:absolute;bottom:150px;left:46px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);font-family:'JetBrains Mono';font-size:10px;padding:3px 10px;border-radius:12px;pointer-events:none}
-.walk-ud-btns{position:absolute;bottom:20px;right:24px;display:flex;flex-direction:column;gap:6px;pointer-events:auto}
-.walk-ud-btn{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+body.field-mode .walk-touch.show{display:flex;justify-content:space-between;align-items:flex-end;padding:0 16px 12px}
+.walk-joy{position:relative;width:130px;height:130px;pointer-events:auto;touch-action:none;flex-shrink:0}
+.walk-joy-bg{width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.walk-joy-knob{position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);top:41px;left:41px;transition:none;pointer-events:none}
+.walk-joy-label{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.35);pointer-events:none}
+.walk-center-btns{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:auto;flex-shrink:0}
+.walk-ud-btn{width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);color:rgba(255,255,255,.65);font-size:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);gap:1px}
 .walk-ud-btn:active{background:rgba(255,255,255,.25)}
+.walk-ud-label{font-size:8px;font-family:'JetBrains Mono';letter-spacing:.5px;opacity:.6}
+.walk-speed-pill{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-family:'JetBrains Mono';font-size:10px;padding:4px 10px;border-radius:12px;pointer-events:none;white-space:nowrap}
 
 /* ── Auth UI ────────────────────────────────────────────────── */
 /* Full-page overlay shown while auth state is unknown OR user is logged out. */
@@ -1547,15 +1548,23 @@ body.field-mode .walk-touch.show{display:block}
 
 <!-- Touch walk controls (visible only in Field Mode + walk active) -->
 <div class="walk-touch" id="walkTouch">
-  <div class="walk-joy" id="walkJoy">
+  <!-- Left: Move joystick -->
+  <div class="walk-joy walk-joy-left" id="walkJoy">
     <div class="walk-joy-bg"></div>
     <div class="walk-joy-knob" id="walkJoyKnob"></div>
+    <div class="walk-joy-label">MOVE</div>
   </div>
-  <div class="walk-speed-pill" id="walkSpeedPill">Speed: 1.0×</div>
-  <div class="walk-look-zone" id="walkLookZone"></div>
-  <div class="walk-ud-btns">
-    <button class="walk-ud-btn" id="walkUpBtn" ontouchstart="walkTouchUD('up',true)" ontouchend="walkTouchUD('up',false)">▲</button>
-    <button class="walk-ud-btn" id="walkDownBtn" ontouchstart="walkTouchUD('down',true)" ontouchend="walkTouchUD('down',false)">▼</button>
+  <!-- Center: Up/Down buttons -->
+  <div class="walk-center-btns">
+    <button class="walk-ud-btn" ontouchstart="walkTouchUD('up',true)" ontouchend="walkTouchUD('up',false)">▲<span class="walk-ud-label">Up</span></button>
+    <div class="walk-speed-pill" id="walkSpeedPill">1.0×</div>
+    <button class="walk-ud-btn" ontouchstart="walkTouchUD('down',true)" ontouchend="walkTouchUD('down',false)">▼<span class="walk-ud-label">Down</span></button>
+  </div>
+  <!-- Right: Look joystick -->
+  <div class="walk-joy walk-joy-right" id="walkLookJoy">
+    <div class="walk-joy-bg"></div>
+    <div class="walk-joy-knob" id="walkLookKnob"></div>
+    <div class="walk-joy-label">LOOK</div>
   </div>
 </div>
 <div class="sg-json-overlay" id="sgJsonOverlay">
@@ -2272,6 +2281,68 @@ function initThree(){
   }
 
   scene.add(new THREE.AmbientLight(0xffffff,0.8));
+
+  // ── Pinch-to-zoom toward finger midpoint (touch devices) ──
+  // OrbitControls' built-in pinch zooms toward controls.target (model center).
+  // This override zooms toward the MIDPOINT between the two fingers, raycast 
+  // to the model surface, giving intuitive "zoom where I'm looking" behavior.
+  {
+    let pinchDist0 = 0;
+    let pinchMid = {x:0, y:0};
+    let pinchActive = false;
+    const pinchRay = new THREE.Raycaster();
+    
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if(e.touches.length === 2 && !walkActive){
+        pinchActive = true;
+        const t0 = e.touches[0], t1 = e.touches[1];
+        pinchDist0 = Math.sqrt(Math.pow(t1.clientX-t0.clientX,2) + Math.pow(t1.clientY-t0.clientY,2));
+        pinchMid = { x: (t0.clientX+t1.clientX)/2, y: (t0.clientY+t1.clientY)/2 };
+        
+        // Raycast from midpoint to find zoom pivot
+        const rect = renderer.domElement.getBoundingClientRect();
+        const mx = ((pinchMid.x - rect.left)/rect.width)*2-1;
+        const my = -((pinchMid.y - rect.top)/rect.height)*2+1;
+        pinchRay.setFromCamera(new THREE.Vector2(mx, my), camera);
+        const targets = [];
+        scene.traverse(o => { if(o.isMesh && o.visible) targets.push(o); });
+        const hits = pinchRay.intersectObjects(targets, false);
+        
+        const zs = window._zoomState;
+        if(hits.length > 0){
+          zs.pivot.copy(hits[0].point);
+        } else {
+          const d = camera.position.distanceTo(controls.target);
+          zs.pivot.copy(pinchRay.ray.origin).addScaledVector(pinchRay.ray.direction, d);
+        }
+        zs.pivotValid = true;
+        
+        // Disable OrbitControls zoom to prevent double-zoom
+        controls.enableZoom = false;
+      }
+    }, {passive:true});
+    
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if(!pinchActive || e.touches.length !== 2 || walkActive) return;
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const dist = Math.sqrt(Math.pow(t1.clientX-t0.clientX,2) + Math.pow(t1.clientY-t0.clientY,2));
+      if(pinchDist0 > 0){
+        const scale = dist / pinchDist0;
+        // Feed into the same zoom velocity system used by mouse wheel
+        const zs = window._zoomState;
+        const delta = Math.log(scale) * -0.5; // negative = zoom in when spreading
+        zs.accum = delta;
+        pinchDist0 = dist;
+      }
+    }, {passive:true});
+    
+    renderer.domElement.addEventListener('touchend', () => {
+      if(pinchActive){
+        pinchActive = false;
+        controls.enableZoom = true; // re-enable OrbitControls zoom
+      }
+    }, {passive:true});
+  }
   const d1=new THREE.DirectionalLight(0xffffff,1.5);d1.position.set(80,120,80);scene.add(d1);
   const d2=new THREE.DirectionalLight(0x99aacc,0.5);d2.position.set(-50,80,-50);scene.add(d2);
   scene.add(new THREE.HemisphereLight(0xddeeff,0x99aa88,0.5));
@@ -8517,6 +8588,13 @@ function walkLoop(){
     move.add(right.clone().multiplyScalar(_walkJoyVec.x * spd));
   }
   
+  // Look rotation from touch look joystick (Field Mode)
+  if(_walkLookVec && (Math.abs(_walkLookVec.x)>0.08 || Math.abs(_walkLookVec.y)>0.08)){
+    walkYaw -= _walkLookVec.x * 0.03;   // horizontal look speed
+    walkPitch -= _walkLookVec.y * 0.02;  // vertical look speed (slower)
+    walkPitch = Math.max(-Math.PI/2+0.01, Math.min(Math.PI/2-0.01, walkPitch));
+  }
+  
   camera.position.add(move);
   
   // Look direction from yaw/pitch
@@ -11957,25 +12035,27 @@ window.fieldToggleWalk = function(){
 let _walkJoyActive = false;
 let _walkJoyCenter = {x:0, y:0};
 let _walkJoyVec = {x:0, y:0}; // -1..1 normalized
-let _walkLookActive = false;
-let _walkLookPrev = {x:0, y:0};
+let _walkLookJoyActive = false;
+let _walkLookJoyCenter = {x:0, y:0};
+let _walkLookVec = {x:0, y:0}; // -1..1 normalized for continuous look rotation
 
 function walkTouchInit(){
   const joy = document.getElementById('walkJoy');
   const knob = document.getElementById('walkJoyKnob');
-  const lookZone = document.getElementById('walkLookZone');
+  const lookJoy = document.getElementById('walkLookJoy');
+  const lookKnob = document.getElementById('walkLookKnob');
 
-  // Joystick touch
+  // ── Left joystick: Move ──
   joy.ontouchstart = (e) => {
     e.preventDefault();
     _walkJoyActive = true;
     const rect = joy.getBoundingClientRect();
-    _walkJoyCenter = { x: rect.left + 60, y: rect.top + 60 };
-    walkJoyMove(e.touches[0]);
+    _walkJoyCenter = { x: rect.left + 65, y: rect.top + 65 };
+    walkJoyMove(e.touches[0], knob, _walkJoyCenter, (v) => { _walkJoyVec = v; });
   };
   joy.ontouchmove = (e) => {
     e.preventDefault();
-    if(_walkJoyActive && e.touches[0]) walkJoyMove(e.touches[0]);
+    if(_walkJoyActive && e.touches[0]) walkJoyMove(e.touches[0], knob, _walkJoyCenter, (v) => { _walkJoyVec = v; });
   };
   joy.ontouchend = joy.ontouchcancel = (e) => {
     e.preventDefault();
@@ -11984,39 +12064,37 @@ function walkTouchInit(){
     knob.style.transform = 'translate(0px, 0px)';
   };
 
-  // Look zone touch (right side of screen)
-  lookZone.ontouchstart = (e) => {
+  // ── Right joystick: Look ──
+  lookJoy.ontouchstart = (e) => {
     e.preventDefault();
-    _walkLookActive = true;
-    _walkLookPrev = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    _walkLookJoyActive = true;
+    const rect = lookJoy.getBoundingClientRect();
+    _walkLookJoyCenter = { x: rect.left + 65, y: rect.top + 65 };
+    walkJoyMove(e.touches[0], lookKnob, _walkLookJoyCenter, (v) => { _walkLookVec = v; });
   };
-  lookZone.ontouchmove = (e) => {
+  lookJoy.ontouchmove = (e) => {
     e.preventDefault();
-    if(!_walkLookActive || !e.touches[0]) return;
-    const dx = e.touches[0].clientX - _walkLookPrev.x;
-    const dy = e.touches[0].clientY - _walkLookPrev.y;
-    _walkLookPrev = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    // Apply to walk yaw/pitch
-    walkYaw -= dx * 0.004;
-    walkPitch -= dy * 0.004;
-    walkPitch = Math.max(-Math.PI/2+0.01, Math.min(Math.PI/2-0.01, walkPitch));
+    if(_walkLookJoyActive && e.touches[0]) walkJoyMove(e.touches[0], lookKnob, _walkLookJoyCenter, (v) => { _walkLookVec = v; });
   };
-  lookZone.ontouchend = lookZone.ontouchcancel = () => {
-    _walkLookActive = false;
+  lookJoy.ontouchend = lookJoy.ontouchcancel = (e) => {
+    e.preventDefault();
+    _walkLookJoyActive = false;
+    _walkLookVec = {x:0, y:0};
+    lookKnob.style.transform = 'translate(0px, 0px)';
   };
 }
 
-function walkJoyMove(touch){
-  const dx = touch.clientX - _walkJoyCenter.x;
-  const dy = touch.clientY - _walkJoyCenter.y;
+function walkJoyMove(touch, knobEl, center, setVec){
+  const dx = touch.clientX - center.x;
+  const dy = touch.clientY - center.y;
   const dist = Math.sqrt(dx*dx + dy*dy);
-  const maxR = 40;
+  const maxR = 44;
   const clamped = Math.min(dist, maxR);
   const angle = Math.atan2(dy, dx);
   const cx = Math.cos(angle) * clamped;
   const cy = Math.sin(angle) * clamped;
-  document.getElementById('walkJoyKnob').style.transform = `translate(${cx}px, ${cy}px)`;
-  _walkJoyVec = { x: cx / maxR, y: cy / maxR };
+  knobEl.style.transform = `translate(${cx}px, ${cy}px)`;
+  setVec({ x: cx / maxR, y: cy / maxR });
 }
 
 window.walkTouchUD = function(dir, pressed){

@@ -998,11 +998,11 @@ body.field-mode .ctx-menu .ctx-item{padding:12px 16px;font-size:14px;min-height:
 
   <div class="left-panel">
     <div class="upload-area">
-      <div class="upload-card" id="uc0" onclick="document.getElementById('f0').click()">
-        <input type="file" id="f0" accept=".ifc" onchange="handleFile(0)">
+      <label class="upload-card" id="uc0" for="f0">
+        <input type="file" id="f0" accept=".ifc,*/*" onchange="handleFile(0)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
         <div class="uc-placeholder"><div class="uc-label">Version A — Baseline</div><div class="uc-text">📐 Drop IFC here</div><div class="uc-hint">click or drag .ifc</div></div>
         <div class="uc-file"><div class="uc-label">Version A</div><div class="uc-filename" id="fn0"></div><div class="uc-size" id="fs0"></div><div class="uc-status" id="us0"></div></div>
-      </div>
+      </label>
       <div class="vis-row" id="visRow0" style="display:none">
         <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-dim);cursor:pointer;padding:2px 0">
           <input type="checkbox" checked id="visA" onchange="toggleModelVis(0)" style="accent-color:var(--red);width:13px;height:13px">
@@ -1010,11 +1010,11 @@ body.field-mode .ctx-menu .ctx-item{padding:12px 16px;font-size:14px;min-height:
           Version A (Baseline)
         </label>
       </div>
-      <div class="upload-card" id="uc1" onclick="document.getElementById('f1').click()">
-        <input type="file" id="f1" accept=".ifc" onchange="handleFile(1)">
+      <label class="upload-card" id="uc1" for="f1">
+        <input type="file" id="f1" accept=".ifc,*/*" onchange="handleFile(1)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
         <div class="uc-placeholder"><div class="uc-label">Version B — Updated</div><div class="uc-text">📐 Drop IFC here</div><div class="uc-hint">click or drag .ifc</div></div>
         <div class="uc-file"><div class="uc-label">Version B</div><div class="uc-filename" id="fn1"></div><div class="uc-size" id="fs1"></div><div class="uc-status" id="us1"></div></div>
-      </div>
+      </label>
       <div class="vis-row" id="visRow1" style="display:none">
         <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-dim);cursor:pointer;padding:2px 0">
           <input type="checkbox" checked id="visB" onchange="toggleModelVis(1)" style="accent-color:var(--blue);width:13px;height:13px">
@@ -1026,7 +1026,7 @@ body.field-mode .ctx-menu .ctx-item{padding:12px 16px;font-size:14px;min-height:
       <div class="fed-section" id="fedSection">
         <div class="fed-slots" id="fedSlots"></div>
         <button class="fed-add-btn" id="fedAddBtn" onclick="fedAddSlot()" title="Load additional IFC files to view together">+ Add more files</button>
-        <input type="file" id="fedFileInput" accept=".ifc" style="display:none" onchange="fedHandleFile(event)">
+        <input type="file" id="fedFileInput" accept=".ifc,*/*" style="display:none" onchange="fedHandleFile(event)">
       </div>
     </div>
     <div class="summary-strip" id="sumStrip">
@@ -1517,12 +1517,12 @@ body.field-mode .ctx-menu .ctx-item{padding:12px 16px;font-size:14px;min-height:
 <div class="field-loader" id="fieldLoader">
   <div class="field-loader-card">
     <h3>Load IFC Model</h3>
-    <div class="field-loader-drop" id="fieldLoaderDrop" onclick="document.getElementById('fieldFileInput').click()">
+    <label for="fieldFileInput" class="field-loader-drop" id="fieldLoaderDrop">
       <div class="field-loader-drop-icon">📐</div>
       <div class="field-loader-drop-text">Tap to select .ifc file</div>
-    </div>
+    </label>
     <div class="field-loader-status" id="fieldLoaderStatus"></div>
-    <input type="file" id="fieldFileInput" accept=".ifc" style="display:none" onchange="fieldLoadFile(event)">
+    <input type="file" id="fieldFileInput" accept=".ifc,*/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="fieldLoadFile(event)">
     <button class="field-loader-close" onclick="fieldCloseLoader()">Close</button>
   </div>
 </div>

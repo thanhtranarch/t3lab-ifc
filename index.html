@@ -13182,6 +13182,147 @@ window.aiIndexSummary = async function(){
 // Cho phép gọi từ console / module khác
 window.buildAIIndex = buildAIIndex;
 
+/* ═══════════════════════════════════════════════════════════════════════
+   IFC DELTA — AI QUERY TOOLS  (bước 2: tool chạy trên data index)
+   ───────────────────────────────────────────────────────────────────────
+   countElements / sumQuantity tính SỐ CHÍNH XÁC trên bảng index (buildAIIndex).
+   AI chỉ GỌI HÀM rồi diễn đạt kết quả — KHÔNG tự đếm, KHÔNG tự đoán số.
+
+   Thử nhanh trong console:
+     await countElements({category:"Columns"})
+     await countElements({storey:"L3", category:"Columns"})
+     await sumQuantity({category:"Floors"}, "volume")
+   AI_TOOLS = định nghĩa tool chuẩn Anthropic Tool Use (dùng ở bước chat sau).
+═══════════════════════════════════════════════════════════════════════ */
+
+// — chuẩn hoá chuỗi để so khớp không phân biệt hoa thường / khoảng trắng —
+function _aiNorm(s){ return (s==null ? '' : String(s)).toLowerCase().trim(); }
+
+// — lọc danh sách element theo bộ lọc (khớp gần đúng cho dễ dùng với câu hỏi tự nhiên) —
+function _aiApplyFilter(elements, f={}){
+  const cat = f.category!=null     ? _aiNorm(f.category)     : null;
+  const sto = f.storey!=null       ? _aiNorm(f.storey)       : null;
+  const cls = f.ifcClass!=null     ? _aiNorm(f.ifcClass)     : null;
+  const mat = f.material!=null     ? _aiNorm(f.material)     : null;
+  const nm  = f.nameContains!=null ? _aiNorm(f.nameContains) : null;
+  const mi  = (f.modelIdx!=null && f.modelIdx!=='') ? Number(f.modelIdx) : null;
+  return elements.filter(e=>{
+    if(cat!=null && !_aiNorm(e.category).includes(cat)) return false;
+    if(sto!=null){
+      const es = e.storey==null ? '' : _aiNorm(e.storey);
+      if(!es.includes(sto)) return false;
+    }
+    if(cls!=null && !_aiNorm(e.ifcClass).includes(cls)) return false;
+    if(mat!=null && !(e.materials||[]).some(m=>_aiNorm(m).includes(mat))) return false;
+    if(nm!=null  && !_aiNorm(e.name).includes(nm)) return false;
+    if(mi!=null  && e.modelIdx!==mi) return false;
+    return true;
+  });
+}
+
+// — phân nhóm + đếm, sắp giảm dần —
+function _aiGroupCount(els, key){
+  const o = {};
+  for(const e of els){
+    const k = (e[key]==null || e[key]==='') ? '(không xác định)' : e[key];
+    o[k] = (o[k]||0)+1;
+  }
+  return Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,count}));
+}
+
+// ── TOOL 1: đếm element ──
+async function countElements(filter={}){
+  const idx = await buildAIIndex();                 // có cache, rẻ
+  const els = _aiApplyFilter(idx.elements, filter);
+  return {
+    count: els.length,
+    filter,
+    byCategory: _aiGroupCount(els, 'category'),
+    byStorey:   _aiGroupCount(els, 'storey'),
+  };
+}
+
+// ── TOOL 2: cộng khối lượng ──
+async function sumQuantity(filter={}, quantity='volume'){
+  const idx = await buildAIIndex();
+  const q = _aiNorm(quantity);
+  const key = ({ volume:'volume', 'thể tích':'volume', area:'area', 'diện tích':'area',
+                 length:'length', 'chiều dài':'length', count:'count', 'số lượng':'count'
+               })[q] || 'volume';
+  const els = _aiApplyFilter(idx.elements, filter);
+  let total=0, withQty=0, missing=0;
+  for(const e of els){
+    const v = e.quantities ? e.quantities[key] : null;
+    if(typeof v==='number' && isFinite(v)){ total+=v; withQty++; }
+    else missing++;
+  }
+  const unit = key==='volume' ? 'm³' : key==='area' ? 'm²' : key==='length' ? 'mm' : 'cái';
+  return {
+    quantity: key,
+    total: Math.round(total*1000)/1000,
+    unit,
+    elementsMatched: els.length,
+    elementsWithQuantity: withQty,
+    elementsMissing: missing,       // khớp lọc nhưng THIẾU đại lượng này (không tính vào tổng)
+    filter,
+  };
+}
+
+// — định nghĩa tool chuẩn Anthropic Tool Use (gần như y hệt MCP) —
+const AI_TOOLS = [
+  {
+    name: 'count_elements',
+    description: 'Đếm số lượng element trong (các) model IFC đang mở, lọc theo category kiểu Revit, tầng, lớp IFC, vật liệu hoặc tên. Trả về số chính xác kèm phân nhóm theo category và theo tầng. Dùng cho câu hỏi như "có bao nhiêu cột ở tầng L3", "đếm số cửa ở basement".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        category:     { type:'string', description:'Category kiểu Revit, vd "Columns","Floors","Doors","Walls". Khớp gần đúng, không phân biệt hoa thường.' },
+        storey:       { type:'string', description:'Tên tầng, vd "L2","L3","Parking". Khớp gần đúng.' },
+        ifcClass:     { type:'string', description:'Lớp IFC, vd "IfcColumn","IfcSlab","IfcDoor".' },
+        material:     { type:'string', description:'Tên vật liệu, vd "Concrete","Steel".' },
+        nameContains: { type:'string', description:'Chuỗi con cần có trong tên element.' }
+      }
+    }
+  },
+  {
+    name: 'sum_quantity',
+    description: 'Cộng tổng khối lượng các element khớp bộ lọc: thể tích (volume, m³), diện tích (area, m²), chiều dài (length, mm) hoặc số lượng (count). Trả về tổng chính xác, đơn vị, và số element bị thiếu đại lượng. Dùng cho "tổng thể tích bê tông sàn tầng 1".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        quantity:     { type:'string', enum:['volume','area','length','count'], description:'Đại lượng cần cộng.' },
+        category:     { type:'string', description:'Category Revit để lọc.' },
+        storey:       { type:'string', description:'Tầng để lọc.' },
+        ifcClass:     { type:'string', description:'Lớp IFC để lọc.' },
+        material:     { type:'string', description:'Vật liệu để lọc.' },
+        nameContains: { type:'string', description:'Chuỗi con trong tên.' }
+      },
+      required: ['quantity']
+    }
+  }
+];
+
+// — dispatcher: AI gọi tool theo tên → chạy hàm tương ứng (dùng ở bước chat) —
+async function runAITool(name, input){
+  input = input || {};
+  if(name === 'count_elements') return await countElements(input);
+  if(name === 'sum_quantity'){
+    const { quantity, ...f } = input;
+    return await sumQuantity(f, quantity || 'volume');
+  }
+  throw new Error('Unknown AI tool: ' + name);
+}
+
+// expose để test trong console + dùng ở bước chat
+window.countElements = countElements;
+window.sumQuantity   = sumQuantity;
+window.runAITool     = runAITool;
+window.AI_TOOLS      = AI_TOOLS;
+
+console.log('%c═══ AI QUERY TOOLS sẵn sàng ═══','color:#16a34a;font-weight:700');
+console.log('Thử:  await countElements({category:"Columns"})');
+console.log('      await sumQuantity({category:"Floors"}, "volume")');
+
 initThree();initSectionDrag();initViewCube();log('Ready');
 </script>
 </body>

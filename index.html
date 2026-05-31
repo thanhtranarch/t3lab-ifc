@@ -8595,7 +8595,7 @@ window.toggleWalkMode=function(){
 // Keyboard
 document.addEventListener('keydown',e=>{
   if(!walkActive)return;
-  const k=e.key.toLowerCase();
+  const k=(e.key||'').toLowerCase();
   if(k==='w')walkKeys.w=true;
   if(k==='a')walkKeys.a=true;
   if(k==='s')walkKeys.s=true;
@@ -8606,7 +8606,7 @@ document.addEventListener('keydown',e=>{
   if(k==='escape'){toggleWalkMode();e.preventDefault()}
 });
 document.addEventListener('keyup',e=>{
-  const k=e.key.toLowerCase();
+  const k=(e.key||'').toLowerCase();
   if(k==='w')walkKeys.w=false;
   if(k==='a')walkKeys.a=false;
   if(k==='s')walkKeys.s=false;
@@ -13233,7 +13233,7 @@ function _aiGroupCount(els, key){
 // ── TOOL 1: đếm element ──
 async function countElements(filter={}){
   const idx = await buildAIIndex();                 // có cache, rẻ
-  const els = _aiApplyFilter(idx.elements, filter);
+  const els = _aiApplyFilter((idx&&idx.elements)||[], filter);
   return {
     count: els.length,
     filter,
@@ -13249,7 +13249,7 @@ async function sumQuantity(filter={}, quantity='volume'){
   const key = ({ volume:'volume', 'thể tích':'volume', area:'area', 'diện tích':'area',
                  length:'length', 'chiều dài':'length', count:'count', 'số lượng':'count'
                })[q] || 'volume';
-  const els = _aiApplyFilter(idx.elements, filter);
+  const els = _aiApplyFilter((idx&&idx.elements)||[], filter);
   let total=0, withQty=0, missing=0;
   for(const e of els){
     const v = e.quantities ? e.quantities[key] : null;

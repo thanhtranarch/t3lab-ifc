@@ -150,6 +150,8 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 .issue-status.added{color:var(--green);background:var(--green-lt)}
 .issue-status.removed{color:var(--red);background:var(--red-lt)}
 .issue-status.modified{color:var(--amber);background:var(--amber-lt)}
+.issue-status.manual,.issue-status.open{color:var(--blue);background:var(--blue-bg)}
+.issue-status.closed{color:var(--text-muted);background:var(--bg-hover)}
 .issue-type{font-family:'JetBrains Mono';font-size:10px;color:var(--text-muted);margin-left:auto}
 .issue-name{font-size:13px;font-weight:500;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .issue-detail{font-size:12px;color:var(--text-muted);margin-top:2px}
@@ -1716,6 +1718,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
   <div class="ctx-sep"></div>
   <div class="ctx-item" onclick="ctxAction('zoom')"><span class="ci-icon">🔍</span><span class="ci-label">Zoom to Element</span></div>
   <div class="ctx-item" onclick="ctxAction('props')"><span class="ci-icon">📋</span><span class="ci-label">Properties</span></div>
+  <div class="ctx-item" onclick="ctxAction('newIssue')" style="color:var(--blue)"><span class="ci-icon">➕</span><span class="ci-label">New Issue</span></div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" onclick="ctxAction('showAll')"><span class="ci-icon">👁</span><span class="ci-label">Show All Hidden</span></div>
 </div>
@@ -3958,6 +3961,7 @@ window.ctxAction=function(action){
     ifcLoader.ifcManager.getItemProperties(loadedModels[mi].modelID,eid,true).then(p=>{if(p)showProps(p,mi)});
     return;
   }
+  if(action==='newIssue'&&eid!=null&&mi>=0){openNewIssueDialog(eid,mi);return}
   console.log('[CTX] action not handled or missing data');
 };
 
@@ -7103,15 +7107,46 @@ window.focusIssue=function(idx){
     }
   }catch(e){log('focusIssue highlight err:',e?.message)}
 
+  // For manual issues, restore the exact viewport saved at creation time
+  // (the snapshot was taken from that view, so keep it consistent).
+  if(iss.isManual&&iss.camPos&&iss.camTgt){
+    camera.position.set(iss.camPos.x,iss.camPos.y,iss.camPos.z);
+    controls.target.set(iss.camTgt.x,iss.camTgt.y,iss.camTgt.z);
+    controls.update();
+  }
+
   // Show properties
   showIssueProps(iss);
 };
 
 function showIssueProps(iss){
-  const colors={added:'var(--green)',removed:'var(--red)',modified:'var(--amber)'};
-  const bgs={added:'var(--green-lt)',removed:'var(--red-lt)',modified:'var(--amber-lt)'};
-  let h=`<div style="padding:8px 12px;background:${bgs[iss.status]};border-bottom:1px solid var(--border)">
-    <span style="font-family:JetBrains Mono;font-size:13px;font-weight:700;color:${colors[iss.status]}">ISSUE #${iss.num} — ${iss.status.toUpperCase()}</span>
+  const colors={added:'var(--green)',removed:'var(--red)',modified:'var(--amber)',manual:'var(--blue)'};
+  const bgs={added:'var(--green-lt)',removed:'var(--red-lt)',modified:'var(--amber-lt)',manual:'var(--blue-bg)'};
+  const accent=colors[iss.status]||'var(--blue)';
+  const accentBg=bgs[iss.status]||'var(--blue-bg)';
+  if(iss.isManual){
+    let h=`<div style="padding:8px 12px;background:${accentBg};border-bottom:1px solid var(--border)">
+      <span style="font-family:JetBrains Mono;font-size:13px;font-weight:700;color:${accent}">ISSUE #${iss.num} — ${(iss.wfStatus||'OPEN').toUpperCase()}</span>
+    </div>
+    <div class="ps"><div class="ps-t">Issue</div>
+      <div class="pr"><div class="pk">Title</div><div class="pv">${escXml(iss.title||'')}</div></div>
+      <div class="pr"><div class="pk">Description</div><div class="pv">${escXml(iss.detail||'—')}</div></div>
+      <div class="pr"><div class="pk">Status</div><div class="pv">${escXml(iss.wfStatus||'Open')}</div></div>
+      <div class="pr"><div class="pk">Priority</div><div class="pv">${escXml(iss.priority||'Normal')}</div></div>
+      <div class="pr"><div class="pk">Assigned to</div><div class="pv">${escXml(iss.assignedTo||'—')}</div></div>
+    </div>
+    <div class="ps"><div class="ps-t">Element</div>
+      <div class="pr"><div class="pk">Name</div><div class="pv">${escXml(iss.name||'—')}</div></div>
+      <div class="pr"><div class="pk">Type</div><div class="pv">${escXml(iss.type||'—')}</div></div>
+      <div class="pr"><div class="pk">Tag / Element ID</div><div class="pv">${escXml(iss.tag||'—')}</div></div>
+      <div class="pr"><div class="pk">GlobalId</div><div class="pv" style="font-family:JetBrains Mono;font-size:10px">${escXml(iss.gid||'—')}</div></div>
+      <div class="pr"><div class="pk">ExpressID</div><div class="pv">${iss.expressID}</div></div>
+    </div>`;
+    document.getElementById('propArea').innerHTML=h;
+    return;
+  }
+  let h=`<div style="padding:8px 12px;background:${accentBg};border-bottom:1px solid var(--border)">
+    <span style="font-family:JetBrains Mono;font-size:13px;font-weight:700;color:${accent}">ISSUE #${iss.num} — ${iss.status.toUpperCase()}</span>
   </div>
   <div class="ps"><div class="ps-t">Element</div>
     <div class="pr"><div class="pk">Name</div><div class="pv">${iss.name}</div></div>
@@ -7173,7 +7208,7 @@ function _bcfSnapshot(){
   return cnv.toDataURL('image/png').split(',')[1];
 }
 window.exportBCF=async function(selected){
-  const list=(Array.isArray(selected)&&selected.length)?selected:issuesList; if(!compareResult||!list.length){log('No issues to export');return}
+  const list=(Array.isArray(selected)&&selected.length)?selected:issuesList; if(!list.length){log('No issues to export');return}
   if(!window.JSZip){
     const s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
@@ -7195,10 +7230,10 @@ window.exportBCF=async function(selected){
     // reverse offset in Three-space first
     const tx=x-mdlPos.x, ty=y-mdlPos.y, tz=z-mdlPos.z;
     // Y-up -> Z-up: (x, y, z)_three -> (x, z, -y)_ifc
-    return {x:tx, y:tz, z:-ty};
+    return {x:tx, y:-tz, z:ty};
   };
   // Axis swap for direction vectors (no offset)
-  const dirThreeToIfc=(x,y,z)=>({x:x, y:z, z:-y});
+  const dirThreeToIfc=(x,y,z)=>({x:x, y:-z, z:y});
   log('Compare BCF model offset (three-space): ('+mdlPos.x.toFixed(2)+', '+mdlPos.y.toFixed(2)+', '+mdlPos.z.toFixed(2)+')');
   
   // Save camera
@@ -7223,7 +7258,15 @@ window.exportBCF=async function(selected){
     // Highlighting makes the element visible as a colored overlay in the snapshot
     // thumbnail shown in BCF Manager, so the user can see which element is the issue.
     let snap64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/58BHgAIBwJ+Qil1RAAAAABJRU5ErkJggg==';
-    if(bbox?.center){
+    if(iss.isManual){
+      // Manual issue: use the snapshot + camera captured at creation time.
+      if(iss.snapshot)snap64=iss.snapshot;
+      if(iss.camPos&&iss.camTgt){
+        camera.position.set(iss.camPos.x,iss.camPos.y,iss.camPos.z);
+        controls.target.set(iss.camTgt.x,iss.camTgt.y,iss.camTgt.z);
+        controls.update();
+      }
+    }else if(bbox?.center){
       camera.position.set(bbox.center.x+d*0.4,bbox.center.y+d*0.3,bbox.center.z+d*0.4);
       controls.target.set(bbox.center.x,bbox.center.y,bbox.center.z);
       controls.update();
@@ -7246,7 +7289,7 @@ window.exportBCF=async function(selected){
       if(snapHL){try{scene.remove(snapHL);snapHL.geometry?.dispose();}catch(e){}}
     }
     
-    let desc=iss.status.toUpperCase()+': '+(iss.name||'');
+    let desc=iss.isManual?(iss.detail||''):(iss.status.toUpperCase()+': '+(iss.name||''));
     if(iss.tag)desc+=' | Element ID: '+iss.tag;
     if(iss.detail)desc+=' | '+iss.detail;
     // Add position info for elements that may not exist in target Revit project
@@ -7271,17 +7314,16 @@ window.exportBCF=async function(selected){
     // Distance scales with section-box size so we frame the whole section nicely.
     const viewR=Math.max(sx,sy,sz)*1.8+3;
     let camX=ix+viewR*0.55, camY=iy-viewR*0.75, camZ=iz+viewR*0.45;
-    let tgtX=ix, tgtY=iy, tgtZ=iz;
-    // Chế độ Dalux: đổi local -> SVY21 (IfcMapConversion) để khớp cách Dalux đặt model
-    if(window.BCF_TARGET==='dalux'){
-      const mc=(loadedModels[iss.modelIdx]&&loadedModels[iss.modelIdx].mapConv)||((loadedModels.find(m=>m&&m.mapConv)||{}).mapConv);
-      if(mc){
-        const toMap=(x,y,z)=>({x:mc.e+mc.scale*(x*mc.xa - y*mc.xo), y:mc.n+mc.scale*(x*mc.xo + y*mc.xa), z:mc.h+mc.scale*z});
-        const c=toMap(camX,camY,camZ), t=toMap(tgtX,tgtY,tgtZ);
-        camX=c.x;camY=c.y;camZ=c.z; tgtX=t.x;tgtY=t.y;tgtZ=t.z;
-      }
+    let ddx=ix-camX, ddy=iy-camY, ddz=iz-camZ;
+    // Manual issue: honour the exact saved camera. Transform Three-space cam
+    // position + view direction into IFC (Z-up) coords so the viewpoint matches
+    // the snapshot the user saw when creating the issue.
+    if(iss.isManual&&iss.camPos&&iss.camTgt){
+      const cp=threeToIfc(iss.camPos.x,iss.camPos.y,iss.camPos.z);
+      camX=cp.x; camY=cp.y; camZ=cp.z;
+      const dir=dirThreeToIfc(iss.camTgt.x-iss.camPos.x, iss.camTgt.y-iss.camPos.y, iss.camTgt.z-iss.camPos.z);
+      ddx=dir.x; ddy=dir.y; ddz=dir.z;
     }
-    const ddx=tgtX-camX, ddy=tgtY-camY, ddz=tgtZ-camZ;
     const ln=Math.sqrt(ddx*ddx+ddy*ddy+ddz*ddz)||1;
     const col={added:'FF16A34A',removed:'FFDC2626',modified:'FFD97706'}[iss.status]||'FF2563EB';
     
@@ -7328,7 +7370,13 @@ window.exportBCF=async function(selected){
       (files[1]?'<File IfcProject="" IfcSpatialStructureElement="" isExternal="true"><Filename>'+escXml(files[1].name)+'</Filename><Date>'+now+'</Date></File>':'')+
       '</Header>';
     
-    zip.file(tid+'/markup.bcf','<?xml version="1.0" encoding="UTF-8"?>\n<Markup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+headerXml+'\n<Topic Guid="'+tid+'" TopicType="Issue" TopicStatus="Active"><Title>'+escXml('#'+iss.num+' '+iss.name+' ['+iss.status.toUpperCase()+']')+'</Title><Description>'+escXml(desc)+'</Description><CreationDate>'+now+'</CreationDate><CreationAuthor>IFC Delta</CreationAuthor><ModifiedDate>'+now+'</ModifiedDate></Topic>\n<Comment Guid="'+crypto.randomUUID()+'"><Date>'+now+'</Date><Author>IFC Delta</Author><Comment>'+escXml(desc)+'</Comment><Viewpoint Guid="'+vid+'"/></Comment>\n<Viewpoints Guid="'+vid+'"><Viewpoint>viewpoint.bcfv</Viewpoint><Snapshot>snapshot.png</Snapshot></Viewpoints>\n</Markup>');
+    const _topicStatus = iss.isManual ? (iss.wfStatus||'Open') : 'Active';
+    const _topicTitle  = iss.isManual ? (iss.title||iss.name||('#'+iss.num))
+                                       : ('#'+iss.num+' '+iss.name+' ['+iss.status.toUpperCase()+']');
+    // BCF 2.1 Topic child order: Title, Priority, ..., AssignedTo, Description
+    const _priorityXml = iss.isManual&&iss.priority ? '<Priority>'+escXml(iss.priority)+'</Priority>' : '';
+    const _assignedXml = iss.isManual&&iss.assignedTo ? '<AssignedTo>'+escXml(iss.assignedTo)+'</AssignedTo>' : '';
+    zip.file(tid+'/markup.bcf','<?xml version="1.0" encoding="UTF-8"?>\n<Markup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'+headerXml+'\n<Topic Guid="'+tid+'" TopicType="Issue" TopicStatus="'+escXml(_topicStatus)+'"><Title>'+escXml(_topicTitle)+'</Title>'+_priorityXml+'<CreationDate>'+now+'</CreationDate><CreationAuthor>IFC Delta</CreationAuthor><ModifiedDate>'+now+'</ModifiedDate>'+_assignedXml+'<Description>'+escXml(desc)+'</Description></Topic>\n<Comment Guid="'+crypto.randomUUID()+'"><Date>'+now+'</Date><Author>IFC Delta</Author><Comment>'+escXml(desc)+'</Comment><Viewpoint Guid="'+vid+'"/></Comment>\n<Viewpoints Guid="'+vid+'"><Viewpoint>viewpoint.bcfv</Viewpoint><Snapshot>snapshot.png</Snapshot></Viewpoints>\n</Markup>');
     
     // viewpoint.bcfv — MUST follow BCF 2.1 visinfo.xsd element order:
     //   Components (optional) → OrthogonalCamera XOR PerspectiveCamera → Lines →
@@ -8350,7 +8398,7 @@ window.exportClashBCF=async function(){
   // Three (x,y,z) → IFC (x, z, -y): reverse offset first, then swap Y↔Z, negate Y.
   const threeToIfc=(x,y,z)=>{
     const tx=x-mdlPos.x, ty=y-mdlPos.y, tz=z-mdlPos.z;
-    return {x:tx, y:tz, z:-ty};
+    return {x:tx, y:-tz, z:ty};
   };
   log('Clash BCF model offset (three-space): ('+mdlPos.x.toFixed(2)+', '+mdlPos.y.toFixed(2)+', '+mdlPos.z.toFixed(2)+')');
 
@@ -11497,7 +11545,7 @@ window.sgExportBCF = async function(){
   }
   const threeToIfc = (x,y,z) => {
     const tx=x-mdlPos.x, ty=y-mdlPos.y, tz=z-mdlPos.z;
-    return {x:tx, y:tz, z:-ty};
+    return {x:tx, y:-tz, z:ty};
   };
 
   // Save camera state
@@ -13612,9 +13660,9 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
    BCF EXPORT — hộp thoại chọn issue để export (thay vì luôn export all)
 ═══════════════════════════════════════════════════════════════════════ */
 window.openBCFDialog = function(){
-  if(typeof issuesList==='undefined' || !compareResult || !issuesList.length){ log('No issues to export'); return; }
+  if(typeof issuesList==='undefined' || !issuesList.length){ log('No issues to export'); return; }
   const old=document.getElementById('bcfDlgOverlay'); if(old) old.remove();
-  const sc = {added:'var(--green,#16a34a)',removed:'var(--red,#dc2626)',modified:'var(--amber,#d97706)'};
+  const sc = {added:'var(--green,#16a34a)',removed:'var(--red,#dc2626)',modified:'var(--amber,#d97706)',manual:'var(--blue,#2563eb)'};
   const ov = document.createElement('div');
   ov.id='bcfDlgOverlay';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10001;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif';
@@ -13622,8 +13670,8 @@ window.openBCFDialog = function(){
     '<label style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border,#d5d9e2);cursor:pointer;font-size:13px">'+
       '<input type="checkbox" class="bcf-iss" data-i="'+i+'" checked>'+
       '<span style="width:9px;height:9px;border-radius:50%;background:'+(sc[it.status]||'var(--blue,#2563eb)')+';flex-shrink:0"></span>'+
-      '<span style="flex:1;color:var(--text,#1a1d26)">#'+it.num+' '+escXml(it.name||'')+'</span>'+
-      '<span style="font-size:11px;color:var(--text-muted,#8590a6);text-transform:uppercase">'+(it.status||'')+'</span>'+
+      '<span style="flex:1;color:var(--text,#1a1d26)">#'+it.num+' '+escXml((it.isManual?it.title:it.name)||'')+'</span>'+
+      '<span style="font-size:11px;color:var(--text-muted,#8590a6);text-transform:uppercase">'+escXml(it.isManual?(it.wfStatus||'open'):(it.status||''))+'</span>'+
     '</label>').join('');
   ov.innerHTML =
     '<div style="background:var(--bg-panel,#fff);border-radius:12px;width:500px;max-width:92vw;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">'+
@@ -13686,7 +13734,129 @@ window.openBCFDialog = function(){
   updateCount();
 };
 
-initThree();initSectionDrag();initViewCube();log('Ready');
+/* ═══════════════════════════════════════════════════════════════════════
+   MANUAL ISSUE CREATION — click element → tạo issue thủ công
+   Issue thủ công dùng chung issuesList + export BCF như issue auto-generated.
+   Schema mở rộng: {isManual:true, title, wfStatus, priority, assignedTo,
+   snapshot(base64 viewport hiện tại), camPos, camTgt}.
+═══════════════════════════════════════════════════════════════════════ */
+function renderIssuesList(){
+  // Render lại toàn bộ issuesList (compare + manual) mà KHÔNG wipe như buildIssues.
+  const el=document.getElementById('issuesList');
+  if(!el)return;
+  document.getElementById('issueCount').textContent=issuesList.length;
+  let html='';
+  if(issuesList.length===0){
+    html='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:14px">No issues</div>';
+  }else{
+    issuesList.forEach((iss,i)=>{
+      const stCls=iss.isManual?(iss.wfStatus==='Closed'?'closed':'open'):iss.status;
+      const stLbl=iss.isManual?(iss.wfStatus||'OPEN').toUpperCase():(iss.status||'').toUpperCase();
+      const titleTxt=iss.isManual?(iss.title||iss.name||'(no title)'):(iss.name||'(unnamed)');
+      const detailTxt=iss.isManual?(iss.detail||iss.priority||''):iss.detail;
+      html+=`<div class="issue-card" id="issue-${i}" onclick="focusIssue(${i})">
+        <div class="issue-hdr">
+          <span class="issue-num">#${iss.num}</span>
+          <span class="issue-status ${stCls}">${stLbl}</span>
+          <span class="issue-type">${(iss.type||'').replace('Ifc','')}</span>
+        </div>
+        <div class="issue-name">${escXml(titleTxt)}</div>
+        <div class="issue-detail">${escXml(detailTxt||'')}</div>
+      </div>`;
+    });
+  }
+  el.innerHTML=html;
+  document.getElementById('panelTabs').classList.add('show');
+  // Reveal the BCF export button once there is at least one issue (manual
+  // issues can exist without a compare having been run).
+  if(issuesList.length>0){const b=document.getElementById('btnExportBCF');if(b)b.style.display='';}
+}
+
+window.openNewIssueDialog=async function(eid,mi){
+  if(eid==null||mi==null||mi<0||!loadedModels[mi]){log('New Issue: no valid element');return}
+  // ── Capture viewport hiện tại (snapshot + camera) NGAY tại thời điểm tạo ──
+  let snap='';
+  try{renderer.render(scene,camera);snap=_bcfSnapshot();}catch(e){log('New Issue snapshot err:',e?.message)}
+  const camPos={x:camera.position.x,y:camera.position.y,z:camera.position.z};
+  const camTgt={x:controls.target.x,y:controls.target.y,z:controls.target.z};
+  // ── Resolve GlobalId / Name / Type / Tag từ IFC props ──
+  let gid='',name='',tag='',type='';
+  try{
+    const p=await ifcLoader.ifcManager.getItemProperties(loadedModels[mi].modelID,eid,false);
+    gid=p?.GlobalId?.value||'';
+    name=p?.Name?.value||'';
+    tag=p?.Tag?.value||'';
+    const tn=ifcLoader.ifcManager.state.api.GetLineType(loadedModels[mi].modelID,eid);
+    type=(typeof IFC_NAMES!=='undefined'&&IFC_NAMES[tn])||('IFC_'+tn);
+  }catch(e){log('New Issue props err:',e?.message)}
+  const defTitle=(name||type||'Element')+' #'+eid;
+
+  const old=document.getElementById('niDlgOverlay'); if(old) old.remove();
+  const ov=document.createElement('div');
+  ov.id='niDlgOverlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10001;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif';
+  const fieldCss='width:100%;padding:8px 10px;border:1px solid var(--border,#d5d9e2);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;background:var(--bg-panel,#fff);color:var(--text,#1a1d26)';
+  const lblCss='font-size:12px;font-weight:600;color:var(--text-dim,#4a5068);margin:10px 0 4px';
+  ov.innerHTML=
+    '<div style="background:var(--bg-panel,#fff);border-radius:12px;width:460px;max-width:92vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">'+
+      '<div style="padding:14px 16px;border-bottom:1px solid var(--border,#d5d9e2);display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:18px">➕</span>'+
+        '<b style="flex:1;font-size:15px;color:var(--text,#1a1d26)">New Issue</b>'+
+        '<button id="niX" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-dim,#4a5068)">✕</button>'+
+      '</div>'+
+      '<div style="padding:14px 16px;overflow-y:auto;flex:1">'+
+        '<div style="display:flex;gap:10px;align-items:center;padding:8px 10px;background:var(--bg-card,#f0f1f4);border-radius:7px;margin-bottom:6px">'+
+          (snap?'<img src="data:image/png;base64,'+snap+'" style="width:96px;height:60px;object-fit:cover;border-radius:5px;border:1px solid var(--border,#d5d9e2)">':'')+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:12px;color:var(--text-dim,#4a5068);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escXml(name||type||'Element')+' #'+eid+'</div>'+
+            '<div style="font-size:10px;color:var(--text-muted,#8590a6);font-family:JetBrains Mono;word-break:break-all">'+escXml(gid||'(no GlobalId)')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="'+lblCss+'">Title</div>'+
+        '<input id="niTitle" type="text" style="'+fieldCss+'" value="'+escXml(defTitle)+'">'+
+        '<div style="'+lblCss+'">Description</div>'+
+        '<textarea id="niDesc" rows="3" style="'+fieldCss+';resize:vertical" placeholder="Mô tả vấn đề..."></textarea>'+
+        '<div style="display:flex;gap:10px">'+
+          '<div style="flex:1"><div style="'+lblCss+'">Status</div>'+
+            '<select id="niStatus" style="'+fieldCss+'"><option value="Open">Open</option><option value="Closed">Closed</option></select></div>'+
+          '<div style="flex:1"><div style="'+lblCss+'">Priority</div>'+
+            '<select id="niPrio" style="'+fieldCss+'"><option>Low</option><option selected>Normal</option><option>High</option><option>Critical</option></select></div>'+
+        '</div>'+
+        '<div style="'+lblCss+'">Assigned to</div>'+
+        '<input id="niAssign" type="text" style="'+fieldCss+'" placeholder="Tên / email người phụ trách">'+
+      '</div>'+
+      '<div style="padding:12px 16px;border-top:1px solid var(--border,#d5d9e2);display:flex;gap:10px;justify-content:flex-end">'+
+        '<button id="niCancel" style="padding:8px 14px;border:1px solid var(--border,#d5d9e2);background:var(--bg-card,#f0f1f4);border-radius:7px;cursor:pointer;font-size:13px">Huỷ</button>'+
+        '<button id="niSave" style="padding:8px 20px;border:none;background:var(--blue,#2563eb);color:#fff;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600">Tạo issue</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  ov.querySelector('#niX').onclick=close;
+  ov.querySelector('#niCancel').onclick=close;
+  ov.onclick=e=>{if(e.target===ov)close()};
+  setTimeout(()=>{const t=ov.querySelector('#niTitle');t.focus();t.select();},30);
+  ov.querySelector('#niSave').onclick=()=>{
+    const title=(ov.querySelector('#niTitle').value||'').trim()||defTitle;
+    const desc=(ov.querySelector('#niDesc').value||'').trim();
+    const wfStatus=ov.querySelector('#niStatus').value;
+    const priority=ov.querySelector('#niPrio').value;
+    const assignedTo=(ov.querySelector('#niAssign').value||'').trim();
+    const maxNum=issuesList.reduce((m,it)=>Math.max(m,it.num||0),0);
+    issuesList.push({
+      num:maxNum+1, status:'manual', wfStatus, gid, name:name||defTitle, type, tag,
+      detail:desc||(priority+' priority'), expressID:eid, modelIdx:mi, diffs:null,
+      isManual:true, title, priority, assignedTo,
+      snapshot:snap, camPos, camTgt
+    });
+    close();
+    renderIssuesList();
+    switchTab('issues');
+    log('Manual issue #'+(maxNum+1)+' created: '+title);
+  };
+};
+
+
 </script>
 </body>
 </html>

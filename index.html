@@ -31,11 +31,8 @@
     </div>
     <div class="auth-brand-top">
       <div class="auth-brand-logo">
-        <div class="auth-brand-logo-mark">Δ</div>
-        <div>
-          <div class="auth-brand-logo-name">IFC DELTA</div>
-          <div class="auth-brand-logo-sub">3D Version Compare</div>
-        </div>
+        <div class="auth-brand-logo-name">T3LAB.IFC</div>
+        <div class="auth-brand-logo-sub">3D Version Compare</div>
       </div>
       <div class="auth-brand-hero">
         <h1 class="auth-brand-headline">BIM comparison,<br/>visualized.</h1>
@@ -55,8 +52,15 @@
   <div class="auth-form-panel">
     <div class="auth-form-inner">
 
+      <!-- LOADING VIEW (default; hidden once Firebase resolves auth state) -->
+      <div id="authViewLoading">
+        <div class="auth-loading-wrap">
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
       <!-- LOGIN VIEW (default) -->
-      <div id="authViewLogin">
+      <div id="authViewLogin" style="display:none">
         <div class="auth-heading-block">
           <h2 class="auth-heading">Sign in</h2>
           <p class="auth-heading-sub">Enter your credentials to access the platform.</p>
@@ -81,14 +85,7 @@
             <span class="auth-submit-label">Sign in</span>
           </button>
         </form>
-        <div class="auth-foot">Don't have an account? Contact your administrator.</div>
-        <div class="auth-demo-box">
-          <div class="auth-demo-label">Demo Accounts</div>
-          <div class="auth-demo-row"><code>trantienthanh909@gmail.com</code><span class="auth-demo-role">· BIM Coordinator</span></div>
-          <div class="auth-demo-row"><code>d.wong@t3lab.space</code><span class="auth-demo-role">· Project Manager</span></div>
-          <div class="auth-demo-row"><code>s.chen@t3lab.space</code><span class="auth-demo-role">· BIM Lead</span></div>
-          <div class="auth-demo-pwd">Password: T3lab2026!</div>
-        </div>
+        <div class="auth-foot">Don't have an account? <span class="auth-signup-link">Sign up</span></div>
       </div>
 
       <!-- VERIFY-EMAIL VIEW (shown after login if email not verified) -->

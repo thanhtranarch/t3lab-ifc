@@ -879,11 +879,10 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 /* Left brand panel */
 .auth-brand-panel{width:42%;min-width:280px;background:#111;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:48px;position:relative;overflow:hidden;flex-shrink:0}
 .auth-grid-bg{position:absolute;inset:0;pointer-events:none;opacity:.12}
-.auth-brand-top{position:relative;z-index:1;display:flex;flex-direction:column}
-.auth-brand-logo{display:flex;align-items:flex-start;gap:10px;margin-bottom:56px}
-.auth-brand-logo-mark{width:30px;height:30px;background:#fff;color:#111;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:15px;flex-shrink:0;margin-top:1px}
-.auth-brand-logo-name{font-family:'Hanken Grotesk';font-weight:800;font-size:14px;color:#fff;letter-spacing:.4px;line-height:1.15}
-.auth-brand-logo-sub{font-family:'Hanken Grotesk';font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+.auth-brand-top{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:space-between;flex:1;padding-bottom:40px}
+.auth-brand-logo{display:flex;flex-direction:column;gap:4px}
+.auth-brand-logo-name{font-family:'Hanken Grotesk';font-weight:800;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1}
+.auth-brand-logo-sub{font-family:'Hanken Grotesk';font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.5px}
 .auth-brand-hero{display:flex;flex-direction:column}
 .auth-brand-headline{font-family:'Hanken Grotesk';font-weight:800;font-size:36px;line-height:1.1;color:#fff;margin:0 0 14px}
 .auth-brand-tagline{font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;max-width:300px}
@@ -915,15 +914,22 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-submit:disabled{background:#a1a1aa;cursor:not-allowed}
 .auth-msg{padding:9px 12px;border-radius:6px;font-size:13px;line-height:1.4;margin-top:4px;display:none}
 .auth-msg.show{display:block}
-.auth-msg.error{background:var(--red-lt);color:var(--red);border:1px solid rgba(220,38,38,.2)}
-.auth-msg.info{background:var(--blue-lt);color:var(--text-dim);border:1px solid var(--border)}
-.auth-msg.success{background:var(--green-lt);color:var(--green);border:1px solid rgba(15,138,102,.2)}
-.auth-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:auth-spin .7s linear infinite;display:none}
+.auth-msg.error{background:rgba(210,59,59,0.08);border:1px solid rgba(210,59,59,0.28);color:#D23B3B}
+.auth-msg.info{background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.22);color:#2563eb}
+.auth-msg.success{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.28);color:#059669}
+
+/* Spinner inside submit */
+.auth-spinner{
+  width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+  border-radius:50%;animation:auth-spin .7s linear infinite;display:none;
+}
 .auth-submit.loading .auth-spinner{display:inline-block}
 .auth-submit.loading .auth-submit-label{opacity:.7}
 @keyframes auth-spin{to{transform:rotate(360deg)}}
 .auth-foot{margin-top:16px;font-size:13px;color:#71717a;text-align:center;line-height:1.5}
 .auth-foot .auth-inline-link{font-size:13px}
+.auth-signup-link{background:linear-gradient(90deg,#6366f1,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:600;cursor:pointer}
 .auth-demo-box{margin-top:20px;padding:16px 18px;background:#fff;border:1px solid #e4e4e7;border-radius:8px}
 .auth-demo-label{font-family:'Hanken Grotesk';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#a1a1aa;margin-bottom:10px}
 .auth-demo-row{display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:12px;font-family:'Hanken Grotesk'}
@@ -932,12 +938,34 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-demo-pwd{margin-top:10px;padding-top:10px;border-top:1px solid #f4f4f5;font-size:11px;color:#a1a1aa;font-family:'JetBrains Mono'}
 @media(max-width:700px){.auth-brand-panel{display:none}.auth-form-panel{padding:32px 24px}}
 
+/* Loading / hydration state — mirrors IDD AuthGuard typing-dots */
+.auth-loading-wrap{display:flex;align-items:center;justify-content:center;min-height:220px}
+.typing-dots{display:flex;gap:7px;align-items:center}
+.typing-dots span{width:8px;height:8px;background:#a1a1aa;border-radius:50%;animation:typing-bounce 1.2s infinite ease-in-out;display:block}
+.typing-dots span:nth-child(1){animation-delay:0s}
+.typing-dots span:nth-child(2){animation-delay:.18s}
+.typing-dots span:nth-child(3){animation-delay:.36s}
+@keyframes typing-bounce{0%,80%,100%{transform:scale(.55);opacity:.35}40%{transform:scale(1);opacity:1}}
+
 /* Email-verification gate: same panel, different content */
 .auth-verify{display:flex;flex-direction:column;gap:14px;text-align:center}
 .auth-verify-icon{width:48px;height:48px;margin:0 auto;background:var(--amber-lt);color:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
 .auth-verify-title{font-size:16px;font-weight:600;color:#18181b}
 .auth-verify-desc{font-size:13px;color:#71717a;line-height:1.5}
 .auth-verify-actions{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+
+/* ── Responsive: stack panels on narrow screens ──────────── */
+@media(max-width:860px){
+  .auth-overlay{flex-direction:column}
+  .auth-brand-panel{
+    width:100%;padding:32px 28px;
+    flex:0 0 auto;min-height:auto;
+  }
+  .auth-brand-logo{margin-bottom:24px}
+  .auth-brand-headline{font-size:24px}
+  .auth-brand-features{gap:16px;padding-top:20px}
+  .auth-form-panel{padding:32px 24px}
+}
 
 /* User badge in header */
 .user-badge{display:flex;align-items:center;gap:8px;padding:0 10px 0 6px;height:32px;border-radius:5px;border:1px solid var(--border);background:var(--bg-panel);cursor:pointer;transition:all var(--t);font-family:'Hanken Grotesk';font-size:13px;color:var(--text-dim)}

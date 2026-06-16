@@ -915,10 +915,16 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-submit:disabled{background:#a1a1aa;cursor:not-allowed}
 .auth-msg{padding:9px 12px;border-radius:6px;font-size:13px;line-height:1.4;margin-top:4px;display:none}
 .auth-msg.show{display:block}
-.auth-msg.error{background:var(--red-lt);color:var(--red);border:1px solid rgba(220,38,38,.2)}
-.auth-msg.info{background:var(--blue-lt);color:var(--text-dim);border:1px solid var(--border)}
-.auth-msg.success{background:var(--green-lt);color:var(--green);border:1px solid rgba(15,138,102,.2)}
-.auth-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:auth-spin .7s linear infinite;display:none}
+.auth-msg.error{background:rgba(210,59,59,0.08);border:1px solid rgba(210,59,59,0.28);color:#D23B3B}
+.auth-msg.info{background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-bg)}
+.auth-msg.success{background:var(--green-lt);color:var(--green);border:1px solid var(--green-bg)}
+
+/* Spinner inside submit */
+.auth-spinner{
+  width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+  border-radius:50%;animation:auth-spin .7s linear infinite;display:none;
+}
 .auth-submit.loading .auth-spinner{display:inline-block}
 .auth-submit.loading .auth-submit-label{opacity:.7}
 @keyframes auth-spin{to{transform:rotate(360deg)}}
@@ -938,6 +944,19 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-verify-title{font-size:16px;font-weight:600;color:#18181b}
 .auth-verify-desc{font-size:13px;color:#71717a;line-height:1.5}
 .auth-verify-actions{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+
+/* ── Responsive: stack panels on narrow screens ──────────── */
+@media(max-width:860px){
+  .auth-overlay{flex-direction:column}
+  .auth-brand-panel{
+    width:100%;padding:32px 28px;
+    flex:0 0 auto;min-height:auto;
+  }
+  .auth-brand-logo{margin-bottom:24px}
+  .auth-brand-headline{font-size:24px}
+  .auth-brand-features{gap:16px;padding-top:20px}
+  .auth-form-panel{padding:32px 24px}
+}
 
 /* User badge in header */
 .user-badge{display:flex;align-items:center;gap:8px;padding:0 10px 0 6px;height:32px;border-radius:5px;border:1px solid var(--border);background:var(--bg-panel);cursor:pointer;transition:all var(--t);font-family:'Hanken Grotesk';font-size:13px;color:var(--text-dim)}

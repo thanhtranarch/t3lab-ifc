@@ -915,8 +915,8 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-msg{padding:9px 12px;border-radius:6px;font-size:13px;line-height:1.4;margin-top:4px;display:none}
 .auth-msg.show{display:block}
 .auth-msg.error{background:rgba(210,59,59,0.08);border:1px solid rgba(210,59,59,0.28);color:#D23B3B}
-.auth-msg.info{background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-bg)}
-.auth-msg.success{background:var(--green-lt);color:var(--green);border:1px solid var(--green-bg)}
+.auth-msg.info{background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.22);color:#2563eb}
+.auth-msg.success{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.28);color:#059669}
 
 /* Spinner inside submit */
 .auth-spinner{

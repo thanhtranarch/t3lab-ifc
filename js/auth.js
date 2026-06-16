@@ -35,18 +35,42 @@ if(!isConfigPlaceholder){
   setPersistence(auth, browserLocalPersistence).catch(e => console.warn('[auth] setPersistence failed:', e));
 }
 
+// ── Auth state (mirrors IDD Zustand store interface in vanilla JS) ──────
+// user / token / hasHydrated — same shape, stored in module scope.
+// setAuth / clearAuth called on sign-in success / sign-out.
+let authState = { user: null, token: null, hasHydrated: false };
+
+function setAuth(user, token = null){
+  authState = { ...authState, user, token };
+}
+function clearAuth(){
+  authState = { ...authState, user: null, token: null };
+}
+function setHasHydrated(){
+  authState = { ...authState, hasHydrated: true };
+}
+
 // ── DOM helpers ────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 const overlay = $('authOverlay');
-const viewLogin = $('authViewLogin');
+const viewLoading = $('authViewLoading');
+const viewLogin  = $('authViewLogin');
 const viewVerify = $('authViewVerify');
-const viewReset = $('authViewReset');
+const viewReset  = $('authViewReset');
 
 function showView(which){
-  viewLogin.style.display = which === 'login' ? '' : 'none';
-  viewVerify.style.display = which === 'verify' ? '' : 'none';
-  viewReset.style.display = which === 'reset' ? '' : 'none';
+  viewLoading.style.display = which === 'loading' ? '' : 'none';
+  viewLogin.style.display   = which === 'login'   ? '' : 'none';
+  viewVerify.style.display  = which === 'verify'  ? '' : 'none';
+  viewReset.style.display   = which === 'reset'   ? '' : 'none';
 }
+
+// Start in loading state — same as AuthGuard waiting for hasHydrated.
+// A 6 s timeout falls back to login if Firebase never fires (network issue).
+showView('loading');
+const _authInitTimeout = setTimeout(() => {
+  if(!authState.hasHydrated) showView('login');
+}, 6000);
 
 function showMsg(elId, text, kind='error'){
   const el = $(elId);
@@ -83,37 +107,39 @@ function friendlyAuthError(e){
   }
 }
 
-// ── Initial check: if config is missing, lock the overlay with an error ──
+// ── Initial check: if config is missing, skip loading and show error ───
 if(isConfigPlaceholder){
-  // Replace login form with a config-missing message
-  viewLogin.innerHTML = '<div class="auth-brand"><div class="logo-mark">Δ</div><div class="auth-brand-name">IFC Delta<span>Setup needed</span></div></div>'
-    + '<div class="auth-msg show error" style="margin-top:18px">'
+  showView('login');
+  viewLogin.innerHTML = '<div class="auth-heading-block"><h2 class="auth-heading">Setup needed</h2></div>'
+    + '<div class="auth-msg show error" style="margin-top:4px">'
     + '<b>Firebase config missing.</b><br>'
-    + 'Open <code>index.html</code>, find the <code>firebaseConfig</code> object near the top of the auth module, and replace the placeholder values with your Firebase project config from the Firebase Console.'
-    + '</div>'
-    + '<div class="auth-foot">See setup instructions in the project README.</div>';
-  console.error('[auth] Firebase config contains REPLACE_ME placeholders. Edit index.html.');
+    + 'Open <code>js/auth.js</code>, find <code>firebaseConfig</code> and replace placeholder values with your Firebase project config.'
+    + '</div>';
+  console.error('[auth] Firebase config contains REPLACE_ME placeholders.');
 }
 
 // ── Auth state listener ────────────────────────────────────────────────
-// Drives the gate: hides overlay when user is signed in AND verified;
-// shows verify view when signed in but not verified; shows login otherwise.
+// Mirrors IDD AuthGuard: resolve hasHydrated first, then gate the UI.
+// Loading view → login | verify | hidden (grant access).
 if(auth){
   onAuthStateChanged(auth, user => {
+    clearTimeout(_authInitTimeout);
+    setHasHydrated();
+
     if(!user){
-      // Signed out
+      clearAuth();
       overlay.classList.remove('hidden');
       showView('login');
       $('userBadge').style.display = 'none';
       $('userMenu').classList.remove('show');
       return;
     }
-    // Signed in
+    setAuth(user);
+
     if(!user.emailVerified){
       overlay.classList.remove('hidden');
       showView('verify');
       $('verifyEmail').textContent = user.email || '';
-      // Auto-send verification on first arrival in verify view (one-shot per session)
       if(!sessionStorage.getItem('verifySent_'+user.uid)){
         sendEmailVerification(user)
           .then(() => {
@@ -121,7 +147,6 @@ if(auth){
             sessionStorage.setItem('verifySent_'+user.uid, '1');
           })
           .catch(e => {
-            // Likely too-many-requests — silently swallow, user can click Resend
             console.warn('[auth] auto sendEmailVerification:', e?.code);
           });
       }

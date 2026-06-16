@@ -110,30 +110,30 @@
 <div class="app">
   <header class="header">
     <div class="logo"><div class="logo-mark">Δ</div><div class="logo-name">IFC Delta<span>3D Compare</span></div></div>
-    <button class="field-toggle" id="fieldModeBtn" onclick="fieldEnterMode()" title="Field Mode — tablet-optimized for on-site review">📱 Field</button>
+    <button class="field-toggle" id="fieldModeBtn" onclick="fieldEnterMode()" title="Field Mode — tablet-optimized for on-site review"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Field</button>
     <div class="h-sep"></div>
-    <button class="btn primary" id="btnCompare" disabled onclick="runCompare()">▶ Compare</button>
-    <button class="btn" id="btnClash" style="border-color:var(--red);color:var(--red)" onclick="toggleClashMode()">⚡ Clash</button>
-    <button class="btn" id="btnRunClash" style="display:none" disabled onclick="runClashDetection()">▶ Run Clash</button>
-    <button class="btn" id="btnExitClash" style="display:none;border-color:var(--red);color:var(--red)" onclick="exitClashMode()">✕ Exit Clash</button>
-    <button class="btn" id="btnExitCompare" style="display:none;border-color:var(--red);color:var(--red)" onclick="exitCompare()">✕ Exit Compare</button>
-    <button class="btn" id="btnExport" style="display:none" onclick="exportCSV()">⬇ CSV</button>
-    <button class="btn" id="btnExportBCF" style="display:none;border-color:var(--green);color:var(--green)" onclick="exportBCF()">⬇ BCF</button>
-    <button class="btn" id="btnExportClashCSV" style="display:none" onclick="exportClashCSV()">⬇ Clash CSV</button>
-    <button class="btn" id="btnExportClashBCF" style="display:none;border-color:var(--green);color:var(--green)" onclick="exportClashBCF()">⬇ Clash BCF</button>
+    <button class="btn primary" id="btnCompare" disabled onclick="runCompare()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polygon points="5 3 19 12 5 21 5 3"/></svg> Compare</button>
+    <button class="btn" id="btnClash" style="border-color:var(--red);color:var(--red)" onclick="toggleClashMode()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Clash</button>
+    <button class="btn" id="btnRunClash" style="display:none" disabled onclick="runClashDetection()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Clash</button>
+    <button class="btn" id="btnExitClash" style="display:none;border-color:var(--red);color:var(--red)" onclick="exitClashMode()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Exit Clash</button>
+    <button class="btn" id="btnExitCompare" style="display:none;border-color:var(--red);color:var(--red)" onclick="exitCompare()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Exit Compare</button>
+    <button class="btn" id="btnExport" style="display:none" onclick="exportCSV()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV</button>
+    <button class="btn" id="btnExportBCF" style="display:none;border-color:var(--green);color:var(--green)" onclick="exportBCF()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> BCF</button>
+    <button class="btn" id="btnExportClashCSV" style="display:none" onclick="exportClashCSV()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Clash CSV</button>
+    <button class="btn" id="btnExportClashBCF" style="display:none;border-color:var(--green);color:var(--green)" onclick="exportClashBCF()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Clash BCF</button>
     <div id="statusBadge" class="status-badge"><span id="statusText"></span></div>
     <div class="h-right">
-      <button class="btn" id="btnMeasure" onclick="toggleMeasure()">📏 Measure</button>
-      <button class="btn" onclick="captureScreenshot()">📸 Screenshot</button>
-      <button class="btn" id="btnSection" onclick="toggleSectionBox()">✂ Section</button>
-      <button class="btn" id="btnColorize" onclick="toggleColorize()">🎨 Colorize</button>
-      <button class="btn" onclick="zoomFit()">⊞ Fit</button>
-      <button class="btn" onclick="toggleWire()">◫ Wire</button>
-      <button class="btn" id="btnShowAll" style="display:none" onclick="showAllHidden()">👁 Show All</button>
-      <button class="btn" id="btnWalk" onclick="toggleWalkMode()">🚶 Walk</button>
-      <button class="btn" id="btnPlan" onclick="togglePlanOverlay()" title="Show 2D plan overlay (top-down view of current storey)">⊟ Plan</button>
-      <button class="btn" id="btnSGCheck" style="border-color:#dc2626;color:#dc2626" onclick="toggleSGCheckPanel()" title="CORENET X / IFC-SG pre-submission validation (Singapore)">🇸🇬 SG Check</button>
-      <button class="btn" onclick="resetCam()">⌂ Reset</button>
+      <button class="btn" id="btnMeasure" onclick="toggleMeasure()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M2 20L20 4"/><path d="M6 16l2-2m2-2l2-2"/></svg> Measure</button>
+      <button class="btn" onclick="captureScreenshot()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Screenshot</button>
+      <button class="btn" id="btnSection" onclick="toggleSectionBox()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg> Section</button>
+      <button class="btn" id="btnColorize" onclick="toggleColorize()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg> Colorize</button>
+      <button class="btn" onclick="zoomFit()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fit</button>
+      <button class="btn" onclick="toggleWire()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Wire</button>
+      <button class="btn" id="btnShowAll" style="display:none" onclick="showAllHidden()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Show All</button>
+      <button class="btn" id="btnWalk" onclick="toggleWalkMode()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="12" cy="5" r="2"/><path d="M12 8l-2 4h4l-2 4"/><path d="M10 12l-2 6M14 12l2 6"/></svg> Walk</button>
+      <button class="btn" id="btnPlan" onclick="togglePlanOverlay()" title="Show 2D plan overlay (top-down view of current storey)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg> Plan</button>
+      <button class="btn" id="btnSGCheck" style="border-color:#dc2626;color:#dc2626" onclick="toggleSGCheckPanel()" title="CORENET X / IFC-SG pre-submission validation (Singapore)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> SG Check</button>
+      <button class="btn" onclick="resetCam()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Reset</button>
       <div class="h-sep" style="margin:0 4px"></div>
       <button class="user-badge" id="userBadge" onclick="toggleUserMenu(event)" style="display:none">
         <span class="user-avatar" id="userAvatar">·</span>
@@ -146,7 +146,7 @@
     <div class="upload-area">
       <label class="upload-card" id="uc0" for="f0">
         <input type="file" id="f0" accept=".ifc,*/*" onchange="handleFile(0)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
-        <div class="uc-placeholder"><div class="uc-label">Version A — Baseline</div><div class="uc-text">📐 Drop IFC here</div><div class="uc-hint">click or drag .ifc</div></div>
+        <div class="uc-placeholder"><div class="uc-label">Version A — Baseline</div><div class="uc-text"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Drop IFC here</div><div class="uc-hint">click or drag .ifc</div></div>
         <div class="uc-file"><div class="uc-label">Version A</div><div class="uc-filename" id="fn0"></div><div class="uc-size" id="fs0"></div><div class="uc-status" id="us0"></div></div>
       </label>
       <div class="vis-row" id="visRow0" style="display:none">
@@ -158,7 +158,7 @@
       </div>
       <label class="upload-card" id="uc1" for="f1">
         <input type="file" id="f1" accept=".ifc,*/*" onchange="handleFile(1)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
-        <div class="uc-placeholder"><div class="uc-label">Version B — Updated</div><div class="uc-text">📐 Drop IFC here</div><div class="uc-hint">click or drag .ifc</div></div>
+        <div class="uc-placeholder"><div class="uc-label">Version B — Updated</div><div class="uc-text"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Drop IFC here</div><div class="uc-hint">click or drag .ifc</div></div>
         <div class="uc-file"><div class="uc-label">Version B</div><div class="uc-filename" id="fn1"></div><div class="uc-size" id="fs1"></div><div class="uc-status" id="us1"></div></div>
       </label>
       <div class="vis-row" id="visRow1" style="display:none">
@@ -178,7 +178,7 @@
     <!-- Google Drive Panel -->
     <div class="od-panel" id="odPanel">
       <button class="od-toggle" onclick="odToggle()">
-        <span class="od-toggle-icon">☁️</span> Google Drive
+        <span class="od-toggle-icon"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg></span> Google Drive
         <span class="od-toggle-badge" id="odBadge">offline</span>
       </button>
       <div class="od-body" id="odBody">
@@ -223,7 +223,7 @@
     <div class="panel-tabs" id="panelTabs">
       <div class="ptab on" onclick="switchTab('tree')">Entity Tree</div>
       <div class="ptab" onclick="switchTab('issues')">Issues <span class="ptab-count" id="issueCount">0</span></div>
-      <div class="ptab" onclick="switchTab('search')">🔍 Search <span class="ptab-count" id="searchCount" style="display:none">0</span></div>
+      <div class="ptab" onclick="switchTab('search')"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search <span class="ptab-count" id="searchCount" style="display:none">0</span></div>
     </div>
     <div class="issue-nav" id="issueNav">
       <span class="issue-nav-info" id="issueNavInfo">0 / 0</span>
@@ -242,9 +242,9 @@
           <select class="search-type-select" id="searchTypeFilter" onchange="searchRun()">
             <option value="">All types</option>
           </select>
-          <div class="search-chip" onclick="searchToggleChip(this,'missing')" title="Elements missing a specific property">❌ Missing prop</div>
-          <div class="search-chip" onclick="searchToggleChip(this,'has')" title="Elements that have a specific property">✓ Has prop</div>
-          <div class="search-chip" onclick="searchToggleAdvanced()" title="Advanced property filter">⚙ Advanced</div>
+          <div class="search-chip" onclick="searchToggleChip(this,'missing')" title="Elements missing a specific property"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Missing prop</div>
+          <div class="search-chip" onclick="searchToggleChip(this,'has')" title="Elements that have a specific property"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg> Has prop</div>
+          <div class="search-chip" onclick="searchToggleAdvanced()" title="Advanced property filter"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> Advanced</div>
         </div>
       </div>
       <div class="search-adv" id="searchAdv">
@@ -273,10 +273,10 @@
       </div>
       <div class="search-results" id="searchResults"></div>
       <div class="search-actions" id="searchActions" style="display:none">
-        <button class="search-act-btn" onclick="searchIsolateAll()" title="Isolate all results in 3D">👁 Isolate all</button>
-        <button class="search-act-btn" onclick="searchHideAll()" title="Hide all results">🚫 Hide all</button>
-        <button class="search-act-btn" onclick="searchSelectAll()" title="Select all for export">☑ Select all</button>
-        <button class="search-act-btn danger" onclick="searchClear()">✕ Clear</button>
+        <button class="search-act-btn" onclick="searchIsolateAll()" title="Isolate all results in 3D"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Isolate all</button>
+        <button class="search-act-btn" onclick="searchHideAll()" title="Hide all results"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Hide all</button>
+        <button class="search-act-btn" onclick="searchSelectAll()" title="Select all for export"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Select all</button>
+        <button class="search-act-btn danger" onclick="searchClear()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Clear</button>
       </div>
     </div>
     
@@ -287,7 +287,7 @@
   <div class="viewport-area" id="vpArea">
     <!-- 3D canvas wrapper — Three.js renderer reads this element's size -->
     <div class="viewport-canvas" id="vpCanvas">
-      <div class="empty-vp" id="emptyVP"><div class="ev-icon">🏗️</div><div class="ev-title">IFC 3D Version Compare</div><div class="ev-hint">Upload 2 IFC files and click Compare</div></div>
+      <div class="empty-vp" id="emptyVP"><div class="ev-icon"><svg viewBox="0 0 24 24" style="width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.3"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><div class="ev-title">IFC 3D Version Compare</div><div class="ev-hint">Upload 2 IFC files and click Compare</div></div>
       <!-- View cube: click cube face to snap to that orthogonal view. Home below resets. -->
       <div class="view-cube" id="viewCube" title="Click a face to snap to view"></div>
       <div class="view-cube-home" id="viewCubeHome" title="Reset view" onclick="resetCam()">⌂</div>

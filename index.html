@@ -52,8 +52,15 @@
   <div class="auth-form-panel">
     <div class="auth-form-inner">
 
+      <!-- LOADING VIEW (default; hidden once Firebase resolves auth state) -->
+      <div id="authViewLoading">
+        <div class="auth-loading-wrap">
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
       <!-- LOGIN VIEW (default) -->
-      <div id="authViewLogin">
+      <div id="authViewLogin" style="display:none">
         <div class="auth-heading-block">
           <h2 class="auth-heading">Sign in</h2>
           <p class="auth-heading-sub">Enter your credentials to access the platform.</p>

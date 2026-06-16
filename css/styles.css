@@ -879,11 +879,10 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 /* Left brand panel */
 .auth-brand-panel{width:42%;min-width:280px;background:#111;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:48px;position:relative;overflow:hidden;flex-shrink:0}
 .auth-grid-bg{position:absolute;inset:0;pointer-events:none;opacity:.12}
-.auth-brand-top{position:relative;z-index:1;display:flex;flex-direction:column}
-.auth-brand-logo{display:flex;align-items:flex-start;gap:10px;margin-bottom:56px}
-.auth-brand-logo-mark{width:30px;height:30px;background:#fff;color:#111;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:15px;flex-shrink:0;margin-top:1px}
-.auth-brand-logo-name{font-family:'Hanken Grotesk';font-weight:800;font-size:14px;color:#fff;letter-spacing:.4px;line-height:1.15}
-.auth-brand-logo-sub{font-family:'Hanken Grotesk';font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+.auth-brand-top{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:space-between;flex:1;padding-bottom:40px}
+.auth-brand-logo{display:flex;flex-direction:column;gap:4px}
+.auth-brand-logo-name{font-family:'Hanken Grotesk';font-weight:800;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1}
+.auth-brand-logo-sub{font-family:'Hanken Grotesk';font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.5px}
 .auth-brand-hero{display:flex;flex-direction:column}
 .auth-brand-headline{font-family:'Hanken Grotesk';font-weight:800;font-size:36px;line-height:1.1;color:#fff;margin:0 0 14px}
 .auth-brand-tagline{font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;max-width:300px}

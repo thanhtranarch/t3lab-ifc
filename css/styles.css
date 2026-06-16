@@ -870,29 +870,49 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .walk-ud-label{font-size:8px;font-family:'JetBrains Mono';letter-spacing:.5px;opacity:.6}
 .walk-speed-pill{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-family:'JetBrains Mono';font-size:10px;padding:4px 10px;border-radius:12px;pointer-events:none;white-space:nowrap}
 
-/* ── Auth UI ────────────────────────────────────────────────── */
-/* Full-page overlay shown while auth state is unknown OR user is logged out. */
-/* Uses display:flex by default (covers app on first paint to prevent flash of */
-/* unauthenticated content); JS toggles .hidden once auth state is resolved.  */
-.auth-overlay{position:fixed;inset:0;z-index:9999;background:#ECECEF;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+/* ── Auth UI — Two-panel IDD-style layout ───────────────────────── */
+/* Full-page overlay: left dark brand panel + right light form panel. */
+/* JS toggles .hidden once auth state is resolved.                    */
+.auth-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:row}
 .auth-overlay.hidden{display:none}
-.auth-card{width:100%;max-width:380px;background:var(--bg-panel);border:1px solid var(--border);border-radius:20px;padding:32px 28px;box-shadow:0 16px 38px -10px rgba(24,24,27,.22)}
-.auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.auth-brand .logo-mark{width:32px;height:32px;background:var(--text);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:18px;color:#fff}
-.auth-brand-name{font-family:'Hanken Grotesk';font-weight:600;font-size:18px;color:var(--text)}
-.auth-brand-name span{font-family:'JetBrains Mono';font-weight:400;font-size:11px;color:var(--text-muted);margin-left:6px;text-transform:uppercase;letter-spacing:1px}
-.auth-desc{font-size:13px;color:var(--text-muted);margin:8px 0 22px;line-height:1.5}
-.auth-form{display:flex;flex-direction:column;gap:12px}
-.auth-field{display:flex;flex-direction:column;gap:5px}
-.auth-label{font-family:'JetBrains Mono';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted)}
-.auth-input{height:44px;padding:0 15px;border:1px solid var(--border);border-radius:13px;background:var(--bg-card);font-family:'Hanken Grotesk';font-size:14px;font-weight:500;color:var(--text);transition:all var(--t);outline:none}
-.auth-input:focus{border-color:var(--text);background:var(--bg-panel);box-shadow:0 0 0 3px rgba(24,24,27,.08)}
+
+/* Left brand panel */
+.auth-brand-panel{width:42%;min-width:280px;background:#111;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:48px;position:relative;overflow:hidden;flex-shrink:0}
+.auth-grid-bg{position:absolute;inset:0;pointer-events:none;opacity:.12}
+.auth-brand-top{position:relative;z-index:1;display:flex;flex-direction:column}
+.auth-brand-logo{display:flex;align-items:flex-start;gap:10px;margin-bottom:56px}
+.auth-brand-logo-mark{width:30px;height:30px;background:#fff;color:#111;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:15px;flex-shrink:0;margin-top:1px}
+.auth-brand-logo-name{font-family:'Hanken Grotesk';font-weight:800;font-size:14px;color:#fff;letter-spacing:.4px;line-height:1.15}
+.auth-brand-logo-sub{font-family:'Hanken Grotesk';font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+.auth-brand-hero{display:flex;flex-direction:column}
+.auth-brand-headline{font-family:'Hanken Grotesk';font-weight:800;font-size:36px;line-height:1.1;color:#fff;margin:0 0 14px}
+.auth-brand-tagline{font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;max-width:300px}
+.auth-brand-bottom{position:relative;z-index:1}
+.auth-brand-features{display:flex;gap:28px;padding-top:24px;border-top:1px solid rgba(255,255,255,.12)}
+.auth-brand-feat{display:flex;flex-direction:column;gap:3px}
+.auth-brand-feat-val{font-family:'Hanken Grotesk';font-weight:700;font-size:12px;color:#fff}
+.auth-brand-feat-lbl{font-size:10px;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.8px}
+
+/* Right form panel */
+.auth-form-panel{flex:1;background:#ECECEF;display:flex;align-items:center;justify-content:center;padding:48px;overflow-y:auto}
+.auth-form-inner{width:100%;max-width:400px}
+.auth-heading-block{margin-bottom:28px}
+.auth-heading{font-family:'Hanken Grotesk';font-weight:700;font-size:26px;color:#18181b;margin:0 0 6px}
+.auth-heading-sub{font-family:'Hanken Grotesk';font-size:13px;color:#71717a;margin:0;line-height:1.5}
+
+/* Form fields */
+.auth-form{display:flex;flex-direction:column;gap:16px}
+.auth-field{display:flex;flex-direction:column;gap:6px}
+.auth-label-row{display:flex;justify-content:space-between;align-items:center}
+.auth-label{font-family:'Hanken Grotesk';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#71717a}
+.auth-inline-link{font-family:'Hanken Grotesk';font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;padding:0;font-weight:500;text-decoration:none}
+.auth-inline-link:hover{text-decoration:underline}
+.auth-input{height:44px;padding:0 13px;border:1px solid #d4d4d8;border-radius:6px;background:#fff;font-family:'Hanken Grotesk';font-size:14px;font-weight:400;color:#18181b;transition:border-color .12s,box-shadow .12s;outline:none;width:100%;box-sizing:border-box}
+.auth-input:focus{border-color:#18181b;box-shadow:0 0 0 3px rgba(24,24,27,.08)}
 .auth-input:disabled{opacity:.6;cursor:not-allowed}
-.auth-submit{height:42px;margin-top:6px;border-radius:13px;border:none;background:var(--text);color:#fff;font-family:'Hanken Grotesk';font-size:14px;font-weight:600;cursor:pointer;transition:all var(--t);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px -2px rgba(24,24,27,.45)}
+.auth-submit{height:44px;margin-top:4px;border-radius:6px;border:none;background:#18181b;color:#fff;font-family:'Hanken Grotesk';font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
 .auth-submit:hover:not(:disabled){background:#000}
-.auth-submit:disabled{background:var(--text-muted);cursor:not-allowed;opacity:.7}
-.auth-link{font-size:13px;color:var(--text-dim);background:none;border:none;cursor:pointer;text-align:left;padding:0;margin-top:4px;font-family:'Hanken Grotesk';transition:opacity var(--t)}
-.auth-link:hover{opacity:.7;text-decoration:underline}
+.auth-submit:disabled{background:#a1a1aa;cursor:not-allowed}
 .auth-msg{padding:9px 12px;border-radius:6px;font-size:13px;line-height:1.4;margin-top:4px;display:none}
 .auth-msg.show{display:block}
 .auth-msg.error{background:var(--red-lt);color:var(--red);border:1px solid rgba(220,38,38,.2)}
@@ -902,13 +922,21 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-submit.loading .auth-spinner{display:inline-block}
 .auth-submit.loading .auth-submit-label{opacity:.7}
 @keyframes auth-spin{to{transform:rotate(360deg)}}
-.auth-foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);text-align:center;line-height:1.5}
+.auth-foot{margin-top:16px;font-size:13px;color:#71717a;text-align:center;line-height:1.5}
+.auth-foot .auth-inline-link{font-size:13px}
+.auth-demo-box{margin-top:20px;padding:16px 18px;background:#fff;border:1px solid #e4e4e7;border-radius:8px}
+.auth-demo-label{font-family:'Hanken Grotesk';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#a1a1aa;margin-bottom:10px}
+.auth-demo-row{display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:12px;font-family:'Hanken Grotesk'}
+.auth-demo-row code{font-family:'JetBrains Mono';font-size:11px;color:#18181b;font-weight:500}
+.auth-demo-role{color:#a1a1aa;font-size:11px}
+.auth-demo-pwd{margin-top:10px;padding-top:10px;border-top:1px solid #f4f4f5;font-size:11px;color:#a1a1aa;font-family:'JetBrains Mono'}
+@media(max-width:700px){.auth-brand-panel{display:none}.auth-form-panel{padding:32px 24px}}
 
-/* Email-verification gate: same overlay, different content */
+/* Email-verification gate: same panel, different content */
 .auth-verify{display:flex;flex-direction:column;gap:14px;text-align:center}
 .auth-verify-icon{width:48px;height:48px;margin:0 auto;background:var(--amber-lt);color:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
-.auth-verify-title{font-size:16px;font-weight:600;color:var(--text)}
-.auth-verify-desc{font-size:13px;color:var(--text-dim);line-height:1.5}
+.auth-verify-title{font-size:16px;font-weight:600;color:#18181b}
+.auth-verify-desc{font-size:13px;color:#71717a;line-height:1.5}
 .auth-verify-actions{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 
 /* User badge in header */

@@ -11,77 +11,121 @@
 </head>
 <body>
 
-<!-- Auth overlay — covers full viewport while auth state is unknown or user is signed out.
-     Visible by default (no .hidden class) so users never see the app for a flash before
-     Firebase resolves the auth state. JS removes .hidden once user is verified. -->
+<!-- Auth overlay — full-viewport two-panel layout (IDD-style).
+     Left: brand panel with grid pattern + tagline.
+     Right: sign-in / verify / reset forms.
+     Visible by default; JS adds .hidden once user is verified. -->
 <div class="auth-overlay" id="authOverlay">
-  <div class="auth-card" id="authCard">
-    <!-- LOGIN VIEW (default) -->
-    <div id="authViewLogin">
-      <div class="auth-brand">
-        <div class="logo-mark">Δ</div>
-        <div class="auth-brand-name">IFC Delta<span>3D Compare</span></div>
+
+  <!-- Left panel — brand -->
+  <div class="auth-brand-panel">
+    <div class="auth-grid-bg">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="authGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.6"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#authGrid)" />
+      </svg>
+    </div>
+    <div class="auth-brand-top">
+      <div class="auth-brand-logo">
+        <div class="auth-brand-logo-mark">Δ</div>
+        <div>
+          <div class="auth-brand-logo-name">IFC DELTA</div>
+          <div class="auth-brand-logo-sub">3D Version Compare</div>
+        </div>
       </div>
-      <div class="auth-desc">Internal team tool — contact admin for access.</div>
-      <form class="auth-form" id="loginForm" autocomplete="on">
-        <div class="auth-field">
-          <label class="auth-label" for="loginEmail">Email</label>
-          <input class="auth-input" type="email" id="loginEmail" name="email" autocomplete="email" required placeholder="you@company.com">
+      <div class="auth-brand-hero">
+        <h1 class="auth-brand-headline">BIM comparison,<br/>visualized.</h1>
+        <p class="auth-brand-tagline">Version compare, clash detection, SG validation, and AI-powered analysis — unified in your browser.</p>
+      </div>
+    </div>
+    <div class="auth-brand-bottom">
+      <div class="auth-brand-features">
+        <div class="auth-brand-feat"><div class="auth-brand-feat-val">Compare</div><div class="auth-brand-feat-lbl">Versions</div></div>
+        <div class="auth-brand-feat"><div class="auth-brand-feat-val">Clash</div><div class="auth-brand-feat-lbl">Detection</div></div>
+        <div class="auth-brand-feat"><div class="auth-brand-feat-val">IFC-SG</div><div class="auth-brand-feat-lbl">Validation</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel — forms -->
+  <div class="auth-form-panel">
+    <div class="auth-form-inner">
+
+      <!-- LOGIN VIEW (default) -->
+      <div id="authViewLogin">
+        <div class="auth-heading-block">
+          <h2 class="auth-heading">Sign in</h2>
+          <p class="auth-heading-sub">Enter your credentials to access the platform.</p>
         </div>
-        <div class="auth-field">
-          <label class="auth-label" for="loginPassword">Password</label>
-          <input class="auth-input" type="password" id="loginPassword" name="password" autocomplete="current-password" required placeholder="••••••••">
-        </div>
+
         <div class="auth-msg" id="loginMsg"></div>
-        <button type="submit" class="auth-submit" id="loginSubmit">
-          <span class="auth-spinner"></span>
-          <span class="auth-submit-label">Sign in</span>
-        </button>
-        <button type="button" class="auth-link" onclick="showResetView()">Forgot password?</button>
-      </form>
-      <div class="auth-foot">No account? Contact your administrator.</div>
-    </div>
 
-    <!-- VERIFY-EMAIL VIEW (shown after login if email not verified) -->
-    <div id="authViewVerify" style="display:none">
-      <div class="auth-verify">
-        <div class="auth-verify-icon">✉</div>
-        <div class="auth-verify-title">Verify your email</div>
-        <div class="auth-verify-desc">
-          We sent a verification link to <b id="verifyEmail">—</b>.<br>
-          Click the link in your inbox, then refresh this page.
-        </div>
-        <div class="auth-msg" id="verifyMsg"></div>
-        <div class="auth-verify-actions">
-          <button type="button" class="auth-submit" id="verifyResend">
+        <form class="auth-form" id="loginForm" autocomplete="on">
+          <div class="auth-field">
+            <label class="auth-label" for="loginEmail">Email</label>
+            <input class="auth-input" type="email" id="loginEmail" name="email" autocomplete="email" required placeholder="you@company.com">
+          </div>
+          <div class="auth-field">
+            <div class="auth-label-row">
+              <label class="auth-label" for="loginPassword">Password</label>
+              <button type="button" class="auth-inline-link" onclick="showResetView()">Forgot Password?</button>
+            </div>
+            <input class="auth-input" type="password" id="loginPassword" name="password" autocomplete="current-password" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="auth-submit" id="loginSubmit">
             <span class="auth-spinner"></span>
-            <span class="auth-submit-label">Resend verification email</span>
+            <span class="auth-submit-label">Sign in</span>
           </button>
-          <button type="button" class="auth-link" style="text-align:center" onclick="checkVerifiedNow()">I've verified — refresh</button>
-          <button type="button" class="auth-link" style="text-align:center;color:var(--text-muted)" onclick="signOutFromVerify()">Use a different account</button>
-        </div>
+        </form>
+        <div class="auth-foot">No account? Contact your administrator.</div>
       </div>
-    </div>
 
-    <!-- PASSWORD-RESET VIEW -->
-    <div id="authViewReset" style="display:none">
-      <div class="auth-brand">
-        <div class="logo-mark">Δ</div>
-        <div class="auth-brand-name">Reset password</div>
-      </div>
-      <div class="auth-desc">Enter your email and we'll send you a reset link.</div>
-      <form class="auth-form" id="resetForm">
-        <div class="auth-field">
-          <label class="auth-label" for="resetEmail">Email</label>
-          <input class="auth-input" type="email" id="resetEmail" required placeholder="you@company.com">
+      <!-- VERIFY-EMAIL VIEW (shown after login if email not verified) -->
+      <div id="authViewVerify" style="display:none">
+        <div class="auth-verify">
+          <div class="auth-verify-icon">✉</div>
+          <div class="auth-verify-title">Verify your email</div>
+          <div class="auth-verify-desc">
+            We sent a verification link to <b id="verifyEmail">—</b>.<br>
+            Click the link in your inbox, then refresh this page.
+          </div>
+          <div class="auth-msg" id="verifyMsg"></div>
+          <div class="auth-verify-actions">
+            <button type="button" class="auth-submit" id="verifyResend">
+              <span class="auth-spinner"></span>
+              <span class="auth-submit-label">Resend verification email</span>
+            </button>
+            <button type="button" class="auth-inline-link" style="text-align:center;margin-top:8px" onclick="checkVerifiedNow()">I've verified — refresh</button>
+            <button type="button" class="auth-inline-link" style="text-align:center;margin-top:4px;color:var(--text-muted)" onclick="signOutFromVerify()">Use a different account</button>
+          </div>
         </div>
+      </div>
+
+      <!-- PASSWORD-RESET VIEW -->
+      <div id="authViewReset" style="display:none">
+        <div class="auth-heading-block">
+          <h2 class="auth-heading">Forgot password?</h2>
+          <p class="auth-heading-sub">Remembered your password? <span class="auth-inline-link" onclick="showLoginView()">Sign in</span></p>
+        </div>
+
         <div class="auth-msg" id="resetMsg"></div>
-        <button type="submit" class="auth-submit" id="resetSubmit">
-          <span class="auth-spinner"></span>
-          <span class="auth-submit-label">Send reset link</span>
-        </button>
-        <button type="button" class="auth-link" onclick="showLoginView()">← Back to sign in</button>
-      </form>
+
+        <form class="auth-form" id="resetForm">
+          <div class="auth-field">
+            <label class="auth-label" for="resetEmail">Email Address</label>
+            <input class="auth-input" type="email" id="resetEmail" required placeholder="you@company.com">
+          </div>
+          <button type="submit" class="auth-submit" id="resetSubmit">
+            <span class="auth-spinner"></span>
+            <span class="auth-submit-label">Send instructions</span>
+          </button>
+        </form>
+      </div>
+
     </div>
   </div>
 </div>

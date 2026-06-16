@@ -2,13 +2,15 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.12.0/fireba
 import {
   getAuth,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   sendEmailVerification,
   sendPasswordResetEmail,
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
-  reload as reloadUser
+  reload as reloadUser,
+  updateProfile
 } from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js';
 
 // ⚠️  REPLACE THIS CONFIG with your Firebase project's config from
@@ -55,12 +57,14 @@ const $ = id => document.getElementById(id);
 const overlay = $('authOverlay');
 const viewLoading = $('authViewLoading');
 const viewLogin  = $('authViewLogin');
+const viewSignup = $('authViewSignup');
 const viewVerify = $('authViewVerify');
 const viewReset  = $('authViewReset');
 
 function showView(which){
   viewLoading.style.display = which === 'loading' ? '' : 'none';
   viewLogin.style.display   = which === 'login'   ? '' : 'none';
+  viewSignup.style.display  = which === 'signup'  ? '' : 'none';
   viewVerify.style.display  = which === 'verify'  ? '' : 'none';
   viewReset.style.display   = which === 'reset'   ? '' : 'none';
 }
@@ -239,8 +243,14 @@ window.showResetView = function(){
   showView('reset');
 };
 window.showLoginView = function(){
+  clearMsg('loginMsg');
   clearMsg('resetMsg');
+  clearMsg('signupMsg');
   showView('login');
+};
+window.showSignupView = function(){
+  clearMsg('signupMsg');
+  showView('signup');
 };
 
 $('resetForm').addEventListener('submit', async e => {
@@ -310,5 +320,51 @@ window.doLogout = async function(){
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && $('confirmBackdrop').classList.contains('show')){
     cancelLogout();
+  }
+});
+
+// ── SIGNUP form ─────────────────────────────────────────────────────────
+$('signupForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(!auth) return;
+  clearMsg('signupMsg');
+  const name  = $('signupName').value.trim();
+  const email = $('signupEmail').value.trim();
+  const pass  = $('signupPassword').value;
+  const pass2 = $('signupPasswordConfirm').value;
+
+  if(!name || !email || !pass || !pass2){
+    showMsg('signupMsg', 'Please fill in all fields.');
+    return;
+  }
+  if(pass !== pass2){
+    showMsg('signupMsg', 'Passwords do not match.');
+    return;
+  }
+  if(pass.length < 6){
+    showMsg('signupMsg', 'Password should be at least 6 characters.');
+    return;
+  }
+
+  setLoading('signupSubmit', true);
+  try{
+    const { user } = await createUserWithEmailAndPassword(auth, email, pass);
+    // Set display name on the profile
+    await updateProfile(user, { displayName: name });
+    // Send email verification (onAuthStateChanged will switch to verify view)
+    await sendEmailVerification(user).catch(() => {});
+    showMsg('signupMsg', 'Account created! Please check your email for verification.', 'success');
+    // onAuthStateChanged will handle the rest (show verify view)
+  }catch(err){
+    const c = err?.code || '';
+    if(c === 'auth/email-already-in-use'){
+      showMsg('signupMsg', 'This email is already registered. Try signing in instead.');
+    } else if(c === 'auth/weak-password'){
+      showMsg('signupMsg', 'Password is too weak. Use at least 6 characters.');
+    } else {
+      showMsg('signupMsg', friendlyAuthError(err));
+    }
+  }finally{
+    setLoading('signupSubmit', false);
   }
 });

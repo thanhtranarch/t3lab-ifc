@@ -7,29 +7,17 @@
 
 import * as THREE from 'three';
 import { appState } from '../state/index.js';
-import { IFC_NAMES } from '../constants.js';
 import { log, ifcClassToRevitCategory } from './ifc-category.js';
-import { getElementBBox } from './color-schemes.js';
+import { IFC_NAMES } from '../constants.js';
 
-interface PropRow {
-  label: string;
-  value: string;
-  _empty?: boolean;
-}
-
-interface PropGroup {
-  name: string;
-  rows: PropRow[];
-}
-
-function renderPropertiesAccordion(elementHeader: string, groups: PropGroup[]): void {
+function renderPropertiesAccordion(elementHeader: string, groups: any[]): void {
   const esc=(s: any)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   // Drop empty groups (no rows AND no _empty marker)
   const visibleGroups = groups.filter(g=>g.rows.length>0);
   // Default-expanded set: Identity only. Users can expand all via toolbar.
   const DEFAULT_OPEN = new Set(['Identity']);
   // Total row count for the toolbar badge
-  const totalRows = visibleGroups.reduce((sum,g)=>sum+g.rows.filter(r=>!r._empty).length, 0);
+  const totalRows = visibleGroups.reduce((sum: number,g: any)=>sum+g.rows.filter((r: any)=>!r._empty).length, 0);
 
   let html = '';
   // Sticky toolbar with element name + total count + expand/collapse buttons.
@@ -44,7 +32,7 @@ function renderPropertiesAccordion(elementHeader: string, groups: PropGroup[]): 
   // One row per group
   for(const g of visibleGroups){
     const open = DEFAULT_OPEN.has(g.name);
-    const rowCount = g.rows.filter(r=>!r._empty).length;
+    const rowCount = g.rows.filter((r: any)=>!r._empty).length;
     let rowsHtml = '';
     for(const r of g.rows){
       if(r._empty){
@@ -66,7 +54,7 @@ function renderPropertiesAccordion(elementHeader: string, groups: PropGroup[]): 
 }
 
 // Toggle a single group header (click event handler).
-window.propAccordionToggle=function(hdr: HTMLElement){
+window.propAccordionToggle=function(hdr: any){
   if(!hdr)return;
   hdr.classList.toggle('expanded');
 };
@@ -90,7 +78,7 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
   // {value:X, type: labelcode} or a raw primitive or an array.
   const getVal=(v: any): string=>{
     if(v===null||v===undefined)return '';
-    if(Array.isArray(v))return v.map(getVal).filter(x=>x!=='').join(', ');
+    if(Array.isArray(v))return v.map(getVal).filter((x: string)=>x!=='').join(', ');
     if(typeof v==='object' && 'value' in v){
       // IfcValue wrapper — .value is the actual data
       const inner=v.value;
@@ -135,14 +123,10 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
   };
 
   // Pretty-print a property value of any IfcProperty* subtype.
-  // Detect measure type to apply unit conversion. For IfcQuantity* the type
-  // is implicit in the field name (LengthValue vs AreaValue). For regular
-  // IfcPropertySingleValue we inspect the NominalValue wrapper's type code.
+  // Detect measure type to apply unit conversion.
   const extractPropValue=(p: any): string=>{
     if(!p)return '';
     // ── IfcQuantity* (IfcElementQuantity) ──
-    // These have fixed semantic types that web-ifc represents as dedicated
-    // fields. Apply unit conversion based on the field used.
     if(p.LengthValue !==undefined)return fmtLength(p.LengthValue?.value ?? p.LengthValue);
     if(p.AreaValue   !==undefined)return fmtArea  (p.AreaValue?.value   ?? p.AreaValue);
     if(p.VolumeValue !==undefined)return fmtVolume(p.VolumeValue?.value ?? p.VolumeValue);
@@ -150,11 +134,6 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
     if(p.CountValue  !==undefined)return getVal(p.CountValue);
     if(p.TimeValue   !==undefined){const v=p.TimeValue?.value??p.TimeValue;return (typeof v==='number')?(v.toFixed(2)+' s'):getVal(p.TimeValue)}
     // ── IfcPropertySingleValue.NominalValue ──
-    // The type code on the NominalValue wrapper tells us what measure it is.
-    // We don't have a rock-solid mapping, so the hybrid fallback:
-    //   1. Try to detect by property Name (e.g. "Length", "Width",
-    //      "OuterSurfaceArea") — pattern matching on common Pset conventions.
-    //   2. Otherwise render as a raw number via getVal().
     if(p.NominalValue!==undefined){
       const nv=p.NominalValue;
       const rawV = (nv && typeof nv==='object' && 'value' in nv) ? nv.value : nv;
@@ -183,33 +162,30 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
     }
     return getVal(p);
   };
+
   const resolveRef=async(ref: any, recursive=false): Promise<any>=>{
     if(!ref||mid===undefined)return null;
     const id=typeof ref==='number'?ref:(ref?.value ?? null);
     if(typeof id!=='number'||id<=0)return null;
     try{return await mgr.getItemProperties(mid, id, recursive)}catch(e){return null}
   };
-  const esc=(s: any)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const addRow=(label: string,val: string)=>{
-    if(val===''||val===undefined||val===null)return;
-    if(!curGroup){beginGroup('Other')}
-    curGroup!.rows.push({label, value: val});
-  };
 
   const ifcClass = IFC_NAMES[props.type] || ('IFC_'+props.type);
   const revitCat = ifcClassToRevitCategory(ifcClass);
 
   // ── Group accumulator ──
-  // showProps now collects sections into a `groups` array of
+  // showProps collects sections into a `groups` array of
   // {name, rows: [{label, value}]} objects, then renders them as a
-  // collapsible accordion at the end (Dalux-style). The legacy `h`
-  // string concatenation is kept only for the section bridges that
-  // get rewritten below; final output is built by renderPropertiesAccordion().
-  const groups: PropGroup[] = [];
-  let curGroup: PropGroup | null = null;
+  // collapsible accordion at the end (Dalux-style).
+  const groups: any[]=[];
+  let curGroup: any=null;
   const beginGroup=(name: string)=>{ curGroup={name, rows:[]}; groups.push(curGroup); };
+  const addRow=(label: string,val: any)=>{
+    if(val===''||val===undefined||val===null)return;
+    if(!curGroup){beginGroup('Other')}
+    curGroup.rows.push({label, value: val});
+  };
   const elementHeader = `Version ${modelIdx===0?'A':'B'} — #${eid}`;
-  let h='';
 
   // ── Identity section ──
   beginGroup('Identity');
@@ -221,10 +197,9 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
   addRow('Tag / Element ID', getVal(props.Tag));
   addRow('PredefinedType', getVal(props.PredefinedType));
   addRow('GlobalId', getVal(props.GlobalId));
-  /* end-group */;
 
   // ── Type section (IsTypedBy → IfcElementType) ──
-  let typeObj: any = null;
+  let typeObj: any=null;
   try{
     // Prefer the dedicated getTypeProperties when available — handles
     // IsTypedBy traversal natively.
@@ -252,7 +227,6 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
     addRow('Type Description', getVal(typeObj.Description));
     addRow('Type PredefinedType', getVal(typeObj.PredefinedType));
     addRow('ElementType', getVal(typeObj.ElementType));
-    /* end-group */;
   }
 
   // ── Material (HasAssociations → IfcRelAssociatesMaterial) ──
@@ -319,18 +293,20 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
   if(spatial && levelLabel){
     currentStoreyIdx = spatial.storeys.findIndex((s: any)=>s.name===levelLabel);
   }
+  // suppress unused-variable warning — used implicitly for context
+  void currentStoreyIdx;
 
   // ── Compute elevation info from element bbox (Three.js Y-up space) ──
   // In IFC Z is vertical (up), but three.js uses Y-up. web-ifc-three converts
   // geometry so Z becomes Y. Meaning: Y in three-space == Z in IFC-space.
   let topY: number|null=null, botY: number|null=null, gX: number|null=null, gY: number|null=null, gZ: number|null=null;
   try{
-    const bb=getElementBBox(modelIdx, eid);
+    const bb=(window as any).getElementBBox(modelIdx, eid);
     if(bb && bb.center){
       topY = bb.center.y + bb.size.y/2;
       botY = bb.center.y - bb.size.y/2;
       // Global = bbox center. Reverse-apply model offset if model is translated.
-      const off = (appState.loadedModels[modelIdx] as any)?.position || {x:0,y:0,z:0};
+      const off = appState.loadedModels[modelIdx]?.position || {x:0,y:0,z:0};
       // Three.js (x,y,z) ↔ IFC (x,z,-y). y is vertical in three → Z in IFC.
       gX = bb.center.x - off.x;
       gY = -(bb.center.z - off.z);  // IFC Y = -three.Z
@@ -343,8 +319,6 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
 
   // ── Always render Location section if we have ANY data (project/site/
   // building/storey/elevation/coords) ──
-  // This mirrors BIMcollab's Location tab: 13 fields of spatial + geometric
-  // context that help BIM engineers orient themselves in the model.
   const haveLocation = spatial || materialLabel || systemLabel ||
                        topY!==null || gX!==null;
   if(haveLocation){
@@ -360,13 +334,9 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
     addRow('System',           systemLabel);
     addRow('Material',         materialLabel);
     // Elevations (IFC Z in project units → convert to mm via lengthFactor)
-    // Note: we use the model position offset so these are in project global
-    // coords, matching BIMcollab's "Top Elevation" / "Bottom Elevation".
     if(topY!==null)addRow('Top Elevation',    fmtLength(topY));
     if(botY!==null)addRow('Bottom Elevation', fmtLength(botY));
-    // Distances to adjacent storeys — find the storey ABOVE current and the
-    // one BELOW current (sorted by elevation). Compute signed distance from
-    // element top to next storey and from element bottom to storey below.
+    // Distances to adjacent storeys
     if(spatial && spatial.storeys.length>1 && topY!==null && botY!==null){
       let next: any=null, prev: any=null;
       for(const s of spatial.storeys){
@@ -380,17 +350,13 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
     if(gX!==null)addRow('Global X', fmtLength(gX));
     if(gY!==null)addRow('Global Y', fmtLength(gY));
     if(gZ!==null)addRow('Global Z', fmtLength(gZ));
-    // "Elevation" in BIMcollab is usually the bottom Z of the element (aka
-    // floor-level elevation). Provide as an alias for convenience.
     if(botY!==null)addRow('Elevation', fmtLength(botY));
-    /* end-group */;
   }
 
   // ── All Property Sets (instance + type, merged by web-ifc) ──
   // Passing (recursive=true, includeTypeProperties=true) means web-ifc walks
   // the IsDefinedBy and IsTypedBy relationships for us and returns every pset
-  // (both instance-level and type-level) in one call. This is the canonical
-  // way to get comprehensive property data.
+  // (both instance-level and type-level) in one call.
   let allPsets: any[]=[];
   try{
     const data=await mgr.getPropertySets(mid, eid, true, true);
@@ -405,8 +371,7 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
     if(pset.expressID)seenPset.add(pset.expressID);
     const psetName=getVal(pset.Name)||'Properties';
     // Mark type-level psets (those attached via IfcRelDefinesByType typically
-    // appear after instance ones; heuristic: pset name contains "TypeCommon"
-    // or came from the resolved type object).
+    // appear after instance ones; heuristic: pset name contains "TypeCommon").
     const isType=/TypeCommon$/i.test(psetName);
     const displayName = isType ? `[${psetName}]` : psetName;
     beginGroup(displayName);
@@ -434,18 +399,15 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
       }
     }
     if(rowCount===0){
-      if(curGroup){curGroup.rows.push({label:'', value:'(no properties)', _empty:true})};
+      if(curGroup){curGroup.rows.push({label:'', value:'(no properties)', _empty:true})}
     }
-    /* end-group */;
   }
 
   // ── All Raw Attributes (everything web-ifc returned on this entity) ──
-  // Collapsible catch-all so user can verify no data was missed. Shown as
-  // key-value pairs with resolved references expanded. Useful for debugging
-  // and for non-standard props the authoring tool stuffed at entity level.
+  // Collapsible catch-all so user can verify no data was missed.
   const IDENTITY_KEYS=new Set(['Name','Description','ObjectType','Tag','PredefinedType','GlobalId','OwnerHistory','ObjectPlacement','Representation','expressID','type']);
   const REL_KEYS=new Set(['IsDefinedBy','IsTypedBy','HasAssociations','HasAssignments','ContainedInStructure','Decomposes','IsDecomposedBy','ReferencedBy','HasOpenings','FillsVoids','ConnectedFrom','ConnectedTo','HasProjections','HasStructuralMember','ReferencedInStructures']);
-  const attrRows: {k: string; v: string}[] = [];
+  const attrRows: {k: string; v: string}[]=[];
   for(const k of Object.keys(props)){
     if(IDENTITY_KEYS.has(k))continue;
     if(REL_KEYS.has(k))continue; // already surfaced above
@@ -457,7 +419,6 @@ async function showProps(props: any, modelIdx: number): Promise<void> {
   if(attrRows.length>0){
     beginGroup('Raw Attributes');
     for(const {k,v} of attrRows)addRow(k, v);
-    /* end-raw-group */;
   }
 
   renderPropertiesAccordion(elementHeader, groups);
@@ -486,81 +447,3 @@ window.captureScreenshot=function(){
   a.click();
   log('Screenshot saved');
 };
-
-// ══ Measurement Tool ══
-let measureMode=false;
-let measureType='distance'; // 'distance' or 'level'
-let measurePoints: THREE.Vector3[]=[];
-let measureMarkers: THREE.Mesh[]=[];
-let measureLine: THREE.Line | null=null;
-let measureLabel: THREE.Sprite | null=null;
-
-window.setMeasureMode=function(type: string){
-  measureType=type;
-  (window as any).clearMeasure();
-  // Update button styles
-  const dBtn=document.getElementById('modeDistance')!;
-  const lBtn=document.getElementById('modeLevel')!;
-  if(type==='distance'){
-    dBtn.style.borderColor='var(--blue)';dBtn.style.background='var(--blue-lt)';dBtn.style.color='var(--blue)';dBtn.style.fontWeight='600';
-    lBtn.style.borderColor='var(--border)';lBtn.style.background='var(--bg-card)';lBtn.style.color='var(--text-dim)';lBtn.style.fontWeight='400';
-    document.getElementById('measureText')!.textContent='Click first point';
-  }else{
-    lBtn.style.borderColor='var(--blue)';lBtn.style.background='var(--blue-lt)';lBtn.style.color='var(--blue)';lBtn.style.fontWeight='600';
-    dBtn.style.borderColor='var(--border)';dBtn.style.background='var(--bg-card)';dBtn.style.color='var(--text-dim)';dBtn.style.fontWeight='400';
-    document.getElementById('measureText')!.textContent='Click a point to read elevation';
-  }
-};
-
-window.toggleMeasure=function(){
-  measureMode=!measureMode;
-  document.getElementById('btnMeasure')!.classList.toggle('active',measureMode);
-  document.getElementById('measureInfo')!.style.display=measureMode?'flex':'none';
-  if(!measureMode){
-    (window as any).clearMeasure();
-  }else{
-    (window as any).setMeasureMode(measureType);
-    appState.renderer.domElement.style.cursor='crosshair';
-  }
-};
-
-window.clearMeasure=function(){
-  measurePoints=[];
-  measureMarkers.forEach(m=>{if(m.parent)m.parent.remove(m)});
-  measureMarkers=[];
-  if(measureLine){if(measureLine.parent)measureLine.parent.remove(measureLine);measureLine=null}
-  if(measureLabel){if(measureLabel.parent)measureLabel.parent.remove(measureLabel);measureLabel=null}
-  appState.renderer.domElement.style.cursor=measureMode?'crosshair':'';
-  if(measureMode){
-    document.getElementById('measureText')!.textContent=measureType==='distance'?'Click first point':'Click a point to read elevation';
-  }
-};
-
-function addMeasurePoint(point: THREE.Vector3): void {
-  // Create sphere marker
-  const geo=new THREE.SphereGeometry(0.08,12,12);
-  const color=measureType==='level'?0xf59e0b:0x2563eb;
-  const mat=new THREE.MeshBasicMaterial({color,depthTest:false});
-  const sphere=new THREE.Mesh(geo,mat);
-  sphere.position.copy(point);
-  sphere.renderOrder=999;
-  appState.scene.add(sphere);
-  measureMarkers.push(sphere);
-  measurePoints.push(point.clone());
-}
-
-// Export functions referenced by the task spec
-export { showProps };
-
-// buildIssues, filterIssuesList, renderSummary are defined in 11-measure.js
-// and re-exported here for module wiring compatibility as specified.
-// They will be available on window.* from the measure module at runtime.
-export function buildIssues(): void {
-  if(typeof (window as any).buildIssues === 'function')(window as any).buildIssues();
-}
-export function filterIssuesList(): void {
-  if(typeof (window as any).filterIssuesList === 'function')(window as any).filterIssuesList();
-}
-export function renderSummary(): void {
-  if(typeof (window as any).renderSummary === 'function')(window as any).renderSummary();
-}

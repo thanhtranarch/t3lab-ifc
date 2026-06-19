@@ -155,6 +155,14 @@
   // Picking
   const ray=new THREE.Raycaster();const mouse=new THREE.Vector2();
   let downX,downY;
+  // Restore the camera/target captured at pointerdown — used when a click
+  // resolves to empty space so deselecting can't move/zoom the view.
+  function restoreViewSnap(){
+    const s=window._viewSnap; if(!s)return;
+    camera.position.set(s.px,s.py,s.pz);
+    controls.target.set(s.tx,s.ty,s.tz);
+    controls.update();
+  }
   renderer.domElement.addEventListener('pointerdown',e=>{downX=e.clientX;downY=e.clientY;});
   renderer.domElement.addEventListener('pointerup',async e=>{
     if(Math.abs(e.clientX-downX)>3||Math.abs(e.clientY-downY)>3)return;
@@ -183,7 +191,7 @@
     
     const hits=ray.intersectObjects(ms,false);
     console.log('[PICK] meshes scanned:',ms.length,'hits:',hits.length);
-    if(!hits.length){clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
+    if(!hits.length){restoreViewSnap();clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
     
     // Find first hit that is INSIDE the clipping planes (section box)
     // After Compare, prefer diff subset hits over faded base-model hits
@@ -207,7 +215,7 @@
       if(!validHit) validHit=hit;
       break;
     }
-    if(!validHit){clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
+    if(!validHit){restoreViewSnap();clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
     
     // ── Measure mode: add point and return ──
     if(measureMode){
@@ -349,6 +357,10 @@
   // Only consume the pivot on LEFT button (rotate). Right/middle (pan) keep
   // the pivot pending until the user actually rotates.
   renderer.domElement.addEventListener('pointerdown',(e)=>{
+    // Snapshot camera + target BEFORE any pivot work, so a click that turns
+    // out to be on empty space (deselect) can restore the exact view —
+    // deselecting must never move/zoom the camera.
+    window._viewSnap={px:camera.position.x,py:camera.position.y,pz:camera.position.z,tx:controls.target.x,ty:controls.target.y,tz:controls.target.z};
     // ── Stale-pivot guard ──
     // If the user clicked an element earlier (which staged a pendingPivot),
     // then performed a pan or middle-click drag (which moves controls.target

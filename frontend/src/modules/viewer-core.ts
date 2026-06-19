@@ -337,6 +337,14 @@ export function initThree(): void {
   // Picking
   const ray=new THREE.Raycaster();const mouse=new THREE.Vector2();
   let downX: number, downY: number;
+  // Restore the camera/target captured at pointerdown — used when a click
+  // resolves to empty space so deselecting can't move/zoom the view.
+  function restoreViewSnap(): void {
+    const s = (window as any)._viewSnap; if(!s) return;
+    appState.camera.position.set(s.px, s.py, s.pz);
+    appState.controls.target.set(s.tx, s.ty, s.tz);
+    appState.controls.update();
+  }
   appState.renderer.domElement.addEventListener('pointerdown',(e: PointerEvent)=>{downX=e.clientX;downY=e.clientY;});
   appState.renderer.domElement.addEventListener('pointerup',async (e: PointerEvent)=>{
     if(Math.abs(e.clientX-downX)>3||Math.abs(e.clientY-downY)>3)return;
@@ -366,7 +374,7 @@ export function initThree(): void {
 
     const hits=ray.intersectObjects(ms,false);
     console.log('[PICK] meshes scanned:',ms.length,'hits:',hits.length);
-    if(!hits.length){(window as any).clearHighlight();document.getElementById('propArea')!.innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
+    if(!hits.length){restoreViewSnap();(window as any).clearHighlight();document.getElementById('propArea')!.innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
 
     // Find first hit that is INSIDE the clipping planes (section box)
     // After Compare, prefer diff subset hits over faded base-model hits
@@ -390,7 +398,7 @@ export function initThree(): void {
       if(!validHit) validHit=hit;
       break;
     }
-    if(!validHit){(window as any).clearHighlight();document.getElementById('propArea')!.innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
+    if(!validHit){restoreViewSnap();(window as any).clearHighlight();document.getElementById('propArea')!.innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
 
     // ── Measure mode: add point and return ──
     if((window as any).measureMode){
@@ -533,6 +541,9 @@ export function initThree(): void {
   // Only consume the pivot on LEFT button (rotate). Right/middle (pan) keep
   // the pivot pending until the user actually rotates.
   appState.renderer.domElement.addEventListener('pointerdown',(e: PointerEvent)=>{
+    // Snapshot camera + target BEFORE any pivot work, so a click that turns
+    // out to be on empty space (deselect) can restore the exact view.
+    (window as any)._viewSnap={px:appState.camera.position.x,py:appState.camera.position.y,pz:appState.camera.position.z,tx:appState.controls.target.x,ty:appState.controls.target.y,tz:appState.controls.target.z};
     // ── Stale-pivot guard ──
     // If the user clicked an element earlier (which staged a pendingPivot),
     // then performed a pan or middle-click drag (which moves controls.target

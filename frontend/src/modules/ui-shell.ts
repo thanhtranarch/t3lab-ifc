@@ -37,6 +37,33 @@ window.toggleExportMenu = function (): void {
   bg.style.display = open ? 'none' : 'block';
 };
 
+// Reveal the Properties (right) panel and light its toggle. Called when an
+// element is selected so its properties are visible even though the panel
+// starts closed. No-op in Field Mode, which mirrors properties into its own
+// bottom sheet instead.
+window.openRightPanel = function (): void {
+  if (document.body.classList.contains('field-mode')) return;
+  const p = document.getElementById('rightPanel');
+  if (!p) return;
+  p.style.display = 'flex';
+  p.style.flexDirection = 'column';
+  document.getElementById('btnToggleRight')?.classList.add('hdr-panel-btn-active');
+};
+
+// Auto-open the Properties panel whenever real property content is rendered
+// into #propArea (any selection path: 3D click, compare, clash, search, …).
+// Empty/placeholder states use the `.prop-empty` class, so they don't trigger
+// it. Only opens — never auto-closes — so it can't fight a manual toggle.
+(() => {
+  const propArea = document.getElementById('propArea');
+  if (!propArea) return;
+  new MutationObserver(() => {
+    if (!propArea.querySelector('.prop-empty') && propArea.children.length > 0) {
+      window.openRightPanel!();
+    }
+  }).observe(propArea, { childList: true });
+})();
+
 // Colorize "Color by" segmented control — drives the (hidden) #czProp select
 // that colorize.ts reads, then re-applies the colorize pass.
 window.colorizeSetProp = function (v: string): void {

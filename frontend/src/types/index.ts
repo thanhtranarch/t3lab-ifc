@@ -276,6 +276,7 @@ declare global {
     toggleLeftPanel?: () => void;
     toggleRightPanel?: () => void;
     toggleExportMenu?: () => void;
+    openRightPanel?: () => void;
 
     // Section
     toggleSectionBox?: () => void;

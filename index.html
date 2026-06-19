@@ -75,9 +75,13 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 /* Left Panel */
 .left-panel{background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 /* Top controls (file upload, Drive, summary, search, filters) scroll as a
-   group capped at ~55% so the tab content below (Tree / Issues / Search)
-   always keeps room — otherwise tall file cards push it off-screen. */
-.lp-top{flex:0 1 auto;min-height:0;max-height:55%;overflow-y:auto}
+   group; its height is user-draggable via .lp-divider so the tab content
+   below (Tree / Issues / Search) can be enlarged. */
+.lp-top{flex:none;height:var(--lptop-h,46%);min-height:90px;max-height:72%;overflow-y:auto}
+.lp-divider{flex:none;height:7px;cursor:row-resize;position:relative;background:transparent;transition:background var(--t)}
+.lp-divider:hover,.lp-divider.dragging{background:var(--blue)}
+.lp-divider::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:28px;height:2px;background:var(--border);border-radius:1px;pointer-events:none}
+.lp-divider:hover::after,.lp-divider.dragging::after{background:rgba(255,255,255,.7)}
 .upload-area{padding:16px 16px 10px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
 .upload-card{border:1.5px dashed var(--border);border-radius:var(--radius);padding:10px;text-align:center;cursor:pointer;transition:all var(--t);background:var(--bg-card)}
 .upload-card:hover{border-color:var(--blue);background:var(--blue-bg)}
@@ -1330,6 +1334,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
       <button class="fchip fm" data-f="modified" onclick="setFilter('modified')">~ Modified</button>
     </div>
     </div><!-- /lp-top -->
+    <div class="lp-divider" id="lpDivider" title="Drag to resize"></div>
     <div class="cat-filter show" id="catFilter">
       <div class="cat-filter-title">Category Filter</div>
       <div class="cat-select-btn" id="catBtn" onclick="toggleCatDropdown()">
@@ -1941,6 +1946,37 @@ window.toggleExportMenu = function() {
   d.style.display = open ? 'none' : 'block';
   bg.style.display = open ? 'none' : 'block';
 };
+// Drag the left-panel divider to resize the top controls vs the tab content
+// (Tree / Issues / Search). Updates --lptop-h; CSS clamps to min/max height.
+(function () {
+  const div = document.getElementById('lpDivider');
+  const panel = document.getElementById('leftPanel');
+  if (!div || !panel) return;
+  let dragging = false;
+  div.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    div.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+    try { div.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+  div.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    const r = panel.getBoundingClientRect();
+    let h = e.clientY - r.top;                 // lp-top height = top → cursor
+    h = Math.max(90, Math.min(h, r.height * 0.72));
+    document.documentElement.style.setProperty('--lptop-h', h + 'px');
+  });
+  function stop(e) {
+    if (!dragging) return;
+    dragging = false;
+    div.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    try { div.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+  div.addEventListener('pointerup', stop);
+  div.addEventListener('pointercancel', stop);
+})();
 </script>
 
 <!-- ════════════════════════════════════════════════════════════════════════
@@ -2674,6 +2710,14 @@ function initThree(){
   // Picking
   const ray=new THREE.Raycaster();const mouse=new THREE.Vector2();
   let downX,downY;
+  // Restore the camera/target captured at pointerdown — used when a click
+  // resolves to empty space so deselecting can't move/zoom the view.
+  function restoreViewSnap(){
+    const s=window._viewSnap; if(!s)return;
+    camera.position.set(s.px,s.py,s.pz);
+    controls.target.set(s.tx,s.ty,s.tz);
+    controls.update();
+  }
   renderer.domElement.addEventListener('pointerdown',e=>{downX=e.clientX;downY=e.clientY;});
   renderer.domElement.addEventListener('pointerup',async e=>{
     if(Math.abs(e.clientX-downX)>3||Math.abs(e.clientY-downY)>3)return;
@@ -2702,7 +2746,7 @@ function initThree(){
     
     const hits=ray.intersectObjects(ms,false);
     console.log('[PICK] meshes scanned:',ms.length,'hits:',hits.length);
-    if(!hits.length){clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
+    if(!hits.length){restoreViewSnap();clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
     
     // Find first hit that is INSIDE the clipping planes (section box)
     // After Compare, prefer diff subset hits over faded base-model hits
@@ -2726,7 +2770,7 @@ function initThree(){
       if(!validHit) validHit=hit;
       break;
     }
-    if(!validHit){clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
+    if(!validHit){restoreViewSnap();clearHighlight();document.getElementById('propArea').innerHTML='<div class="prop-empty">Click element in 3D to inspect</div>';return}
     
     // ── Measure mode: add point and return ──
     if(measureMode){
@@ -2868,6 +2912,9 @@ function initThree(){
   // Only consume the pivot on LEFT button (rotate). Right/middle (pan) keep
   // the pivot pending until the user actually rotates.
   renderer.domElement.addEventListener('pointerdown',(e)=>{
+    // Snapshot camera + target BEFORE any pivot work, so a click that turns
+    // out to be on empty space (deselect) can restore the exact view.
+    window._viewSnap={px:camera.position.x,py:camera.position.y,pz:camera.position.z,tx:controls.target.x,ty:controls.target.y,tz:controls.target.z};
     // ── Stale-pivot guard ──
     // If the user clicked an element earlier (which staged a pendingPivot),
     // then performed a pan or middle-click drag (which moves controls.target

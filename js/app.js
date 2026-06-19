@@ -372,6 +372,13 @@ function initThree() {
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   let downX, downY;
+  function restoreViewSnap() {
+    const s = window._viewSnap;
+    if (!s) return;
+    camera.position.set(s.px, s.py, s.pz);
+    controls.target.set(s.tx, s.ty, s.tz);
+    controls.update();
+  }
   renderer.domElement.addEventListener("pointerdown", (e) => {
     downX = e.clientX;
     downY = e.clientY;
@@ -397,6 +404,7 @@ function initThree() {
     const hits = ray.intersectObjects(ms, false);
     console.log("[PICK] meshes scanned:", ms.length, "hits:", hits.length);
     if (!hits.length) {
+      restoreViewSnap();
       clearHighlight();
       document.getElementById("propArea").innerHTML = '<div class="prop-empty">Click element in 3D to inspect</div>';
       return;
@@ -423,6 +431,7 @@ function initThree() {
       break;
     }
     if (!validHit) {
+      restoreViewSnap();
       clearHighlight();
       document.getElementById("propArea").innerHTML = '<div class="prop-empty">Click element in 3D to inspect</div>';
       return;
@@ -536,6 +545,7 @@ function initThree() {
   renderer.domElement.addEventListener(
     "pointerdown",
     (e) => {
+      window._viewSnap = { px: camera.position.x, py: camera.position.y, pz: camera.position.z, tx: controls.target.x, ty: controls.target.y, tz: controls.target.z };
       if (e.button !== 0) {
         window._pendingPivot = null;
         return;

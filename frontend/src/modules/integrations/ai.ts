@@ -8,8 +8,8 @@
    là "nguồn sự thật" để các tool chạy trên đó cho ra số chính xác.
 ═══════════════════════════════════════════════════════════════════════ */
 
-import { appState } from '../state/index.js';
-import { log } from './ifc-category.js';
+import { appState } from '../../state/index.js';
+import { log } from '../core/ifc-category.js';
 
 // Đọc giá trị thô từ wrapper của web-ifc ({value:x} hoặc primitive)
 function aiRaw(v: any): any {

@@ -10,8 +10,8 @@
 // to avoid duplicating checks for the same property across components.
 
 import * as THREE from 'three';
-import { appState } from '../state/index.js';
-import { log } from './ifc-category.js';
+import { appState } from '../../state/index.js';
+import { log } from '../core/ifc-category.js';
 
 // ── Active rule set — starts as the built-in Phase 1 rules ──────────
 let SG_ACTIVE_RULES: any[] = [];

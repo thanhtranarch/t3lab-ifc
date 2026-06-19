@@ -5,8 +5,8 @@
 // Results can be clicked to highlight+zoom, or bulk isolated/hidden.
 
 import * as THREE from 'three';
-import { appState } from '../state/index.js';
-import { log } from './ifc-category.js';
+import { appState } from '../../state/index.js';
+import { log } from '../core/ifc-category.js';
 
 // Cross-module functions/values
 declare const getAllProps: (modelID: number) => Promise<Record<string, any>>;

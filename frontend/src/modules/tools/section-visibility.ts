@@ -1,4 +1,4 @@
-import { appState } from '../state/index.js';
+import { appState } from '../../state/index.js';
 
 // ── Section Plan parallel to clicked face (Dalux-style) ──
 // Only creates ONE clipping plane at the face position. All other directions stay fully open.

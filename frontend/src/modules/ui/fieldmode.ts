@@ -7,8 +7,8 @@
 // sheet, storey pill strip.
 
 import * as THREE from 'three';
-import { appState } from '../state/index.js';
-import { log } from './ifc-category.js';
+import { appState } from '../../state/index.js';
+import { log } from '../core/ifc-category.js';
 
 // Cross-module functions
 declare const showProps: (props: any, modelIdx: number) => void;

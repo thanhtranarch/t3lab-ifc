@@ -214,7 +214,7 @@ function ifcClassToRevitCategory(cls) {
   return IFC_TO_REVIT_CAT[cls] || IFC_TO_REVIT_CAT[cls.charAt(0) + cls.slice(1).toLowerCase()] || cls;
 }
 function log(...a) {
-  console.log("[IFC]", ...a);
+  if (window.DEBUG) console.log("[IFC]", ...a);
 }
 function initThree() {
   const c = document.getElementById("vpCanvas");
@@ -402,7 +402,6 @@ function initThree() {
       }
     });
     const hits = ray.intersectObjects(ms, false);
-    console.log("[PICK] meshes scanned:", ms.length, "hits:", hits.length);
     if (!hits.length) {
       restoreViewSnap();
       clearHighlight();
@@ -464,7 +463,6 @@ function initThree() {
       }
     }
     if (targetModelIdx < 0 || !loadedModels[targetModelIdx] || !ifcLoader) {
-      console.log("[PICK] no model match, targetModelIdx=", targetModelIdx);
       return;
     }
     const modelID = loadedModels[targetModelIdx].modelID;
@@ -485,7 +483,6 @@ function initThree() {
       }
     }
     if (!foundEid) {
-      console.log("[PICK] no expressID found, faceIndex=", hit.faceIndex, "hasExpressID=", !!hit.object.geometry.attributes.expressID);
       return;
     }
     log("Pick: expressID=" + foundEid + " model=" + targetModelIdx + (hit.object.userData?.diffSubset ? " (diff:" + hit.object.userData.diffSubset + ")" : ""));
@@ -1626,20 +1623,17 @@ let hiddenTypes = /* @__PURE__ */ new Set();
 window.ctxAction = function(action) {
   const menu = document.getElementById("ctxMenu");
   menu.classList.remove("show");
-  console.log("[CTX] action=" + action, "ctxTarget=", ctxTarget);
   if (action === "showAll") {
     showAllHidden();
     return;
   }
   if (!ctxTarget) {
-    console.log("[CTX] no target, abort");
     return;
   }
   const eid = ctxTarget.expressID;
   const mi = ctxTarget.modelIdx;
   const bbox = ctxTarget.bbox;
   const typeName = ctxTarget.typeName;
-  console.log("[CTX] eid=" + eid, "mi=" + mi, "bbox=", bbox, "type=" + typeName);
   if (action === "hide") {
     hideExpressID(eid, mi);
     return;
@@ -1674,10 +1668,8 @@ window.ctxAction = function(action) {
     });
     return;
   }
-  console.log("[CTX] action not handled or missing data");
 };
 function hideExpressID(eid, mi) {
-  console.log("[HIDE] eid=" + eid + " mi=" + mi);
   if (!ifcLoader || !loadedModels[mi]) return;
   hiddenExpressIDs.add(mi + "_" + eid);
   if (compareResult) {
@@ -1688,7 +1680,6 @@ function hideExpressID(eid, mi) {
   document.getElementById("btnShowAll").style.display = "";
 }
 function hideByType(typeName) {
-  console.log("[HIDE TYPE]", typeName);
   const catIDs = window._catModelIDs || {};
   const ids = catIDs[typeName];
   if (ids) {
@@ -1716,7 +1707,6 @@ function rebuildModelSubset(mi) {
     showIDs = showIDs.filter((id) => !hiddenExpressIDs.has(mi + "_" + id));
   }
   const hiddenCount = allIDs.length - showIDs.length;
-  console.log("[REBUILD] model=" + mi + " total=" + allIDs.length + " hidden=" + hiddenCount + " showing=" + showIDs.length);
   visSubsets = visSubsets.filter((s) => {
     if (s.userData?.srcModelIdx === mi) {
       if (s.parent) s.parent.remove(s);
@@ -1747,7 +1737,6 @@ function rebuildModelSubset(mi) {
         }
       });
       visSubsets.push(sub);
-      console.log("[REBUILD] subset created ok");
     }
   } catch (e) {
     console.error("[REBUILD] error:", e);
@@ -1755,7 +1744,6 @@ function rebuildModelSubset(mi) {
 }
 let isolatedIDs = null;
 function isolateExpressID(eid, mi) {
-  console.log("[ISOLATE] eid=" + eid + " mi=" + mi);
   isolatedIDs = /* @__PURE__ */ new Set([eid]);
   for (let i = 0; i < 2; i++) {
     if (!loadedModels[i]) continue;
@@ -1764,7 +1752,6 @@ function isolateExpressID(eid, mi) {
   document.getElementById("btnShowAll").style.display = "";
 }
 function isolateByType(typeName, mi) {
-  console.log("[ISOLATE TYPE]", typeName);
   const catIDs = window._catModelIDs || {};
   isolatedIDs = /* @__PURE__ */ new Set();
   const ids = catIDs[typeName];
@@ -1793,7 +1780,6 @@ function getAllExpressIDsForModel(mi) {
 }
 let visSubsets = [];
 window.showAllHidden = function() {
-  console.log("[SHOW ALL]");
   hiddenExpressIDs.clear();
   hiddenTypes.clear();
   isolatedIDs = null;
@@ -1810,9 +1796,7 @@ window.showAllHidden = function() {
   document.getElementById("btnShowAll").style.display = "none";
 };
 function sectionThroughElement(bbox, axis) {
-  console.log("[SECTION] axis=" + axis, "bbox=", bbox);
   if (!bbox) {
-    console.log("[SECTION] no bbox");
     return;
   }
   const b = modelBounds;
@@ -1887,16 +1871,13 @@ function sectionAroundElement(bbox) {
 }
 function sectionPlanParallelToFace() {
   if (!ctxTarget) {
-    console.log("[SECTION PLANE] no target");
     return;
   }
   const normal = ctxTarget.faceNormal;
   const point = ctxTarget.hitPoint;
   if (!normal || !point) {
-    console.log("[SECTION PLANE] no normal/point");
     return;
   }
-  console.log("[SECTION PLANE] normal=", normal.toArray().map((v) => v.toFixed(2)), "point=", point.toArray().map((v) => v.toFixed(2)));
   const b = modelBounds;
   const sx = b.max.x - b.min.x, sy = b.max.y - b.min.y, sz = b.max.z - b.min.z;
   const toSl = (val, mn, range) => Math.max(0, Math.min(100, Math.round((val - mn) / range * 100)));
@@ -1936,9 +1917,7 @@ function sectionPlanParallelToFace() {
   log("Section plane created at face");
 }
 function zoomToElement(bbox) {
-  console.log("[ZOOM] bbox=", bbox);
   if (!bbox || !bbox.center) {
-    console.log("[ZOOM] no bbox/center");
     return;
   }
   const c = bbox.center, s = bbox.size;
@@ -6452,8 +6431,8 @@ function drawPlanCameraMarker() {
     onStorey = camY >= storey.elevation - 0.5 && camY <= storey.topElev + 0.5;
   }
   const fanFill = onStorey ? "rgba(37,99,235,0.18)" : "rgba(120,120,120,0.10)";
-  const fanStroke = onStorey ? "#2563eb" : "#9ca3af";
-  const eyeFill = onStorey ? "#2563eb" : "#6b7280";
+  const fanStroke = onStorey ? "#2563eb" : "#8B8680";
+  const eyeFill = onStorey ? "#2563eb" : "#8B8680";
   const ARROW_LEN = 5;
   const ax = px + Math.cos(svgAngle) * ARROW_LEN;
   const ay = py + Math.sin(svgAngle) * ARROW_LEN;
@@ -6490,9 +6469,9 @@ function drawPlanCameraMarker() {
   const NORTH_X = cw - 22, NORTH_Y = 22;
   const northArrow = `
     <g transform="translate(${NORTH_X},${NORTH_Y}) rotate(${(-tnDeg).toFixed(1)})">
-      <circle cx="0" cy="0" r="14" fill="white" opacity="0.9" stroke="#374151" stroke-width="0.8"/>
-      <polygon points="0,-9 -4,7 0,4 4,7" fill="#dc2626" stroke="white" stroke-width="0.5"/>
-      <text x="0" y="-2" text-anchor="middle" font-family="Inter" font-size="9" font-weight="700" fill="#dc2626" stroke="white" stroke-width="2.5" paint-order="stroke">N</text>
+      <circle cx="0" cy="0" r="14" fill="white" opacity="0.9" stroke="#4A4541" stroke-width="0.8"/>
+      <polygon points="0,-9 -4,7 0,4 4,7" fill="#D05050" stroke="white" stroke-width="0.5"/>
+      <text x="0" y="-2" text-anchor="middle" font-family="Inter" font-size="9" font-weight="700" fill="#D05050" stroke="white" stroke-width="2.5" paint-order="stroke">N</text>
     </g>`;
   const targetPx = 80;
   const worldPerPx = fw / cw;
@@ -6507,10 +6486,10 @@ function drawPlanCameraMarker() {
   const scaleBar = `
     <g transform="translate(${scaleX},${scaleY})">
       <rect x="0" y="-2" width="${scalePx.toFixed(1)}" height="4" fill="white" opacity="0.85"/>
-      <line x1="0" y1="0" x2="${scalePx.toFixed(1)}" y2="0" stroke="#374151" stroke-width="1.5"/>
-      <line x1="0" y1="-3" x2="0" y2="3" stroke="#374151" stroke-width="1.2"/>
-      <line x1="${scalePx.toFixed(1)}" y1="-3" x2="${scalePx.toFixed(1)}" y2="3" stroke="#374151" stroke-width="1.2"/>
-      <text x="${(scalePx / 2).toFixed(1)}" y="-6" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#374151" stroke="white" stroke-width="2.5" paint-order="stroke">${nice >= 1 ? nice + " m" : (nice * 1e3).toFixed(0) + " mm"}</text>
+      <line x1="0" y1="0" x2="${scalePx.toFixed(1)}" y2="0" stroke="#4A4541" stroke-width="1.5"/>
+      <line x1="0" y1="-3" x2="0" y2="3" stroke="#4A4541" stroke-width="1.2"/>
+      <line x1="${scalePx.toFixed(1)}" y1="-3" x2="${scalePx.toFixed(1)}" y2="3" stroke="#4A4541" stroke-width="1.2"/>
+      <text x="${(scalePx / 2).toFixed(1)}" y="-6" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#4A4541" stroke="white" stroke-width="2.5" paint-order="stroke">${nice >= 1 ? nice + " m" : (nice * 1e3).toFixed(0) + " mm"}</text>
     </g>`;
   svg.innerHTML = `
     ${sectionRect}
@@ -8394,7 +8373,7 @@ async function sgRunValidation() {
     sgRenderResults();
   } catch (err) {
     log("SG validation error:", err?.message);
-    document.getElementById("sgRulesList").innerHTML = `<div class="sg-empty" style="color:#dc2626">Error: ${err?.message || err}</div>`;
+    document.getElementById("sgRulesList").innerHTML = `<div class="sg-empty" style="color:#D05050">Error: ${err?.message || err}</div>`;
   } finally {
     document.getElementById("sgRunBtn").disabled = false;
     document.getElementById("sgRunBtn").textContent = "\u25B6 Validate";
@@ -8447,7 +8426,7 @@ function sgRenderResults() {
           <div class="sg-rule-counts">
             <span class="pass-n">${passed.length} pass</span>
             ${failed.length > 0 ? ` \u2022 <span class="fail-n">${failed.length} fail</span>` : ""}
-            ${skipped > 0 ? ` \u2022 <span style="color:#9ca3af">${skipped} skip</span>` : ""}
+            ${skipped > 0 ? ` \u2022 <span style="color:#8B8680">${skipped} skip</span>` : ""}
           </div>
         </div>
       </div>`;
@@ -10349,9 +10328,9 @@ window.countElements = countElements;
 window.sumQuantity = sumQuantity;
 window.runAITool = runAITool;
 window.AI_TOOLS = AI_TOOLS;
-console.log("%c\u2550\u2550\u2550 AI QUERY TOOLS s\u1EB5n s\xE0ng \u2550\u2550\u2550", "color:#16a34a;font-weight:700");
-console.log('Th\u1EED:  await countElements({category:"Columns"})');
-console.log('      await sumQuantity({category:"Floors"}, "volume")');
+if (window.DEBUG) console.log("%c\u2550\u2550\u2550 AI QUERY TOOLS s\u1EB5n s\xE0ng \u2550\u2550\u2550", "color:#16a34a;font-weight:700");
+if (window.DEBUG) console.log('Th\u1EED:  await countElements({category:"Columns"})');
+if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "volume")');
 (function() {
   const AI_CONFIG = {
     model: "claude-haiku-4-5-20251001",
@@ -10389,7 +10368,7 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
   .aic-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
   .aic-msg.user{align-self:flex-end;background:var(--blue,#2563eb);color:#fff;border-bottom-right-radius:4px}
   .aic-msg.assistant{align-self:flex-start;background:var(--bg-panel,#fff);border:1px solid var(--border,#d5d9e2);border-bottom-left-radius:4px}
-  .aic-msg.error{align-self:stretch;background:var(--red-bg,#fdeaea);color:var(--red,#dc2626);border:1px solid var(--red,#dc2626);font-size:12px;max-width:100%}
+  .aic-msg.error{align-self:stretch;background:var(--red-bg,#fdeaea);color:var(--red,#D05050);border:1px solid var(--red,#D05050);font-size:12px;max-width:100%}
   .aic-tool{align-self:flex-start;font-size:11px;color:var(--text-muted,#8590a6);background:var(--bg-card,#f0f1f4);
     border:1px solid var(--border,#d5d9e2);border-radius:8px;padding:5px 9px;font-family:'JetBrains Mono',monospace}
   .aic-think{align-self:flex-start;font-size:12px;color:var(--text-muted,#8590a6);font-style:italic;padding:4px 8px}
@@ -10593,8 +10572,8 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
       submit();
     }
   };
-  console.log("%c\u2550\u2550\u2550 AI CHAT UI s\u1EB5n s\xE0ng \u2550\u2550\u2550", "color:#2563eb;font-weight:700");
-  console.log("Nh\u1EA5n n\xFAt \u2726 g\xF3c ph\u1EA3i-d\u01B0\u1EDBi \u0111\u1EC3 m\u1EDF chat. D\xE1n API key trong \u2699 \u0111\u1EC3 test.");
+  if (window.DEBUG) console.log("%c\u2550\u2550\u2550 AI CHAT UI s\u1EB5n s\xE0ng \u2550\u2550\u2550", "color:#2563eb;font-weight:700");
+  if (window.DEBUG) console.log("Nh\u1EA5n n\xFAt \u2726 g\xF3c ph\u1EA3i-d\u01B0\u1EDBi \u0111\u1EC3 m\u1EDF chat. D\xE1n API key trong \u2699 \u0111\u1EC3 test.");
 })();
 initThree();
 initSectionDrag();

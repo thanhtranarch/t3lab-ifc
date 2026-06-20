@@ -392,9 +392,9 @@ window.sumQuantity   = sumQuantity;
 window.runAITool     = runAITool;
 window.AI_TOOLS      = AI_TOOLS;
 
-console.log('%c═══ AI QUERY TOOLS sẵn sàng ═══','color:#16a34a;font-weight:700');
-console.log('Thử:  await countElements({category:"Columns"})');
-console.log('      await sumQuantity({category:"Floors"}, "volume")');
+if(window.DEBUG)console.log('%c═══ AI QUERY TOOLS sẵn sàng ═══','color:#16a34a;font-weight:700');
+if(window.DEBUG)console.log('Thử:  await countElements({category:"Columns"})');
+if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volume")');
 
 /* ═══════════════════════════════════════════════════════════════════════
    IFC DELTA — AI CHAT UI  (bước 3a: ô chat + vòng lặp tool-use)
@@ -442,7 +442,7 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
   .aic-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
   .aic-msg.user{align-self:flex-end;background:var(--blue,#2563eb);color:#fff;border-bottom-right-radius:4px}
   .aic-msg.assistant{align-self:flex-start;background:var(--bg-panel,#fff);border:1px solid var(--border,#d5d9e2);border-bottom-left-radius:4px}
-  .aic-msg.error{align-self:stretch;background:var(--red-bg,#fdeaea);color:var(--red,#dc2626);border:1px solid var(--red,#dc2626);font-size:12px;max-width:100%}
+  .aic-msg.error{align-self:stretch;background:var(--red-bg,#fdeaea);color:var(--red,#D05050);border:1px solid var(--red,#D05050);font-size:12px;max-width:100%}
   .aic-tool{align-self:flex-start;font-size:11px;color:var(--text-muted,#8590a6);background:var(--bg-card,#f0f1f4);
     border:1px solid var(--border,#d5d9e2);border-radius:8px;padding:5px 9px;font-family:'JetBrains Mono',monospace}
   .aic-think{align-self:flex-start;font-size:12px;color:var(--text-muted,#8590a6);font-style:italic;padding:4px 8px}
@@ -622,8 +622,8 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
   sendBtn.onclick = submit;
   inputEl.onkeydown = (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submit(); } };
 
-  console.log('%c═══ AI CHAT UI sẵn sàng ═══','color:#2563eb;font-weight:700');
-  console.log('Nhấn nút ✦ góc phải-dưới để mở chat. Dán API key trong ⚙ để test.');
+  if(window.DEBUG)console.log('%c═══ AI CHAT UI sẵn sàng ═══','color:#2563eb;font-weight:700');
+  if(window.DEBUG)console.log('Nhấn nút ✦ góc phải-dưới để mở chat. Dán API key trong ⚙ để test.');
 })();
 
 initThree();initSectionDrag();initViewCube();log('Ready');

@@ -7,8 +7,8 @@ import {
   IFCSITE, IFCBUILDING, IFCBUILDINGSTOREY, IFCPROJECT, IFCSTAIRFLIGHT,
   IFCSPACE, IFCOPENINGELEMENT,
 } from 'web-ifc';
-import { appState } from '../state/index.js';
-import { FED_COLORS, IFC_NAMES } from '../constants.js';
+import { appState } from '../../state/index.js';
+import { FED_COLORS, IFC_NAMES } from '../../constants.js';
 
 // ══ Federation file management (slots 2+) ══════════════════════════
 let _fedPendingSlot = -1;

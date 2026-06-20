@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════════════════════════
 // ── CORENET X / IFC-SG VALIDATOR ──────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════
-import { appState } from '../state/index.js';
+import { appState } from '../../state/index.js';
 
 declare const THREE: any;
 

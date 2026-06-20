@@ -6,9 +6,9 @@
 // useful info on first inspect). Click any header to toggle.
 
 import * as THREE from 'three';
-import { appState } from '../state/index.js';
-import { log, ifcClassToRevitCategory } from './ifc-category.js';
-import { IFC_NAMES } from '../constants.js';
+import { appState } from '../../state/index.js';
+import { log, ifcClassToRevitCategory } from '../core/ifc-category.js';
+import { IFC_NAMES } from '../../constants.js';
 
 function renderPropertiesAccordion(elementHeader: string, groups: any[]): void {
   const esc=(s: any)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

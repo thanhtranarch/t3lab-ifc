@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { appState } from '../state/index.js';
-import { log } from './ifc-category.js';
+import { appState } from '../../state/index.js';
+import { log } from '../core/ifc-category.js';
 
 // ══════════════════════════════════════════════════════════════
 // ══ FIRST PERSON WALK MODE ══

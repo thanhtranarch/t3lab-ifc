@@ -17,28 +17,36 @@ IFC-Viewer/
 │   │   │   └── index.ts        # appState — trạng thái dùng chung toàn app
 │   │   ├── types/
 │   │   │   └── index.ts        # TypeScript interfaces + Window declarations
-│   │   └── modules/            # 22 tính năng (nguồn sự thật của app logic)
-│   │       ├── ifc-category.ts
-│   │       ├── viewer-core.ts
-│   │       ├── viewcube.ts
-│   │       ├── colorize.ts
-│   │       ├── color-schemes.ts
-│   │       ├── section-visibility.ts
-│   │       ├── federation-load.ts
-│   │       ├── compare.ts
-│   │       ├── properties.ts
-│   │       ├── measure.ts
-│   │       ├── focus-highlight.ts
-│   │       ├── clash.ts
-│   │       ├── walk.ts
-│   │       ├── plan-overlay.ts
-│   │       ├── validator-rules.ts
-│   │       ├── validator-json-loader.ts
-│   │       ├── validator-export.ts
-│   │       ├── drive.ts
-│   │       ├── search.ts
-│   │       ├── fieldmode.ts
-│   │       └── ai.ts
+│   │   └── modules/            # 22 module tính năng, gom nhóm theo vai trò
+│   │       ├── core/           # nền tảng Three.js + IFC
+│   │       │   ├── viewer-core.ts
+│   │       │   ├── viewcube.ts
+│   │       │   └── ifc-category.ts
+│   │       ├── tools/          # công cụ viewport
+│   │       │   ├── colorize.ts
+│   │       │   ├── color-schemes.ts
+│   │       │   ├── section-visibility.ts
+│   │       │   ├── measure.ts
+│   │       │   ├── walk.ts
+│   │       │   ├── plan-overlay.ts
+│   │       │   └── focus-highlight.ts
+│   │       ├── compare/        # so sánh nhiều model
+│   │       │   ├── compare.ts
+│   │       │   ├── federation-load.ts
+│   │       │   └── clash.ts
+│   │       ├── validate/       # IFC-SG validator
+│   │       │   ├── validator-rules.ts
+│   │       │   ├── validator-json-loader.ts
+│   │       │   └── validator-export.ts
+│   │       ├── inspect/        # tra cứu phần tử
+│   │       │   ├── properties.ts
+│   │       │   └── search.ts
+│   │       ├── integrations/   # dịch vụ ngoài
+│   │       │   ├── drive.ts
+│   │       │   └── ai.ts
+│   │       └── ui/             # vỏ UI + chế độ
+│   │           ├── ui-shell.ts
+│   │           └── fieldmode.ts
 │   ├── public/
 │   │   └── css/
 │   │       └── styles.css      # Giao diện

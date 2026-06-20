@@ -4,8 +4,8 @@
 // loading restores the exact coloring the user set up previously.
 
 import * as THREE from 'three';
-import { appState } from '../state/index.js';
-import { log } from './ifc-category.js';
+import { appState } from '../../state/index.js';
+import { log } from '../core/ifc-category.js';
 import { colorizeDisposeSubsets, colorizeFadeBase } from './colorize.js';
 
 const CZ_STORAGE_KEY = 'ifc-delta-color-schemes-v1';

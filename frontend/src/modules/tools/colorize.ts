@@ -8,8 +8,8 @@
 // ══════════════════════════════════════════════════════════════════════
 
 import * as THREE from 'three';
-import { appState } from '../state/index.js';
-import { log, ifcClassToRevitCategory } from './ifc-category.js';
+import { appState } from '../../state/index.js';
+import { log, ifcClassToRevitCategory } from '../core/ifc-category.js';
 
 // Global state for the colorize overlay is now in appState.colorize.
 // Supports two modes:

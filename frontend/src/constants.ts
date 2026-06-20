@@ -1,28 +1,43 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { IFCLoader } from 'web-ifc-three';
-import { IFCSPACE, IFCOPENINGELEMENT, IFCWALL, IFCWALLSTANDARDCASE, IFCSLAB, IFCCOLUMN, IFCBEAM, IFCDOOR, IFCWINDOW, IFCROOF, IFCSTAIR, IFCRAILING, IFCPLATE, IFCMEMBER, IFCCURTAINWALL, IFCFOOTING, IFCBUILDINGELEMENTPROXY, IFCFURNISHINGELEMENT, IFCFLOWSEGMENT, IFCFLOWTERMINAL, IFCFLOWFITTING, IFCSITE, IFCBUILDING, IFCBUILDINGSTOREY, IFCPROJECT, IFCSTAIRFLIGHT } from 'web-ifc';
+import {
+  IFCSPACE, IFCOPENINGELEMENT, IFCWALL, IFCWALLSTANDARDCASE, IFCSLAB,
+  IFCCOLUMN, IFCBEAM, IFCDOOR, IFCWINDOW, IFCROOF, IFCSTAIR, IFCRAILING,
+  IFCPLATE, IFCMEMBER, IFCCURTAINWALL, IFCFOOTING, IFCBUILDINGELEMENTPROXY,
+  IFCFURNISHINGELEMENT, IFCFLOWSEGMENT, IFCFLOWTERMINAL, IFCFLOWFITTING,
+  IFCSITE, IFCBUILDING, IFCBUILDINGSTOREY, IFCPROJECT, IFCSTAIRFLIGHT,
+} from 'web-ifc';
 
-let scene, camera, renderer, controls, ifcLoader;
-let files=[null,null], loadedModels=[null,null], compareResult=null, activeFilter='all';
-// Federation: slots 0,1 = Compare A/B; slots 2+ = federation discipline files.
-// loadedModels is a sparse array — indices can be null if file was removed.
-const FED_COLORS = ['#10b981','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#84cc16','#f97316'];
-const FED_LABELS = ['C','D','E','F','G','H','I'];
-let fedNextSlot = 2; // next slot index for federation files
-let ctxTarget=null; // Right-click context menu target
-let activeCategories=new Set(); // empty = show all
-let modelBounds={min:new THREE.Vector3(),max:new THREE.Vector3()};
-let sharedCenterOffset=null; // Shared center offset so both models align to same coord system
-let clipPlanes=[], sectionActive=false;
+export const FED_COLORS = ['#10b981','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#84cc16','#f97316'];
+export const FED_LABELS = ['C','D','E','F','G','H','I'];
 
-const IFC_NAMES={};
-IFC_NAMES[IFCWALL]='IfcWall';IFC_NAMES[IFCWALLSTANDARDCASE]='IfcWallStandardCase';IFC_NAMES[IFCSLAB]='IfcSlab';IFC_NAMES[IFCCOLUMN]='IfcColumn';IFC_NAMES[IFCBEAM]='IfcBeam';IFC_NAMES[IFCDOOR]='IfcDoor';IFC_NAMES[IFCWINDOW]='IfcWindow';IFC_NAMES[IFCROOF]='IfcRoof';IFC_NAMES[IFCSTAIR]='IfcStair';IFC_NAMES[IFCSTAIRFLIGHT]='IfcStairFlight';IFC_NAMES[IFCRAILING]='IfcRailing';IFC_NAMES[IFCPLATE]='IfcPlate';IFC_NAMES[IFCMEMBER]='IfcMember';IFC_NAMES[IFCCURTAINWALL]='IfcCurtainWall';IFC_NAMES[IFCFOOTING]='IfcFooting';IFC_NAMES[IFCBUILDINGELEMENTPROXY]='IfcBuildingElementProxy';IFC_NAMES[IFCFURNISHINGELEMENT]='IfcFurnishingElement';IFC_NAMES[IFCFLOWSEGMENT]='IfcFlowSegment';IFC_NAMES[IFCFLOWTERMINAL]='IfcFlowTerminal';IFC_NAMES[IFCFLOWFITTING]='IfcFlowFitting';IFC_NAMES[IFCSITE]='IfcSite';IFC_NAMES[IFCBUILDING]='IfcBuilding';IFC_NAMES[IFCBUILDINGSTOREY]='IfcBuildingStorey';IFC_NAMES[IFCPROJECT]='IfcProject';IFC_NAMES[IFCSPACE]='IfcSpace';
+export const IFC_NAMES: Record<number, string> = {};
 
-// ── Numeric IFC type codes (for entities found via Method 2 full-scan) ──
-// These codes come from web-ifc's internal type registry. Without these,
-// the Colorize legend shows raw hex-like numbers ("IFC_3612865200"). With
-// them, it shows the canonical IFC class name.
+IFC_NAMES[IFCWALL]='IfcWall';
+IFC_NAMES[IFCWALLSTANDARDCASE]='IfcWallStandardCase';
+IFC_NAMES[IFCSLAB]='IfcSlab';
+IFC_NAMES[IFCCOLUMN]='IfcColumn';
+IFC_NAMES[IFCBEAM]='IfcBeam';
+IFC_NAMES[IFCDOOR]='IfcDoor';
+IFC_NAMES[IFCWINDOW]='IfcWindow';
+IFC_NAMES[IFCROOF]='IfcRoof';
+IFC_NAMES[IFCSTAIR]='IfcStair';
+IFC_NAMES[IFCSTAIRFLIGHT]='IfcStairFlight';
+IFC_NAMES[IFCRAILING]='IfcRailing';
+IFC_NAMES[IFCPLATE]='IfcPlate';
+IFC_NAMES[IFCMEMBER]='IfcMember';
+IFC_NAMES[IFCCURTAINWALL]='IfcCurtainWall';
+IFC_NAMES[IFCFOOTING]='IfcFooting';
+IFC_NAMES[IFCBUILDINGELEMENTPROXY]='IfcBuildingElementProxy';
+IFC_NAMES[IFCFURNISHINGELEMENT]='IfcFurnishingElement';
+IFC_NAMES[IFCFLOWSEGMENT]='IfcFlowSegment';
+IFC_NAMES[IFCFLOWTERMINAL]='IfcFlowTerminal';
+IFC_NAMES[IFCFLOWFITTING]='IfcFlowFitting';
+IFC_NAMES[IFCSITE]='IfcSite';
+IFC_NAMES[IFCBUILDING]='IfcBuilding';
+IFC_NAMES[IFCBUILDINGSTOREY]='IfcBuildingStorey';
+IFC_NAMES[IFCPROJECT]='IfcProject';
+IFC_NAMES[IFCSPACE]='IfcSpace';
+
+// Numeric IFC type codes (from web-ifc's internal type registry)
 IFC_NAMES[3612865200]='IfcPipeSegment';
 IFC_NAMES[310824031]='IfcPipeFitting';
 IFC_NAMES[3518393246]='IfcDuctSegment';
@@ -85,4 +100,3 @@ IFC_NAMES[3283111854]='IfcSpaceHeater';
 IFC_NAMES[1687234759]='IfcShadingDevice';
 IFC_NAMES[900683007]='IfcFooting';
 IFC_NAMES[25142252]='IfcUnitaryEquipment';
-

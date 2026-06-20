@@ -3,20 +3,26 @@
 > Web-based BIM viewer (xem · so sánh · clash · validate · AI) — Three.js + web-ifc,
 > chạy hoàn toàn trong trình duyệt, deploy trên GitHub Pages (không build server).
 
-## Tổng quan runtime
+> ⚠️ Repo có **2 codebase song song**:
+> - **Bản standalone (deploy)** — `index.html` ở root, **inline toàn bộ** CSS + 2 module
+>   (auth + app). Đây là bản chạy production (GitHub Pages + Vercel `build:standalone`).
+> - **`frontend/` (Vite + TS)** — bản component-hoá, chạy dev, **chưa deploy**.
+>
+> Tài liệu này mô tả **bản standalone**.
+
+## Tổng quan runtime (bản standalone)
 
 ```
-index.html
- ├─ <link  css/styles.css>                  ← toàn bộ giao diện
+index.html (self-contained)
+ ├─ <style>…</style>                         ← toàn bộ giao diện (inline)
  ├─ <script importmap>                       ← three, web-ifc, three-mesh-bvh (CDN)
- ├─ <script type=module src=js/auth.js>      ← Firebase Auth (module độc lập)
- └─ <script type=module src=js/app.js>       ← ứng dụng chính (1 module scope)
+ ├─ <script type=module> Firebase Auth       ← inline (≙ js/auth.ts → js/auth.js)
+ └─ <script type=module> ứng dụng chính      ← inline (≙ src/app/*.ts → js/app.js)
 ```
 
-- `js/auth.js` và `js/app.js` **không** chia sẻ lexical scope — chúng giao tiếp qua
-  `window.*` và DOM (giống bản gốc khi còn nằm inline trong index.html).
-- `js/app.js` là **artifact build**, được ghép từ `src/app/*.js`. Mọi cấu kiện code
-  nằm trong **một** module scope chung, nên các file con vẫn dùng chung biến/hàm như cũ.
+- Hai module (auth + app) **không** chia sẻ lexical scope — giao tiếp qua `window.*` + DOM.
+- `js/app.js` là **artifact build** (esbuild) ghép từ `src/app/*.ts` (TypeScript). Xem
+  `build.ts` + `npm run build:standalone`; nguồn đã chuyển sang TS (`src/app/globals.d.ts`).
 
 ## Vì sao split bằng concatenation (không phải ESM import/export)?
 

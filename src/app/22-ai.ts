@@ -400,20 +400,18 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
    IFC DELTA — AI CHAT UI  (bước 3a: ô chat + vòng lặp tool-use)
    ───────────────────────────────────────────────────────────────────────
    Panel chat nổi góc phải. Người dùng hỏi tiếng Việt → gửi câu hỏi + AI_TOOLS
-   lên Claude → Claude chọn tool → runAITool() chạy ra SỐ CHÍNH XÁC → Claude
-   diễn đạt lại. AI không tự đoán số.
+   lên backend proxy (/api/ai/chat) → AI chọn tool → runAITool() chạy ra SỐ
+   CHÍNH XÁC → AI diễn đạt lại. AI không tự đoán số.
 
-   ⚠ KEY: ô nhập key bên dưới CHỈ để TEST LOCAL. KHÔNG commit/deploy kèm key
-   (ai mở DevTools cũng thấy). Khi xong proxy: đặt AI_CONFIG.useProxy=true +
-   proxyUrl, lúc đó không cần key ở client nữa.
+   ✅ KEY nằm Ở SERVER: gọi qua serverless proxy /api/ai/chat (Vercel) — key
+   (DEEPSEEK_API_KEY) đặt trong biến môi trường Vercel, KHÔNG bao giờ xuống
+   trình duyệt. Không còn ô nhập key ở client.
 ═══════════════════════════════════════════════════════════════════════ */
 (function(){
   const AI_CONFIG = {
-    model:     'claude-haiku-4-5-20251001',  // Haiku rẻ, hợp truy vấn thường
+    model:     '',                            // proxy tự chọn model (DEEPSEEK_MODEL); để trống
     maxTokens: 1024,
-    useProxy:  false,                         // ĐỔI true khi proxy sẵn sàng
-    proxyUrl:  '',                            // vd 'https://your-worker.workers.dev'
-    apiKey:    '',                            // chỉ test local
+    proxyUrl:  '/api/ai/chat',                // serverless proxy — key giữ ở server
   };
   window.AI_CONFIG = AI_CONFIG;
 
@@ -451,6 +449,16 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
     font-family:inherit;max-height:90px;min-height:38px;box-sizing:border-box}
   .aic-send{background:var(--blue,#2563eb);color:#fff;border:none;border-radius:8px;width:40px;cursor:pointer;font-size:16px;flex-shrink:0}
   .aic-send:disabled{opacity:.5;cursor:default}
+  .aic-msg.assistant strong{font-weight:600}
+  .aic-msg.assistant em{font-style:italic}
+  .aic-msg.assistant code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-card,#f0f1f4);padding:1px 4px;border-radius:4px}
+  .aic-md-h{font-weight:600;margin:3px 0 1px}
+  .aic-md-ul{margin:4px 0;padding-left:18px}
+  .aic-md-ul li{margin:1px 0}
+  .aic-md-sp{height:6px}
+  .aic-md-table{border-collapse:collapse;margin:6px 0;font-size:12px;width:100%}
+  .aic-md-table th,.aic-md-table td{border:1px solid var(--border,#d5d9e2);padding:3px 7px;text-align:left;vertical-align:top}
+  .aic-md-table th{background:var(--bg-card,#f0f1f4);font-weight:600}
   `;
   const styleEl = document.createElement('style');
   styleEl.textContent = css;
@@ -466,14 +474,8 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   panel.innerHTML = `
     <div class="aic-head">
       <span class="aic-dot"></span><b>Trợ lý AI · IFC Delta</b>
-      <button class="aic-iconbtn" data-act="cfg" title="Cài đặt">⚙</button>
       <button class="aic-iconbtn" data-act="clear" title="Xoá hội thoại">🗑</button>
       <button class="aic-iconbtn" data-act="close" title="Đóng">✕</button>
-    </div>
-    <div class="aic-cfg">
-      <label>API key (test local)</label>
-      <input type="password" class="aic-key" placeholder="sk-ant-..." autocomplete="off">
-      <div class="aic-note">⚠ Chỉ dùng để chạy thử trên máy. Đừng commit/deploy file kèm key. Khi xong proxy sẽ không cần key ở đây.</div>
     </div>
     <div class="aic-msgs"></div>
     <div class="aic-foot">
@@ -483,14 +485,62 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   document.body.appendChild(panel);
 
   const $ = s => panel.querySelector(s);
-  const msgs = $('.aic-msgs'), keyInput = $('.aic-key'), inputEl = $('.aic-in'),
-        sendBtn = $('.aic-send'), cfgBox = $('.aic-cfg');
+  const msgs = $('.aic-msgs'), inputEl = $('.aic-in'), sendBtn = $('.aic-send');
+
+  // ── Markdown TỐI GIẢN → HTML (escape trước, chỉ sinh thẻ an toàn) ──
+  function aicEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function aicInline(s){           // s đã được escape HTML
+    return s
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+  }
+  function aicMd(src){
+    const lines = String(src).replace(/\r\n?/g,'\n').split('\n');
+    const isSep = (r)=> /-/.test(r) && /^\s*\|?[\s:|-]+\|?\s*$/.test(r);
+    const splitRow = (r)=> r.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>c.trim());
+    let html = '', i = 0;
+    while(i < lines.length){
+      const line = lines[i];
+      // Bảng: dòng có '|' + dòng kế là separator |---|
+      if(line.indexOf('|') !== -1 && i+1 < lines.length && isSep(lines[i+1])){
+        const headers = splitRow(line); i += 2;
+        let body = '';
+        while(i < lines.length && lines[i].indexOf('|') !== -1 && lines[i].trim() !== ''){
+          const cells = splitRow(lines[i]);
+          body += '<tr>' + cells.map(c=>'<td>'+aicInline(aicEsc(c))+'</td>').join('') + '</tr>';
+          i++;
+        }
+        html += '<table class="aic-md-table"><thead><tr>'
+              + headers.map(h=>'<th>'+aicInline(aicEsc(h))+'</th>').join('')
+              + '</tr></thead><tbody>'+body+'</tbody></table>';
+        continue;
+      }
+      // Danh sách: -, *, ▸, •
+      if(/^\s*[-*▸•]\s+/.test(line)){
+        let items = '';
+        while(i < lines.length && /^\s*[-*▸•]\s+/.test(lines[i])){
+          items += '<li>'+aicInline(aicEsc(lines[i].replace(/^\s*[-*▸•]\s+/, '')))+'</li>'; i++;
+        }
+        html += '<ul class="aic-md-ul">'+items+'</ul>';
+        continue;
+      }
+      // Tiêu đề: #, ##, ###
+      const h = line.match(/^\s*#{1,3}\s+(.*)$/);
+      if(h){ html += '<div class="aic-md-h">'+aicInline(aicEsc(h[1]))+'</div>'; i++; continue; }
+      // Dòng trống / đoạn thường
+      if(line.trim() === ''){ html += '<div class="aic-md-sp"></div>'; i++; continue; }
+      html += '<div>'+aicInline(aicEsc(line))+'</div>'; i++;
+    }
+    return html;
+  }
 
   // ── render helpers ──
   function render(role, text){
     const d = document.createElement('div');
     d.className = 'aic-msg ' + role;
-    d.textContent = text;
+    if(role === 'assistant') d.innerHTML = aicMd(text);   // chỉ assistant render Markdown
+    else d.textContent = text;                            // user/error: văn bản thuần (an toàn)
     msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
     return d;
   }
@@ -503,31 +553,34 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   function thinking(on, el){
     if(on){
       const d = document.createElement('div');
-      d.className = 'aic-think'; d.textContent = 'Đang suy nghĩ…';
+      d.className = 'aic-think'; d.textContent = 'Đang xử lý…';
       msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d;
     } else if(el){ el.remove(); }
   }
 
-  function endpoint(){ return AI_CONFIG.useProxy ? AI_CONFIG.proxyUrl : 'https://api.anthropic.com/v1/messages'; }
-  function headers(){
-    const h = { 'content-type':'application/json' };
-    if(!AI_CONFIG.useProxy){
-      h['x-api-key'] = AI_CONFIG.apiKey;
-      h['anthropic-version'] = '2023-06-01';
-      h['anthropic-dangerous-direct-browser-access'] = 'true';
-    }
-    return h;
-  }
+  function endpoint(){ return AI_CONFIG.proxyUrl; }
+  function headers(){ return { 'content-type':'application/json' }; }
 
-  // ── system prompt + ngữ cảnh model (giúp Claude chọn đúng tên category/tầng) ──
+  // ── system prompt + ngữ cảnh model (giới hạn kích thước để kiểm soát token) ──
+  // CAP_* giữ ngữ cảnh gọn: chỉ liệt kê các mục phổ biến nhất, phần dôi ra rút gọn.
+  const CAP_LIST = 40, CAP_STOREY = 60;
+  function capNames(items, n){
+    const names = items.map(c => c.name);
+    return names.length > n
+      ? names.slice(0, n).join(', ') + `, …(+${names.length - n} mục khác)`
+      : names.join(', ');
+  }
   async function buildSystem(){
     let ctx = 'Hiện chưa có model IFC nào được load.';
     try{
       const idx = await buildAIIndex();
       if(idx){
-        const cats = idx.categories.map(c=>c.name+'('+c.count+')').join(', ');
-        const stos = idx.storeys.join(', ');
-        const cls  = idx.ifcClasses.map(c=>c.name).join(', ');
+        const cats = capNames(idx.categories, CAP_LIST);
+        const cls  = capNames(idx.ifcClasses, CAP_LIST);
+        const stoArr = idx.storeys;
+        const stos = stoArr.length > CAP_STOREY
+          ? stoArr.slice(0, CAP_STOREY).join(', ') + `, …(+${stoArr.length - CAP_STOREY})`
+          : stoArr.join(', ');
         ctx = 'Model đang mở: ' + idx.models.map(m=>m.fileName).join(', ') + '. Tổng ' + idx.count + ' element.\n'
             + 'Category (Revit) có sẵn: ' + cats + '.\n'
             + 'Tầng (storey) có sẵn: ' + stos + '.\n'
@@ -536,9 +589,14 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
     }catch(e){}
     return [
       'Bạn là trợ lý của IFC Delta — công cụ xem & truy vấn mô hình IFC trên web cho kỹ sư BIM.',
-      'QUY TẮC BẮT BUỘC: với mọi câu hỏi cần con số (đếm số lượng, tổng khối lượng/diện tích/chiều dài), PHẢI gọi tool count_elements hoặc sum_quantity để lấy số CHÍNH XÁC. TUYỆT ĐỐI không tự đoán, không tự bịa số.',
+      'PHẠM VI: CHỈ hỗ trợ về (các) MÔ HÌNH IFC đang mở và tính năng của IFC Delta (đếm element, tổng khối lượng/diện tích/chiều dài, category, tầng, vật liệu, thuộc tính).',
+      'TỪ CHỐI NGOÀI PHẠM VI: nếu câu hỏi KHÔNG liên quan đến mô hình đang mở (kiến thức chung, lập trình, tin tức, toán/đời sống ngoài lề, trò chuyện phiếm…), hãy lịch sự từ chối ngắn gọn và nhắc rằng bạn chỉ trả lời về mô hình IFC đang mở. Tuyệt đối không dùng kiến thức ngoài, không trả lời thông tin ngoài mô hình.',
+      'QUY TẮC SỐ LIỆU: với mọi câu hỏi cần con số, PHẢI gọi tool count_elements hoặc sum_quantity để lấy số CHÍNH XÁC. Chỉ dùng dữ liệu từ tool và ngữ cảnh bên dưới. TUYỆT ĐỐI không tự đoán, không bịa số.',
       'Khi đặt giá trị lọc (category, storey, ifcClass), hãy dùng đúng tên có trong danh sách ngữ cảnh bên dưới (vd "tầng 3" → storey "L3"; "cột" → category "Columns").',
-      'Trả lời bằng tiếng Việt, ngắn gọn, nêu rõ con số kèm đơn vị. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ điều đó.',
+      'NGÔN NGỮ: trả lời CÙNG NGÔN NGỮ với câu hỏi của người dùng — hỏi tiếng Việt thì đáp tiếng Việt, hỏi tiếng Anh thì đáp tiếng Anh (mặc định tiếng Việt nếu không rõ).',
+      'PHONG CÁCH: trả lời chuyên nghiệp, DỨT KHOÁT, súc tích. Mở đầu bằng đáp số/kết luận chính kèm đơn vị, rồi mới tới chi tiết. Không vòng vo, không xin lỗi thừa. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ. Nếu chưa load model, yêu cầu người dùng load model trước.',
+      'ĐỊNH DẠNG: dùng Markdown TỐI GIẢN — được phép **in đậm** cho số/kết luận quan trọng, danh sách "- " và bảng markdown đơn giản khi liệt kê số liệu. Gọn gàng, không tiêu đề lớn rườm rà.',
+      'ICON: chỉ dùng ký hiệu tối giản ĐƠN SẮC khi thật cần (▸ • – → ↑ ↓ │). TUYỆT ĐỐI KHÔNG dùng emoji màu (📊 🥇 🥈 🥉 💡 ✅ ⚠️ 🔥 📈 …).',
       '',
       'NGỮ CẢNH MÔ HÌNH HIỆN TẠI:',
       ctx,
@@ -549,15 +607,25 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   const history = [];   // {role, content}
   let busy = false;
 
+  // Giới hạn ngữ cảnh hội thoại để kiểm soát token: chỉ giữ các lượt gần nhất.
+  // Cắt tại ranh giới an toàn (message user dạng chuỗi = đầu một lượt hỏi) để
+  // không phá cặp tool_use / tool_result.
+  const MAX_HISTORY_MSGS = 24;
+  function trimHistory(){
+    if(history.length <= MAX_HISTORY_MSGS) return;
+    let start = history.length - MAX_HISTORY_MSGS;
+    while(start < history.length &&
+          !(history[start].role === 'user' && typeof history[start].content === 'string')){
+      start++;
+    }
+    if(start > 0 && start < history.length) history.splice(0, start);
+  }
+
   async function ask(question){
     if(busy) return;
-    if(!AI_CONFIG.useProxy && !AI_CONFIG.apiKey){
-      cfgBox.classList.add('show');
-      render('error', 'Chưa có API key. Mở ⚙ và dán key để test, hoặc bật proxy trong AI_CONFIG.');
-      return;
-    }
     busy = true; sendBtn.disabled = true;
     history.push({ role:'user', content: question });
+    trimHistory();
     render('user', question);
     const system = await buildSystem();
     const thinkEl = thinking(true);
@@ -580,13 +648,12 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
         }
         const data = await res.json();
         history.push({ role:'assistant', content: data.content });
-        const texts = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
-        if(texts) render('assistant', texts);
         if(data.stop_reason === 'tool_use'){
+          // Lượt trung gian: chạy tool nền, KHÔNG hiển thị văn bản tự-thuật kế
+          // hoạch hay badge tool — chỉ giữ chỉ báo "Đang xử lý…".
           const toolUses = (data.content||[]).filter(b=>b.type==='tool_use');
           const results = [];
           for(const tu of toolUses){
-            toolBadge(tu.name, tu.input);
             let out;
             try{ out = await window.runAITool(tu.name, tu.input); }
             catch(err){ out = { error: String((err && err.message) || err) }; }
@@ -595,6 +662,9 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
           history.push({ role:'user', content: results });
           continue;
         }
+        // Lượt cuối: chỉ giờ mới hiển thị câu trả lời.
+        const texts = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+        if(texts) render('assistant', texts);
         break;
       }
     }catch(e){
@@ -607,11 +677,17 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   window.aiAsk = ask;
 
   // ── events ──
-  fab.onclick = ()=>{ panel.classList.add('open'); fab.style.display='none'; inputEl.focus(); };
+  let composing = false;   // đang gõ tiếng Việt qua IME — không cướp phím Enter
+  inputEl.addEventListener('compositionstart', ()=>{ composing = true; });
+  inputEl.addEventListener('compositionend',   ()=>{ composing = false; });
+
+  // Mở panel: hiện chat + nạp trước AI index để lần gửi ĐẦU không bị khựng.
+  fab.onclick = ()=>{
+    panel.classList.add('open'); fab.style.display='none'; inputEl.focus();
+    buildAIIndex().catch(()=>{});   // warm cache (fire-and-forget)
+  };
   panel.querySelector('[data-act=close]').onclick = ()=>{ panel.classList.remove('open'); fab.style.display='flex'; };
-  panel.querySelector('[data-act=cfg]').onclick   = ()=>{ cfgBox.classList.toggle('show'); };
   panel.querySelector('[data-act=clear]').onclick = ()=>{ history.length=0; msgs.innerHTML=''; };
-  keyInput.oninput = (e)=>{ AI_CONFIG.apiKey = e.target.value.trim(); };
   function autoGrow(){ inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,90)+'px'; }
   inputEl.oninput = autoGrow;
   function submit(){
@@ -620,10 +696,17 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
     inputEl.value=''; autoGrow(); ask(q);
   }
   sendBtn.onclick = submit;
-  inputEl.onkeydown = (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submit(); } };
+  // Enter = gửi; Shift+Enter = xuống dòng. Bỏ qua Enter khi IME đang ghép phím
+  // (tránh khựng / mất chữ khi gõ tiếng Việt).
+  inputEl.onkeydown = (e)=>{
+    if(e.key==='Enter' && !e.shiftKey && !composing && !e.isComposing && e.keyCode!==229){
+      e.preventDefault();
+      submit();
+    }
+  };
 
   if(window.DEBUG)console.log('%c═══ AI CHAT UI sẵn sàng ═══','color:#2563eb;font-weight:700');
-  if(window.DEBUG)console.log('Nhấn nút ✦ góc phải-dưới để mở chat. Dán API key trong ⚙ để test.');
+  if(window.DEBUG)console.log('Nhấn nút ✦ góc phải-dưới để mở chat. Key giữ ở server (proxy /api/ai/chat).');
 })();
 
 initThree();initSectionDrag();initViewCube();log('Ready');

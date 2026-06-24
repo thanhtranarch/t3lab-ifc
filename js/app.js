@@ -10333,15 +10333,11 @@ if (window.DEBUG) console.log('Th\u1EED:  await countElements({category:"Columns
 if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "volume")');
 (function() {
   const AI_CONFIG = {
-    model: "claude-haiku-4-5-20251001",
-    // Haiku rẻ, hợp truy vấn thường
+    model: "",
+    // proxy tự chọn model (DEEPSEEK_MODEL); để trống
     maxTokens: 1024,
-    useProxy: false,
-    // ĐỔI true khi proxy sẵn sàng
-    proxyUrl: "",
-    // vd 'https://your-worker.workers.dev'
-    apiKey: ""
-    // chỉ test local
+    proxyUrl: "/api/ai/chat"
+    // serverless proxy — key giữ ở server
   };
   window.AI_CONFIG = AI_CONFIG;
   const css = `
@@ -10377,6 +10373,16 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     font-family:inherit;max-height:90px;min-height:38px;box-sizing:border-box}
   .aic-send{background:var(--blue,#2563eb);color:#fff;border:none;border-radius:8px;width:40px;cursor:pointer;font-size:16px;flex-shrink:0}
   .aic-send:disabled{opacity:.5;cursor:default}
+  .aic-msg.assistant strong{font-weight:600}
+  .aic-msg.assistant em{font-style:italic}
+  .aic-msg.assistant code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-card,#f0f1f4);padding:1px 4px;border-radius:4px}
+  .aic-md-h{font-weight:600;margin:3px 0 1px}
+  .aic-md-ul{margin:4px 0;padding-left:18px}
+  .aic-md-ul li{margin:1px 0}
+  .aic-md-sp{height:6px}
+  .aic-md-table{border-collapse:collapse;margin:6px 0;font-size:12px;width:100%}
+  .aic-md-table th,.aic-md-table td{border:1px solid var(--border,#d5d9e2);padding:3px 7px;text-align:left;vertical-align:top}
+  .aic-md-table th{background:var(--bg-card,#f0f1f4);font-weight:600}
   `;
   const styleEl = document.createElement("style");
   styleEl.textContent = css;
@@ -10391,14 +10397,8 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
   panel.innerHTML = `
     <div class="aic-head">
       <span class="aic-dot"></span><b>Tr\u1EE3 l\xFD AI \xB7 IFC Delta</b>
-      <button class="aic-iconbtn" data-act="cfg" title="C\xE0i \u0111\u1EB7t">\u2699</button>
       <button class="aic-iconbtn" data-act="clear" title="Xo\xE1 h\u1ED9i tho\u1EA1i">\u{1F5D1}</button>
       <button class="aic-iconbtn" data-act="close" title="\u0110\xF3ng">\u2715</button>
-    </div>
-    <div class="aic-cfg">
-      <label>API key (test local)</label>
-      <input type="password" class="aic-key" placeholder="sk-ant-..." autocomplete="off">
-      <div class="aic-note">\u26A0 Ch\u1EC9 d\xF9ng \u0111\u1EC3 ch\u1EA1y th\u1EED tr\xEAn m\xE1y. \u0110\u1EEBng commit/deploy file k\xE8m key. Khi xong proxy s\u1EBD kh\xF4ng c\u1EA7n key \u1EDF \u0111\xE2y.</div>
     </div>
     <div class="aic-msgs"></div>
     <div class="aic-foot">
@@ -10407,11 +10407,62 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     </div>`;
   document.body.appendChild(panel);
   const $ = (s) => panel.querySelector(s);
-  const msgs = $(".aic-msgs"), keyInput = $(".aic-key"), inputEl = $(".aic-in"), sendBtn = $(".aic-send"), cfgBox = $(".aic-cfg");
+  const msgs = $(".aic-msgs"), inputEl = $(".aic-in"), sendBtn = $(".aic-send");
+  function aicEsc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function aicInline(s) {
+    return s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>").replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+  }
+  function aicMd(src) {
+    const lines = String(src).replace(/\r\n?/g, "\n").split("\n");
+    const isSep = (r) => /-/.test(r) && /^\s*\|?[\s:|-]+\|?\s*$/.test(r);
+    const splitRow = (r) => r.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim());
+    let html = "", i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (line.indexOf("|") !== -1 && i + 1 < lines.length && isSep(lines[i + 1])) {
+        const headers2 = splitRow(line);
+        i += 2;
+        let body = "";
+        while (i < lines.length && lines[i].indexOf("|") !== -1 && lines[i].trim() !== "") {
+          const cells = splitRow(lines[i]);
+          body += "<tr>" + cells.map((c) => "<td>" + aicInline(aicEsc(c)) + "</td>").join("") + "</tr>";
+          i++;
+        }
+        html += '<table class="aic-md-table"><thead><tr>' + headers2.map((h2) => "<th>" + aicInline(aicEsc(h2)) + "</th>").join("") + "</tr></thead><tbody>" + body + "</tbody></table>";
+        continue;
+      }
+      if (/^\s*[-*▸•]\s+/.test(line)) {
+        let items = "";
+        while (i < lines.length && /^\s*[-*▸•]\s+/.test(lines[i])) {
+          items += "<li>" + aicInline(aicEsc(lines[i].replace(/^\s*[-*▸•]\s+/, ""))) + "</li>";
+          i++;
+        }
+        html += '<ul class="aic-md-ul">' + items + "</ul>";
+        continue;
+      }
+      const h = line.match(/^\s*#{1,3}\s+(.*)$/);
+      if (h) {
+        html += '<div class="aic-md-h">' + aicInline(aicEsc(h[1])) + "</div>";
+        i++;
+        continue;
+      }
+      if (line.trim() === "") {
+        html += '<div class="aic-md-sp"></div>';
+        i++;
+        continue;
+      }
+      html += "<div>" + aicInline(aicEsc(line)) + "</div>";
+      i++;
+    }
+    return html;
+  }
   function render(role, text) {
     const d = document.createElement("div");
     d.className = "aic-msg " + role;
-    d.textContent = text;
+    if (role === "assistant") d.innerHTML = aicMd(text);
+    else d.textContent = text;
     msgs.appendChild(d);
     msgs.scrollTop = msgs.scrollHeight;
     return d;
@@ -10427,7 +10478,7 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     if (on) {
       const d = document.createElement("div");
       d.className = "aic-think";
-      d.textContent = "\u0110ang suy ngh\u0129\u2026";
+      d.textContent = "\u0110ang x\u1EED l\xFD\u2026";
       msgs.appendChild(d);
       msgs.scrollTop = msgs.scrollHeight;
       return d;
@@ -10436,34 +10487,39 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     }
   }
   function endpoint() {
-    return AI_CONFIG.useProxy ? AI_CONFIG.proxyUrl : "https://api.anthropic.com/v1/messages";
+    return AI_CONFIG.proxyUrl;
   }
   function headers() {
-    const h = { "content-type": "application/json" };
-    if (!AI_CONFIG.useProxy) {
-      h["x-api-key"] = AI_CONFIG.apiKey;
-      h["anthropic-version"] = "2023-06-01";
-      h["anthropic-dangerous-direct-browser-access"] = "true";
-    }
-    return h;
+    return { "content-type": "application/json" };
+  }
+  const CAP_LIST = 40, CAP_STOREY = 60;
+  function capNames(items, n) {
+    const names = items.map((c) => c.name);
+    return names.length > n ? names.slice(0, n).join(", ") + `, \u2026(+${names.length - n} m\u1EE5c kh\xE1c)` : names.join(", ");
   }
   async function buildSystem() {
     let ctx = "Hi\u1EC7n ch\u01B0a c\xF3 model IFC n\xE0o \u0111\u01B0\u1EE3c load.";
     try {
       const idx = await buildAIIndex();
       if (idx) {
-        const cats = idx.categories.map((c) => c.name + "(" + c.count + ")").join(", ");
-        const stos = idx.storeys.join(", ");
-        const cls = idx.ifcClasses.map((c) => c.name).join(", ");
+        const cats = capNames(idx.categories, CAP_LIST);
+        const cls = capNames(idx.ifcClasses, CAP_LIST);
+        const stoArr = idx.storeys;
+        const stos = stoArr.length > CAP_STOREY ? stoArr.slice(0, CAP_STOREY).join(", ") + `, \u2026(+${stoArr.length - CAP_STOREY})` : stoArr.join(", ");
         ctx = "Model \u0111ang m\u1EDF: " + idx.models.map((m) => m.fileName).join(", ") + ". T\u1ED5ng " + idx.count + " element.\nCategory (Revit) c\xF3 s\u1EB5n: " + cats + ".\nT\u1EA7ng (storey) c\xF3 s\u1EB5n: " + stos + ".\nL\u1EDBp IFC c\xF3 s\u1EB5n: " + cls + ".";
       }
     } catch (e) {
     }
     return [
       "B\u1EA1n l\xE0 tr\u1EE3 l\xFD c\u1EE7a IFC Delta \u2014 c\xF4ng c\u1EE5 xem & truy v\u1EA5n m\xF4 h\xECnh IFC tr\xEAn web cho k\u1EF9 s\u01B0 BIM.",
-      "QUY T\u1EAEC B\u1EAET BU\u1ED8C: v\u1EDBi m\u1ECDi c\xE2u h\u1ECFi c\u1EA7n con s\u1ED1 (\u0111\u1EBFm s\u1ED1 l\u01B0\u1EE3ng, t\u1ED5ng kh\u1ED1i l\u01B0\u1EE3ng/di\u1EC7n t\xEDch/chi\u1EC1u d\xE0i), PH\u1EA2I g\u1ECDi tool count_elements ho\u1EB7c sum_quantity \u0111\u1EC3 l\u1EA5y s\u1ED1 CH\xCDNH X\xC1C. TUY\u1EC6T \u0110\u1ED0I kh\xF4ng t\u1EF1 \u0111o\xE1n, kh\xF4ng t\u1EF1 b\u1ECBa s\u1ED1.",
+      "PH\u1EA0M VI: CH\u1EC8 h\u1ED7 tr\u1EE3 v\u1EC1 (c\xE1c) M\xD4 H\xCCNH IFC \u0111ang m\u1EDF v\xE0 t\xEDnh n\u0103ng c\u1EE7a IFC Delta (\u0111\u1EBFm element, t\u1ED5ng kh\u1ED1i l\u01B0\u1EE3ng/di\u1EC7n t\xEDch/chi\u1EC1u d\xE0i, category, t\u1EA7ng, v\u1EADt li\u1EC7u, thu\u1ED9c t\xEDnh).",
+      "T\u1EEA CH\u1ED0I NGO\xC0I PH\u1EA0M VI: n\u1EBFu c\xE2u h\u1ECFi KH\xD4NG li\xEAn quan \u0111\u1EBFn m\xF4 h\xECnh \u0111ang m\u1EDF (ki\u1EBFn th\u1EE9c chung, l\u1EADp tr\xECnh, tin t\u1EE9c, to\xE1n/\u0111\u1EDDi s\u1ED1ng ngo\xE0i l\u1EC1, tr\xF2 chuy\u1EC7n phi\u1EBFm\u2026), h\xE3y l\u1ECBch s\u1EF1 t\u1EEB ch\u1ED1i ng\u1EAFn g\u1ECDn v\xE0 nh\u1EAFc r\u1EB1ng b\u1EA1n ch\u1EC9 tr\u1EA3 l\u1EDDi v\u1EC1 m\xF4 h\xECnh IFC \u0111ang m\u1EDF. Tuy\u1EC7t \u0111\u1ED1i kh\xF4ng d\xF9ng ki\u1EBFn th\u1EE9c ngo\xE0i, kh\xF4ng tr\u1EA3 l\u1EDDi th\xF4ng tin ngo\xE0i m\xF4 h\xECnh.",
+      "QUY T\u1EAEC S\u1ED0 LI\u1EC6U: v\u1EDBi m\u1ECDi c\xE2u h\u1ECFi c\u1EA7n con s\u1ED1, PH\u1EA2I g\u1ECDi tool count_elements ho\u1EB7c sum_quantity \u0111\u1EC3 l\u1EA5y s\u1ED1 CH\xCDNH X\xC1C. Ch\u1EC9 d\xF9ng d\u1EEF li\u1EC7u t\u1EEB tool v\xE0 ng\u1EEF c\u1EA3nh b\xEAn d\u01B0\u1EDBi. TUY\u1EC6T \u0110\u1ED0I kh\xF4ng t\u1EF1 \u0111o\xE1n, kh\xF4ng b\u1ECBa s\u1ED1.",
       'Khi \u0111\u1EB7t gi\xE1 tr\u1ECB l\u1ECDc (category, storey, ifcClass), h\xE3y d\xF9ng \u0111\xFAng t\xEAn c\xF3 trong danh s\xE1ch ng\u1EEF c\u1EA3nh b\xEAn d\u01B0\u1EDBi (vd "t\u1EA7ng 3" \u2192 storey "L3"; "c\u1ED9t" \u2192 category "Columns").',
-      "Tr\u1EA3 l\u1EDDi b\u1EB1ng ti\u1EBFng Vi\u1EC7t, ng\u1EAFn g\u1ECDn, n\xEAu r\xF5 con s\u1ED1 k\xE8m \u0111\u01A1n v\u1ECB. N\u1EBFu k\u1EBFt qu\u1EA3 = 0 ho\u1EB7c c\xF3 element thi\u1EBFu kh\u1ED1i l\u01B0\u1EE3ng, n\xF3i r\xF5 \u0111i\u1EC1u \u0111\xF3.",
+      "NG\xD4N NG\u1EEE: tr\u1EA3 l\u1EDDi C\xD9NG NG\xD4N NG\u1EEE v\u1EDBi c\xE2u h\u1ECFi c\u1EE7a ng\u01B0\u1EDDi d\xF9ng \u2014 h\u1ECFi ti\u1EBFng Vi\u1EC7t th\xEC \u0111\xE1p ti\u1EBFng Vi\u1EC7t, h\u1ECFi ti\u1EBFng Anh th\xEC \u0111\xE1p ti\u1EBFng Anh (m\u1EB7c \u0111\u1ECBnh ti\u1EBFng Vi\u1EC7t n\u1EBFu kh\xF4ng r\xF5).",
+      "PHONG C\xC1CH: tr\u1EA3 l\u1EDDi chuy\xEAn nghi\u1EC7p, D\u1EE8T KHO\xC1T, s\xFAc t\xEDch. M\u1EDF \u0111\u1EA7u b\u1EB1ng \u0111\xE1p s\u1ED1/k\u1EBFt lu\u1EADn ch\xEDnh k\xE8m \u0111\u01A1n v\u1ECB, r\u1ED3i m\u1EDBi t\u1EDBi chi ti\u1EBFt. Kh\xF4ng v\xF2ng vo, kh\xF4ng xin l\u1ED7i th\u1EEBa. N\u1EBFu k\u1EBFt qu\u1EA3 = 0 ho\u1EB7c c\xF3 element thi\u1EBFu kh\u1ED1i l\u01B0\u1EE3ng, n\xF3i r\xF5. N\u1EBFu ch\u01B0a load model, y\xEAu c\u1EA7u ng\u01B0\u1EDDi d\xF9ng load model tr\u01B0\u1EDBc.",
+      '\u0110\u1ECANH D\u1EA0NG: d\xF9ng Markdown T\u1ED0I GI\u1EA2N \u2014 \u0111\u01B0\u1EE3c ph\xE9p **in \u0111\u1EADm** cho s\u1ED1/k\u1EBFt lu\u1EADn quan tr\u1ECDng, danh s\xE1ch "- " v\xE0 b\u1EA3ng markdown \u0111\u01A1n gi\u1EA3n khi li\u1EC7t k\xEA s\u1ED1 li\u1EC7u. G\u1ECDn g\xE0ng, kh\xF4ng ti\xEAu \u0111\u1EC1 l\u1EDBn r\u01B0\u1EDDm r\xE0.',
+      "ICON: ch\u1EC9 d\xF9ng k\xFD hi\u1EC7u t\u1ED1i gi\u1EA3n \u0110\u01A0N S\u1EAEC khi th\u1EADt c\u1EA7n (\u25B8 \u2022 \u2013 \u2192 \u2191 \u2193 \u2502). TUY\u1EC6T \u0110\u1ED0I KH\xD4NG d\xF9ng emoji m\xE0u (\u{1F4CA} \u{1F947} \u{1F948} \u{1F949} \u{1F4A1} \u2705 \u26A0\uFE0F \u{1F525} \u{1F4C8} \u2026).",
       "",
       "NG\u1EEE C\u1EA2NH M\xD4 H\xCCNH HI\u1EC6N T\u1EA0I:",
       ctx
@@ -10471,16 +10527,21 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
   }
   const history = [];
   let busy = false;
+  const MAX_HISTORY_MSGS = 24;
+  function trimHistory() {
+    if (history.length <= MAX_HISTORY_MSGS) return;
+    let start = history.length - MAX_HISTORY_MSGS;
+    while (start < history.length && !(history[start].role === "user" && typeof history[start].content === "string")) {
+      start++;
+    }
+    if (start > 0 && start < history.length) history.splice(0, start);
+  }
   async function ask(question) {
     if (busy) return;
-    if (!AI_CONFIG.useProxy && !AI_CONFIG.apiKey) {
-      cfgBox.classList.add("show");
-      render("error", "Ch\u01B0a c\xF3 API key. M\u1EDF \u2699 v\xE0 d\xE1n key \u0111\u1EC3 test, ho\u1EB7c b\u1EADt proxy trong AI_CONFIG.");
-      return;
-    }
     busy = true;
     sendBtn.disabled = true;
     history.push({ role: "user", content: question });
+    trimHistory();
     render("user", question);
     const system = await buildSystem();
     const thinkEl = thinking(true);
@@ -10504,13 +10565,10 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
         }
         const data = await res.json();
         history.push({ role: "assistant", content: data.content });
-        const texts = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
-        if (texts) render("assistant", texts);
         if (data.stop_reason === "tool_use") {
           const toolUses = (data.content || []).filter((b) => b.type === "tool_use");
           const results = [];
           for (const tu of toolUses) {
-            toolBadge(tu.name, tu.input);
             let out;
             try {
               out = await window.runAITool(tu.name, tu.input);
@@ -10522,6 +10580,8 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
           history.push({ role: "user", content: results });
           continue;
         }
+        const texts = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+        if (texts) render("assistant", texts);
         break;
       }
     } catch (e) {
@@ -10534,24 +10594,27 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     }
   }
   window.aiAsk = ask;
+  let composing = false;
+  inputEl.addEventListener("compositionstart", () => {
+    composing = true;
+  });
+  inputEl.addEventListener("compositionend", () => {
+    composing = false;
+  });
   fab.onclick = () => {
     panel.classList.add("open");
     fab.style.display = "none";
     inputEl.focus();
+    buildAIIndex().catch(() => {
+    });
   };
   panel.querySelector("[data-act=close]").onclick = () => {
     panel.classList.remove("open");
     fab.style.display = "flex";
   };
-  panel.querySelector("[data-act=cfg]").onclick = () => {
-    cfgBox.classList.toggle("show");
-  };
   panel.querySelector("[data-act=clear]").onclick = () => {
     history.length = 0;
     msgs.innerHTML = "";
-  };
-  keyInput.oninput = (e) => {
-    AI_CONFIG.apiKey = e.target.value.trim();
   };
   function autoGrow() {
     inputEl.style.height = "auto";
@@ -10567,13 +10630,13 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
   }
   sendBtn.onclick = submit;
   inputEl.onkeydown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !composing && !e.isComposing && e.keyCode !== 229) {
       e.preventDefault();
       submit();
     }
   };
   if (window.DEBUG) console.log("%c\u2550\u2550\u2550 AI CHAT UI s\u1EB5n s\xE0ng \u2550\u2550\u2550", "color:#2563eb;font-weight:700");
-  if (window.DEBUG) console.log("Nh\u1EA5n n\xFAt \u2726 g\xF3c ph\u1EA3i-d\u01B0\u1EDBi \u0111\u1EC3 m\u1EDF chat. D\xE1n API key trong \u2699 \u0111\u1EC3 test.");
+  if (window.DEBUG) console.log("Nh\u1EA5n n\xFAt \u2726 g\xF3c ph\u1EA3i-d\u01B0\u1EDBi \u0111\u1EC3 m\u1EDF chat. Key gi\u1EEF \u1EDF server (proxy /api/ai/chat).");
 })();
 initThree();
 initSectionDrag();

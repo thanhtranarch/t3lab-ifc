@@ -613,7 +613,15 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   window.aiAsk = ask;
 
   // ── events ──
-  fab.onclick = ()=>{ panel.classList.add('open'); fab.style.display='none'; inputEl.focus(); };
+  let composing = false;   // đang gõ tiếng Việt qua IME — không cướp phím Enter
+  inputEl.addEventListener('compositionstart', ()=>{ composing = true; });
+  inputEl.addEventListener('compositionend',   ()=>{ composing = false; });
+
+  // Mở panel: hiện chat + nạp trước AI index để lần gửi ĐẦU không bị khựng.
+  fab.onclick = ()=>{
+    panel.classList.add('open'); fab.style.display='none'; inputEl.focus();
+    buildAIIndex().catch(()=>{});   // warm cache (fire-and-forget)
+  };
   panel.querySelector('[data-act=close]').onclick = ()=>{ panel.classList.remove('open'); fab.style.display='flex'; };
   panel.querySelector('[data-act=clear]').onclick = ()=>{ history.length=0; msgs.innerHTML=''; };
   function autoGrow(){ inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,90)+'px'; }
@@ -624,7 +632,14 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
     inputEl.value=''; autoGrow(); ask(q);
   }
   sendBtn.onclick = submit;
-  inputEl.onkeydown = (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submit(); } };
+  // Enter = gửi; Shift+Enter = xuống dòng. Bỏ qua Enter khi IME đang ghép phím
+  // (tránh khựng / mất chữ khi gõ tiếng Việt).
+  inputEl.onkeydown = (e)=>{
+    if(e.key==='Enter' && !e.shiftKey && !composing && !e.isComposing && e.keyCode!==229){
+      e.preventDefault();
+      submit();
+    }
+  };
 
   if(window.DEBUG)console.log('%c═══ AI CHAT UI sẵn sàng ═══','color:#2563eb;font-weight:700');
   if(window.DEBUG)console.log('Nhấn nút ✦ góc phải-dưới để mở chat. Key giữ ở server (proxy /api/ai/chat).');

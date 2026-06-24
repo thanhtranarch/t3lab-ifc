@@ -10531,10 +10531,19 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     }
   }
   window.aiAsk = ask;
+  let composing = false;
+  inputEl.addEventListener("compositionstart", () => {
+    composing = true;
+  });
+  inputEl.addEventListener("compositionend", () => {
+    composing = false;
+  });
   fab.onclick = () => {
     panel.classList.add("open");
     fab.style.display = "none";
     inputEl.focus();
+    buildAIIndex().catch(() => {
+    });
   };
   panel.querySelector("[data-act=close]").onclick = () => {
     panel.classList.remove("open");
@@ -10558,7 +10567,7 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
   }
   sendBtn.onclick = submit;
   inputEl.onkeydown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !composing && !e.isComposing && e.keyCode !== 229) {
       e.preventDefault();
       submit();
     }

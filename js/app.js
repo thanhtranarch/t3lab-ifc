@@ -10417,7 +10417,7 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     if (on) {
       const d = document.createElement("div");
       d.className = "aic-think";
-      d.textContent = "\u0110ang suy ngh\u0129\u2026";
+      d.textContent = "\u0110ang x\u1EED l\xFD\u2026";
       msgs.appendChild(d);
       msgs.scrollTop = msgs.scrollHeight;
       return d;
@@ -10455,7 +10455,9 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
       "T\u1EEA CH\u1ED0I NGO\xC0I PH\u1EA0M VI: n\u1EBFu c\xE2u h\u1ECFi KH\xD4NG li\xEAn quan \u0111\u1EBFn m\xF4 h\xECnh \u0111ang m\u1EDF (ki\u1EBFn th\u1EE9c chung, l\u1EADp tr\xECnh, tin t\u1EE9c, to\xE1n/\u0111\u1EDDi s\u1ED1ng ngo\xE0i l\u1EC1, tr\xF2 chuy\u1EC7n phi\u1EBFm\u2026), h\xE3y l\u1ECBch s\u1EF1 t\u1EEB ch\u1ED1i ng\u1EAFn g\u1ECDn v\xE0 nh\u1EAFc r\u1EB1ng b\u1EA1n ch\u1EC9 tr\u1EA3 l\u1EDDi v\u1EC1 m\xF4 h\xECnh IFC \u0111ang m\u1EDF. Tuy\u1EC7t \u0111\u1ED1i kh\xF4ng d\xF9ng ki\u1EBFn th\u1EE9c ngo\xE0i, kh\xF4ng tr\u1EA3 l\u1EDDi th\xF4ng tin ngo\xE0i m\xF4 h\xECnh.",
       "QUY T\u1EAEC S\u1ED0 LI\u1EC6U: v\u1EDBi m\u1ECDi c\xE2u h\u1ECFi c\u1EA7n con s\u1ED1, PH\u1EA2I g\u1ECDi tool count_elements ho\u1EB7c sum_quantity \u0111\u1EC3 l\u1EA5y s\u1ED1 CH\xCDNH X\xC1C. Ch\u1EC9 d\xF9ng d\u1EEF li\u1EC7u t\u1EEB tool v\xE0 ng\u1EEF c\u1EA3nh b\xEAn d\u01B0\u1EDBi. TUY\u1EC6T \u0110\u1ED0I kh\xF4ng t\u1EF1 \u0111o\xE1n, kh\xF4ng b\u1ECBa s\u1ED1.",
       'Khi \u0111\u1EB7t gi\xE1 tr\u1ECB l\u1ECDc (category, storey, ifcClass), h\xE3y d\xF9ng \u0111\xFAng t\xEAn c\xF3 trong danh s\xE1ch ng\u1EEF c\u1EA3nh b\xEAn d\u01B0\u1EDBi (vd "t\u1EA7ng 3" \u2192 storey "L3"; "c\u1ED9t" \u2192 category "Columns").',
-      "Tr\u1EA3 l\u1EDDi b\u1EB1ng ti\u1EBFng Vi\u1EC7t, ng\u1EAFn g\u1ECDn, n\xEAu r\xF5 con s\u1ED1 k\xE8m \u0111\u01A1n v\u1ECB. N\u1EBFu k\u1EBFt qu\u1EA3 = 0 ho\u1EB7c c\xF3 element thi\u1EBFu kh\u1ED1i l\u01B0\u1EE3ng, n\xF3i r\xF5. N\u1EBFu ch\u01B0a load model, h\xE3y y\xEAu c\u1EA7u ng\u01B0\u1EDDi d\xF9ng load model tr\u01B0\u1EDBc.",
+      "PHONG C\xC1CH: tr\u1EA3 l\u1EDDi chuy\xEAn nghi\u1EC7p, D\u1EE8T KHO\xC1T, s\xFAc t\xEDch b\u1EB1ng ti\u1EBFng Vi\u1EC7t. M\u1EDF \u0111\u1EA7u b\u1EB1ng \u0111\xE1p s\u1ED1/k\u1EBFt lu\u1EADn ch\xEDnh k\xE8m \u0111\u01A1n v\u1ECB, r\u1ED3i m\u1EDBi t\u1EDBi chi ti\u1EBFt. Kh\xF4ng v\xF2ng vo, kh\xF4ng xin l\u1ED7i th\u1EEBa. N\u1EBFu k\u1EBFt qu\u1EA3 = 0 ho\u1EB7c c\xF3 element thi\u1EBFu kh\u1ED1i l\u01B0\u1EE3ng, n\xF3i r\xF5. N\u1EBFu ch\u01B0a load model, y\xEAu c\u1EA7u ng\u01B0\u1EDDi d\xF9ng load model tr\u01B0\u1EDBc.",
+      '\u0110\u1ECANH D\u1EA0NG: khung chat hi\u1EC3n th\u1ECB V\u0102N B\u1EA2N THU\u1EA6N \u2014 KH\xD4NG d\xF9ng **in \u0111\u1EADm**, KH\xD4NG d\xF9ng b\u1EA3ng markdown (| \u2026 |), KH\xD4NG d\xF9ng ### ti\xEAu \u0111\u1EC1. Tr\xECnh b\xE0y s\u1ED1 li\u1EC7u d\u1EA1ng danh s\xE1ch th\u1EB3ng h\xE0ng "\u25B8 T\xEAn \u2014 s\u1ED1", m\u1ED7i m\u1EE5c m\u1ED9t d\xF2ng.',
+      "ICON: ch\u1EC9 d\xF9ng k\xFD hi\u1EC7u t\u1ED1i gi\u1EA3n \u0110\u01A0N S\u1EAEC khi th\u1EADt c\u1EA7n (\u25B8 \u2022 \u2013 \u2192 \u2191 \u2193 \u2502). TUY\u1EC6T \u0110\u1ED0I KH\xD4NG d\xF9ng emoji m\xE0u (\u{1F4CA} \u{1F947} \u{1F948} \u{1F949} \u{1F4A1} \u2705 \u26A0\uFE0F \u{1F525} \u{1F4C8} \u2026).",
       "",
       "NG\u1EEE C\u1EA2NH M\xD4 H\xCCNH HI\u1EC6N T\u1EA0I:",
       ctx
@@ -10501,13 +10503,10 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
         }
         const data = await res.json();
         history.push({ role: "assistant", content: data.content });
-        const texts = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
-        if (texts) render("assistant", texts);
         if (data.stop_reason === "tool_use") {
           const toolUses = (data.content || []).filter((b) => b.type === "tool_use");
           const results = [];
           for (const tu of toolUses) {
-            toolBadge(tu.name, tu.input);
             let out;
             try {
               out = await window.runAITool(tu.name, tu.input);
@@ -10519,6 +10518,8 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
           history.push({ role: "user", content: results });
           continue;
         }
+        const texts = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+        if (texts) render("assistant", texts);
         break;
       }
     } catch (e) {

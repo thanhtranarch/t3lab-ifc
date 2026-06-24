@@ -542,7 +542,7 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
   function thinking(on: boolean, el?: HTMLElement): HTMLElement | undefined {
     if (on) {
       const d = document.createElement('div');
-      d.className = 'aic-think'; d.textContent = 'Đang suy nghĩ…';
+      d.className = 'aic-think'; d.textContent = 'Đang xử lý…';
       msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d;
     } else if (el) { el.remove(); }
     return undefined;
@@ -579,7 +579,9 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
       'TỪ CHỐI NGOÀI PHẠM VI: nếu câu hỏi KHÔNG liên quan đến mô hình đang mở (kiến thức chung, lập trình, tin tức, toán/đời sống ngoài lề, trò chuyện phiếm…), hãy lịch sự từ chối ngắn gọn và nhắc rằng bạn chỉ trả lời về mô hình IFC đang mở. Tuyệt đối không dùng kiến thức ngoài, không trả lời thông tin ngoài mô hình.',
       'QUY TẮC SỐ LIỆU: với mọi câu hỏi cần con số, PHẢI gọi tool count_elements hoặc sum_quantity để lấy số CHÍNH XÁC. Chỉ dùng dữ liệu từ tool và ngữ cảnh bên dưới. TUYỆT ĐỐI không tự đoán, không bịa số.',
       'Khi đặt giá trị lọc (category, storey, ifcClass), hãy dùng đúng tên có trong danh sách ngữ cảnh bên dưới (vd "tầng 3" → storey "L3"; "cột" → category "Columns").',
-      'Trả lời bằng tiếng Việt, ngắn gọn, nêu rõ con số kèm đơn vị. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ. Nếu chưa load model, hãy yêu cầu người dùng load model trước.',
+      'PHONG CÁCH: trả lời chuyên nghiệp, DỨT KHOÁT, súc tích bằng tiếng Việt. Mở đầu bằng đáp số/kết luận chính kèm đơn vị, rồi mới tới chi tiết. Không vòng vo, không xin lỗi thừa. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ. Nếu chưa load model, yêu cầu người dùng load model trước.',
+      'ĐỊNH DẠNG: khung chat hiển thị VĂN BẢN THUẦN — KHÔNG dùng **in đậm**, KHÔNG dùng bảng markdown (| … |), KHÔNG dùng ### tiêu đề. Trình bày số liệu dạng danh sách thẳng hàng "▸ Tên — số", mỗi mục một dòng.',
+      'ICON: chỉ dùng ký hiệu tối giản ĐƠN SẮC khi thật cần (▸ • – → ↑ ↓ │). TUYỆT ĐỐI KHÔNG dùng emoji màu (📊 🥇 🥈 🥉 💡 ✅ ⚠️ 🔥 📈 …).',
       '',
       'NGỮ CẢNH MÔ HÌNH HIỆN TẠI:',
       ctx,
@@ -620,13 +622,12 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
         }
         const data = await res.json();
         history.push({ role: 'assistant', content: data.content });
-        const texts = (data.content || []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('\n').trim();
-        if (texts) render('assistant', texts);
         if (data.stop_reason === 'tool_use') {
+          // Lượt trung gian: chạy tool nền, KHÔNG hiển thị văn bản tự-thuật kế
+          // hoạch hay badge tool — chỉ giữ chỉ báo "Đang xử lý…".
           const toolUses = (data.content || []).filter((b: any) => b.type === 'tool_use');
           const results: any[] = [];
           for (const tu of toolUses) {
-            toolBadge(tu.name, tu.input);
             let out: any;
             try { out = await window.runAITool(tu.name, tu.input); }
             catch (err: any) { out = { error: String((err && err.message) || err) }; }
@@ -635,6 +636,9 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
           history.push({ role: 'user', content: results });
           continue;
         }
+        // Lượt cuối: chỉ giờ mới hiển thị câu trả lời.
+        const texts = (data.content || []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('\n').trim();
+        if (texts) render('assistant', texts);
         break;
       }
     } catch (e: any) {

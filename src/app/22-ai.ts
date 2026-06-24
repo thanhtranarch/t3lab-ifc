@@ -400,20 +400,18 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
    IFC DELTA — AI CHAT UI  (bước 3a: ô chat + vòng lặp tool-use)
    ───────────────────────────────────────────────────────────────────────
    Panel chat nổi góc phải. Người dùng hỏi tiếng Việt → gửi câu hỏi + AI_TOOLS
-   lên Claude → Claude chọn tool → runAITool() chạy ra SỐ CHÍNH XÁC → Claude
-   diễn đạt lại. AI không tự đoán số.
+   lên backend proxy (/api/ai/chat) → AI chọn tool → runAITool() chạy ra SỐ
+   CHÍNH XÁC → AI diễn đạt lại. AI không tự đoán số.
 
-   ⚠ KEY: ô nhập key bên dưới CHỈ để TEST LOCAL. KHÔNG commit/deploy kèm key
-   (ai mở DevTools cũng thấy). Khi xong proxy: đặt AI_CONFIG.useProxy=true +
-   proxyUrl, lúc đó không cần key ở client nữa.
+   ✅ KEY nằm Ở SERVER: gọi qua serverless proxy /api/ai/chat (Vercel) — key
+   (DEEPSEEK_API_KEY) đặt trong biến môi trường Vercel, KHÔNG bao giờ xuống
+   trình duyệt. Không còn ô nhập key ở client.
 ═══════════════════════════════════════════════════════════════════════ */
 (function(){
   const AI_CONFIG = {
-    model:     'claude-haiku-4-5-20251001',  // Haiku rẻ, hợp truy vấn thường
+    model:     '',                            // proxy tự chọn model (DEEPSEEK_MODEL); để trống
     maxTokens: 1024,
-    useProxy:  false,                         // ĐỔI true khi proxy sẵn sàng
-    proxyUrl:  '',                            // vd 'https://your-worker.workers.dev'
-    apiKey:    '',                            // chỉ test local
+    proxyUrl:  '/api/ai/chat',                // serverless proxy — key giữ ở server
   };
   window.AI_CONFIG = AI_CONFIG;
 
@@ -466,14 +464,8 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   panel.innerHTML = `
     <div class="aic-head">
       <span class="aic-dot"></span><b>Trợ lý AI · IFC Delta</b>
-      <button class="aic-iconbtn" data-act="cfg" title="Cài đặt">⚙</button>
       <button class="aic-iconbtn" data-act="clear" title="Xoá hội thoại">🗑</button>
       <button class="aic-iconbtn" data-act="close" title="Đóng">✕</button>
-    </div>
-    <div class="aic-cfg">
-      <label>API key (test local)</label>
-      <input type="password" class="aic-key" placeholder="sk-ant-..." autocomplete="off">
-      <div class="aic-note">⚠ Chỉ dùng để chạy thử trên máy. Đừng commit/deploy file kèm key. Khi xong proxy sẽ không cần key ở đây.</div>
     </div>
     <div class="aic-msgs"></div>
     <div class="aic-foot">
@@ -483,8 +475,7 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   document.body.appendChild(panel);
 
   const $ = s => panel.querySelector(s);
-  const msgs = $('.aic-msgs'), keyInput = $('.aic-key'), inputEl = $('.aic-in'),
-        sendBtn = $('.aic-send'), cfgBox = $('.aic-cfg');
+  const msgs = $('.aic-msgs'), inputEl = $('.aic-in'), sendBtn = $('.aic-send');
 
   // ── render helpers ──
   function render(role, text){
@@ -508,26 +499,29 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
     } else if(el){ el.remove(); }
   }
 
-  function endpoint(){ return AI_CONFIG.useProxy ? AI_CONFIG.proxyUrl : 'https://api.anthropic.com/v1/messages'; }
-  function headers(){
-    const h = { 'content-type':'application/json' };
-    if(!AI_CONFIG.useProxy){
-      h['x-api-key'] = AI_CONFIG.apiKey;
-      h['anthropic-version'] = '2023-06-01';
-      h['anthropic-dangerous-direct-browser-access'] = 'true';
-    }
-    return h;
-  }
+  function endpoint(){ return AI_CONFIG.proxyUrl; }
+  function headers(){ return { 'content-type':'application/json' }; }
 
-  // ── system prompt + ngữ cảnh model (giúp Claude chọn đúng tên category/tầng) ──
+  // ── system prompt + ngữ cảnh model (giới hạn kích thước để kiểm soát token) ──
+  // CAP_* giữ ngữ cảnh gọn: chỉ liệt kê các mục phổ biến nhất, phần dôi ra rút gọn.
+  const CAP_LIST = 40, CAP_STOREY = 60;
+  function capNames(items, n){
+    const names = items.map(c => c.name);
+    return names.length > n
+      ? names.slice(0, n).join(', ') + `, …(+${names.length - n} mục khác)`
+      : names.join(', ');
+  }
   async function buildSystem(){
     let ctx = 'Hiện chưa có model IFC nào được load.';
     try{
       const idx = await buildAIIndex();
       if(idx){
-        const cats = idx.categories.map(c=>c.name+'('+c.count+')').join(', ');
-        const stos = idx.storeys.join(', ');
-        const cls  = idx.ifcClasses.map(c=>c.name).join(', ');
+        const cats = capNames(idx.categories, CAP_LIST);
+        const cls  = capNames(idx.ifcClasses, CAP_LIST);
+        const stoArr = idx.storeys;
+        const stos = stoArr.length > CAP_STOREY
+          ? stoArr.slice(0, CAP_STOREY).join(', ') + `, …(+${stoArr.length - CAP_STOREY})`
+          : stoArr.join(', ');
         ctx = 'Model đang mở: ' + idx.models.map(m=>m.fileName).join(', ') + '. Tổng ' + idx.count + ' element.\n'
             + 'Category (Revit) có sẵn: ' + cats + '.\n'
             + 'Tầng (storey) có sẵn: ' + stos + '.\n'
@@ -536,9 +530,11 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
     }catch(e){}
     return [
       'Bạn là trợ lý của IFC Delta — công cụ xem & truy vấn mô hình IFC trên web cho kỹ sư BIM.',
-      'QUY TẮC BẮT BUỘC: với mọi câu hỏi cần con số (đếm số lượng, tổng khối lượng/diện tích/chiều dài), PHẢI gọi tool count_elements hoặc sum_quantity để lấy số CHÍNH XÁC. TUYỆT ĐỐI không tự đoán, không tự bịa số.',
+      'PHẠM VI: CHỈ hỗ trợ về (các) MÔ HÌNH IFC đang mở và tính năng của IFC Delta (đếm element, tổng khối lượng/diện tích/chiều dài, category, tầng, vật liệu, thuộc tính).',
+      'TỪ CHỐI NGOÀI PHẠM VI: nếu câu hỏi KHÔNG liên quan đến mô hình đang mở (kiến thức chung, lập trình, tin tức, toán/đời sống ngoài lề, trò chuyện phiếm…), hãy lịch sự từ chối ngắn gọn và nhắc rằng bạn chỉ trả lời về mô hình IFC đang mở. Tuyệt đối không dùng kiến thức ngoài, không trả lời thông tin ngoài mô hình.',
+      'QUY TẮC SỐ LIỆU: với mọi câu hỏi cần con số, PHẢI gọi tool count_elements hoặc sum_quantity để lấy số CHÍNH XÁC. Chỉ dùng dữ liệu từ tool và ngữ cảnh bên dưới. TUYỆT ĐỐI không tự đoán, không bịa số.',
       'Khi đặt giá trị lọc (category, storey, ifcClass), hãy dùng đúng tên có trong danh sách ngữ cảnh bên dưới (vd "tầng 3" → storey "L3"; "cột" → category "Columns").',
-      'Trả lời bằng tiếng Việt, ngắn gọn, nêu rõ con số kèm đơn vị. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ điều đó.',
+      'Trả lời bằng tiếng Việt, ngắn gọn, nêu rõ con số kèm đơn vị. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ. Nếu chưa load model, hãy yêu cầu người dùng load model trước.',
       '',
       'NGỮ CẢNH MÔ HÌNH HIỆN TẠI:',
       ctx,
@@ -549,15 +545,25 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   const history = [];   // {role, content}
   let busy = false;
 
+  // Giới hạn ngữ cảnh hội thoại để kiểm soát token: chỉ giữ các lượt gần nhất.
+  // Cắt tại ranh giới an toàn (message user dạng chuỗi = đầu một lượt hỏi) để
+  // không phá cặp tool_use / tool_result.
+  const MAX_HISTORY_MSGS = 24;
+  function trimHistory(){
+    if(history.length <= MAX_HISTORY_MSGS) return;
+    let start = history.length - MAX_HISTORY_MSGS;
+    while(start < history.length &&
+          !(history[start].role === 'user' && typeof history[start].content === 'string')){
+      start++;
+    }
+    if(start > 0 && start < history.length) history.splice(0, start);
+  }
+
   async function ask(question){
     if(busy) return;
-    if(!AI_CONFIG.useProxy && !AI_CONFIG.apiKey){
-      cfgBox.classList.add('show');
-      render('error', 'Chưa có API key. Mở ⚙ và dán key để test, hoặc bật proxy trong AI_CONFIG.');
-      return;
-    }
     busy = true; sendBtn.disabled = true;
     history.push({ role:'user', content: question });
+    trimHistory();
     render('user', question);
     const system = await buildSystem();
     const thinkEl = thinking(true);
@@ -609,9 +615,7 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   // ── events ──
   fab.onclick = ()=>{ panel.classList.add('open'); fab.style.display='none'; inputEl.focus(); };
   panel.querySelector('[data-act=close]').onclick = ()=>{ panel.classList.remove('open'); fab.style.display='flex'; };
-  panel.querySelector('[data-act=cfg]').onclick   = ()=>{ cfgBox.classList.toggle('show'); };
   panel.querySelector('[data-act=clear]').onclick = ()=>{ history.length=0; msgs.innerHTML=''; };
-  keyInput.oninput = (e)=>{ AI_CONFIG.apiKey = e.target.value.trim(); };
   function autoGrow(){ inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,90)+'px'; }
   inputEl.oninput = autoGrow;
   function submit(){
@@ -623,7 +627,7 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   inputEl.onkeydown = (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submit(); } };
 
   if(window.DEBUG)console.log('%c═══ AI CHAT UI sẵn sàng ═══','color:#2563eb;font-weight:700');
-  if(window.DEBUG)console.log('Nhấn nút ✦ góc phải-dưới để mở chat. Dán API key trong ⚙ để test.');
+  if(window.DEBUG)console.log('Nhấn nút ✦ góc phải-dưới để mở chat. Key giữ ở server (proxy /api/ai/chat).');
 })();
 
 initThree();initSectionDrag();initViewCube();log('Ready');

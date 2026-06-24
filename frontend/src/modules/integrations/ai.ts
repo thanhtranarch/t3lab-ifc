@@ -391,9 +391,10 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
     anthropic: 'claude-haiku-4-5-20251001',  // Haiku rẻ, hợp truy vấn thường
     openai: 'gpt-4o-mini',
     google: 'gemini-2.0-flash',
+    deepseek: 'deepseek-chat',
   };
   const AI_CONFIG = {
-    provider: 'anthropic',                // anthropic | openai | google (& tương thích)
+    provider: 'deepseek',                 // anthropic | openai | deepseek | google (& tương thích)
     model: '',                            // để trống = dùng model mặc định của provider
     maxTokens: 1024,
     proxyUrl: '/api/ai/chat',             // Backend proxy — không cần API key ở client
@@ -547,15 +548,25 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
     return undefined;
   }
 
-  // ── system prompt + ngữ cảnh model ──
+  // ── system prompt + ngữ cảnh model (giới hạn kích thước để kiểm soát token) ──
+  const CAP_LIST = 40, CAP_STOREY = 60;
+  function capNames(items: any[], n: number): string {
+    const names = items.map((c: any) => c.name);
+    return names.length > n
+      ? names.slice(0, n).join(', ') + `, …(+${names.length - n} mục khác)`
+      : names.join(', ');
+  }
   async function buildSystem(): Promise<string> {
     let ctx = 'Hiện chưa có model IFC nào được load.';
     try {
       const idx = await buildAIIndex();
       if (idx) {
-        const cats = idx.categories.map((c: any) => c.name + '(' + c.count + ')').join(', ');
-        const stos = idx.storeys.join(', ');
-        const cls = idx.ifcClasses.map((c: any) => c.name).join(', ');
+        const cats = capNames(idx.categories, CAP_LIST);
+        const cls = capNames(idx.ifcClasses, CAP_LIST);
+        const stoArr: string[] = idx.storeys;
+        const stos = stoArr.length > CAP_STOREY
+          ? stoArr.slice(0, CAP_STOREY).join(', ') + `, …(+${stoArr.length - CAP_STOREY})`
+          : stoArr.join(', ');
         ctx = 'Model đang mở: ' + idx.models.map((m: any) => m.fileName).join(', ') + '. Tổng ' + idx.count + ' element.\n'
           + 'Category (Revit) có sẵn: ' + cats + '.\n'
           + 'Tầng (storey) có sẵn: ' + stos + '.\n'
@@ -564,9 +575,11 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
     } catch (e) { }
     return [
       'Bạn là trợ lý của IFC Delta — công cụ xem & truy vấn mô hình IFC trên web cho kỹ sư BIM.',
-      'QUY TẮC BẮT BUỘC: với mọi câu hỏi cần con số (đếm số lượng, tổng khối lượng/diện tích/chiều dài), PHẢI gọi tool count_elements hoặc sum_quantity để lấy số CHÍNH XÁC. TUYỆT ĐỐI không tự đoán, không tự bịa số.',
+      'PHẠM VI: CHỈ hỗ trợ về (các) MÔ HÌNH IFC đang mở và tính năng của IFC Delta (đếm element, tổng khối lượng/diện tích/chiều dài, category, tầng, vật liệu, thuộc tính).',
+      'TỪ CHỐI NGOÀI PHẠM VI: nếu câu hỏi KHÔNG liên quan đến mô hình đang mở (kiến thức chung, lập trình, tin tức, toán/đời sống ngoài lề, trò chuyện phiếm…), hãy lịch sự từ chối ngắn gọn và nhắc rằng bạn chỉ trả lời về mô hình IFC đang mở. Tuyệt đối không dùng kiến thức ngoài, không trả lời thông tin ngoài mô hình.',
+      'QUY TẮC SỐ LIỆU: với mọi câu hỏi cần con số, PHẢI gọi tool count_elements hoặc sum_quantity để lấy số CHÍNH XÁC. Chỉ dùng dữ liệu từ tool và ngữ cảnh bên dưới. TUYỆT ĐỐI không tự đoán, không bịa số.',
       'Khi đặt giá trị lọc (category, storey, ifcClass), hãy dùng đúng tên có trong danh sách ngữ cảnh bên dưới (vd "tầng 3" → storey "L3"; "cột" → category "Columns").',
-      'Trả lời bằng tiếng Việt, ngắn gọn, nêu rõ con số kèm đơn vị. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ điều đó.',
+      'Trả lời bằng tiếng Việt, ngắn gọn, nêu rõ con số kèm đơn vị. Nếu kết quả = 0 hoặc có element thiếu khối lượng, nói rõ. Nếu chưa load model, hãy yêu cầu người dùng load model trước.',
       '',
       'NGỮ CẢNH MÔ HÌNH HIỆN TẠI:',
       ctx,

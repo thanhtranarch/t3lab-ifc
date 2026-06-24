@@ -57,6 +57,14 @@ const PROVIDERS: Record<string, ProviderConfig> = {
     baseUrl: () => process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
     apiKey: () => process.env.OPENAI_API_KEY,
   },
+  deepseek: {
+    id: 'deepseek',
+    label: 'DeepSeek',
+    envKey: 'DEEPSEEK_API_KEY',
+    defaultModel: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    baseUrl: () => process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
+    apiKey: () => process.env.DEEPSEEK_API_KEY,
+  },
   google: {
     id: 'google',
     label: 'Google (Gemini)',
@@ -272,7 +280,7 @@ aiRouter.post('/chat', async (req: Request, res: Response) => {
   }
 
   try {
-    const result = providerId === 'openai' ? await callOpenAI(cfg, apiKey, body)
+    const result = (providerId === 'openai' || providerId === 'deepseek') ? await callOpenAI(cfg, apiKey, body)
       : providerId === 'google' ? await callGoogle(cfg, apiKey, body)
       : await callAnthropic(cfg, apiKey, body);
 

@@ -647,7 +647,14 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
   (window as any).aiAsk = ask;
 
   // ── events ──
-  fab.onclick = () => { panel.classList.add('open'); fab.style.display = 'none'; inputEl.focus(); };
+  let composing = false;   // đang gõ tiếng Việt qua IME — không cướp phím Enter
+  inputEl.addEventListener('compositionstart', () => { composing = true; });
+  inputEl.addEventListener('compositionend', () => { composing = false; });
+
+  fab.onclick = () => {
+    panel.classList.add('open'); fab.style.display = 'none'; inputEl.focus();
+    buildAIIndex().catch(() => {});   // warm cache để lần gửi đầu không bị khựng
+  };
   panel.querySelector('[data-act=close]')!.addEventListener('click', () => { panel.classList.remove('open'); fab.style.display = 'flex'; });
   panel.querySelector('[data-act=clear]')!.addEventListener('click', () => { history.length = 0; msgs.innerHTML = ''; });
   panel.querySelector('[data-act=settings]')!.addEventListener('click', () => { settingsEl.classList.toggle('open'); });
@@ -661,7 +668,13 @@ console.log('      await sumQuantity({category:"Floors"}, "volume")');
     inputEl.value = ''; autoGrow(); ask(q);
   }
   sendBtn.onclick = submit;
-  inputEl.onkeydown = (e: KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } };
+  // Enter = gửi; Shift+Enter = xuống dòng. Bỏ qua khi IME đang ghép phím (gõ tiếng Việt).
+  inputEl.onkeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !composing && !e.isComposing && e.keyCode !== 229) {
+      e.preventDefault();
+      submit();
+    }
+  };
 
   console.log('%c═══ AI CHAT UI sẵn sàng ═══', 'color:#2563eb;font-weight:700');
   console.log('Nhấn nút ✦ góc phải-dưới để mở chat.');

@@ -11,16 +11,23 @@
 <script src="https://apis.google.com/js/api.js"></script>
 <style>
 :root{
-  --bg:#F8F7F5;--bg-panel:#FFFFFF;--bg-card:#F0EEEB;--bg-hover:#E8E6E1;
-  --border:#D0CCC8;--border-hi:#C7C2BD;
-  --text:#2C2420;--text-dim:#4A4541;--text-muted:#8B8680;
-  --green:#72C5A4;--green-bg:rgba(114,197,164,.08);--green-lt:#E8F9F2;
-  --red:#D05050;--red-bg:rgba(208,80,80,.08);--red-lt:#FAEAE8;
-  --amber:#9A6040;--amber-bg:rgba(245,160,122,.08);--amber-lt:#FEF0E8;
-  --blue:#2C2420;--blue-bg:rgba(44,36,32,.06);--blue-lt:#E8E6E1;
-  --indigo:#5A5652;--indigo-bg:rgba(82,82,91,.06);
+  /* ── T3LAB LUMINA — IDD-aligned design tokens ──────────────────── */
+  --bg:#F1F1F3;--bg-panel:#FFFFFF;--bg-card:#F4F4F6;--bg-hover:#EDEDEF;
+  --border:#D4D4DA;--border-hi:#C4C4CB;
+  --text:#18181B;--text-dim:#3F3F46;--text-muted:#9A9AA2;
+  --green:#0F8A66;--green-bg:rgba(15,138,102,.08);--green-lt:#EAF8F0;
+  --red:#dc2626;--red-bg:rgba(220,38,38,.08);--red-lt:#fee2e2;
+  --amber:#8A6308;--amber-bg:rgba(138,99,8,.08);--amber-lt:#FEF3C7;
+  --blue:#18181B;--blue-bg:rgba(24,24,27,.06);--blue-lt:#ECECEF;
+  --indigo:#52525B;--indigo-bg:rgba(82,82,91,.06);
   --accent:#C2410C;--accent-hover:#EA580C;--accent-soft:#FBEAE0;--brand:#8B9CF4;--brand-soft:#EDEFFE;
   --radius:12px;--t:.15s ease;
+  /* Layout */
+  --topbar-h:48px;
+  /* Shadows (Lumina elevation) */
+  --sh-xs:0 1px 2px rgba(24,24,27,.03);
+  --sh-md:0 1px 2px rgba(24,24,27,.03),0 8px 20px -12px rgba(24,24,27,.12);
+  --sh-lg:0 16px 38px -10px rgba(24,24,27,.26);
 }
 /* ── Resizable layout ──────────────────────────────────────────────────
    Column widths (left sidebar, right Properties panel) and bottom-panel
@@ -51,20 +58,48 @@ body{font-family:'Hanken Grotesk','Inter',sans-serif;background:var(--bg);color:
 body.resizing,body.resizing *{user-select:none !important;cursor:col-resize !important}
 body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-resize !important}
 
-/* Header */
-.header{grid-column:1/-1;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;z-index:50;overflow-x:auto;scrollbar-width:none}
+/* ── Header / Topbar ──────────────────────────────────────────────── */
+.header{
+  grid-column:1/-1;flex:none;
+  height:var(--topbar-h);
+  background:var(--bg-panel);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 12px;gap:7px;z-index:50;
+  overflow-x:auto;scrollbar-width:none;
+}
 .header::-webkit-scrollbar{display:none}
-.logo{display:flex;align-items:center;gap:7px}
-.logo-mark{width:24px;height:24px;background:var(--text);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-weight:700;font-size:16px;color:#fff}
-.logo-name{font-weight:600;font-size:17px;color:var(--text)}
-.logo-name span{color:var(--text-muted);font-weight:400;font-size:14px;margin-left:5px}
-.h-sep{width:1px;height:16px;background:var(--border);margin:0 2px}
-.btn{height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);font-family:'Hanken Grotesk';font-size:14px;font-weight:500;cursor:pointer;transition:all var(--t);display:flex;align-items:center;gap:4px;white-space:nowrap}
+
+/* Logo */
+.logo{display:flex;align-items:center;gap:9px;flex:none;padding-right:2px}
+.logo-mark{
+  width:28px;height:28px;border-radius:8px;flex:none;
+  background:var(--text);display:flex;align-items:center;justify-content:center;
+}
+.logo-name{font-weight:700;font-size:14.5px;color:var(--text);white-space:nowrap;line-height:1.2}
+.logo-name span{color:var(--text-muted);font-weight:500;font-size:11.5px;margin-left:4px;font-family:'JetBrains Mono'}
+.logo-sub{font-size:10.5px;color:var(--text-muted);font-weight:500;white-space:nowrap}
+
+/* Separator */
+.h-sep{width:1px;height:20px;background:var(--border);flex:none;margin:0 1px}
+.h-right{margin-left:auto;display:flex;align-items:center;gap:4px}
+
+/* Base button — Lumina secondary */
+.btn{
+  height:34px;padding:0 13px;border-radius:10px;
+  border:1px solid var(--border);background:var(--bg-panel);
+  color:var(--text);font-family:'Hanken Grotesk';font-size:13.5px;font-weight:500;
+  cursor:pointer;transition:all var(--t);display:flex;align-items:center;gap:5px;white-space:nowrap;
+}
 .btn:hover{background:var(--bg-hover);border-color:var(--border-hi)}
-.btn.primary{background:var(--text);border-color:var(--text);color:#fff;box-shadow:0 2px 8px -2px rgba(44,36,32,.35)}
-.btn.primary:hover{background:#000;border-color:#000}
+.btn.primary,.btn-primary{
+  background:var(--text);border-color:var(--text);color:#fff;
+  box-shadow:0 2px 8px -2px rgba(24,24,27,.35);
+}
+.btn.primary:hover,.btn-primary:hover{background:#000;border-color:#000}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .btn.active{background:var(--blue-lt);border-color:var(--border);color:var(--text)}
+.btn-sm{height:28px;padding:0 10px;font-size:12px;border-radius:8px}
 .h-right{margin-left:auto;display:flex;gap:4px;align-items:center}
 .status-badge{font-family:'JetBrains Mono';font-size:12px;font-weight:600;padding:3px 7px;border-radius:4px;display:none;align-items:center;gap:3px}
 .status-badge.show{display:flex}
@@ -300,7 +335,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 .plan-hdr{height:30px;background:var(--text);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;padding:0 10px;cursor:move;flex-shrink:0;gap:6px;user-select:none}
 .plan-hdr-icon{font-family:'JetBrains Mono';font-weight:700;font-size:13px;opacity:.9}
 .plan-storey-select{flex:1;height:22px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:3px;color:#fff;font-family:'Hanken Grotesk';font-size:11px;font-weight:500;padding:0 4px;outline:none;cursor:pointer}
-.plan-storey-select option{background:#2C2420;color:#fff}
+.plan-storey-select option{background:var(--text);color:#fff}
 .plan-hdr-btn{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:3px;cursor:pointer;font-size:12px;flex-shrink:0;transition:background .15s}
 .plan-hdr-btn:hover{background:rgba(255,255,255,.32)}
 .plan-hdr-btn.active{background:rgba(255,255,255,.4)}
@@ -346,7 +381,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 .cz-select{width:100%;height:32px;padding:0 10px;border:1px solid var(--border);border-radius:5px;background:var(--bg);font-family:'Hanken Grotesk';font-size:13px;color:var(--text);cursor:pointer;outline:none;transition:all var(--t)}
 .cz-select:focus{border-color:var(--brand);background:var(--bg-panel);box-shadow:0 0 0 3px var(--brand-soft)}
 /* Segmented "Color by" control — mockup-style pills */
-.cz-seg{display:flex;gap:2px;padding:3px;background:#E8E6E1;border-radius:9px}
+.cz-seg{display:flex;gap:2px;padding:3px;background:var(--bg-card);border-radius:9px}
 .cz-seg-btn{flex:1;height:28px;border:none;border-radius:7px;background:transparent;color:var(--text-muted);font-family:'Hanken Grotesk';font-size:12.5px;font-weight:500;cursor:pointer;transition:all var(--t)}
 .cz-seg-btn:hover{color:var(--text-dim)}
 .cz-seg-btn.active{background:var(--bg-panel);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(44,36,32,.12)}
@@ -540,7 +575,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 .sg-rule-icon.pass{color:#16a34a}
 .sg-rule-icon.fail{color:#D05050}
 .sg-rule-icon.warn{color:#d97706}
-.sg-rule-icon.skip{color:#8B8680}
+.sg-rule-icon.skip{color:var(--text-muted)}
 .sg-rule-content{flex:1;min-width:0}
 .sg-rule-title{font-weight:500;color:var(--text);line-height:1.3}
 .sg-rule-counts{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono';margin-top:2px}
@@ -913,25 +948,25 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-brand-feat-lbl{font-size:10px;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.8px}
 
 /* Right form panel */
-.auth-form-panel{flex:1;background:#E8E6E1;display:flex;align-items:center;justify-content:center;padding:48px;overflow-y:auto}
+.auth-form-panel{flex:1;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:48px;overflow-y:auto}
 .auth-form-inner{width:100%;max-width:400px}
 .auth-heading-block{margin-bottom:28px}
-.auth-heading{font-family:'Hanken Grotesk';font-weight:700;font-size:26px;color:#2C2420;margin:0 0 6px}
-.auth-heading-sub{font-family:'Hanken Grotesk';font-size:13px;color:#8B8680;margin:0;line-height:1.5}
+.auth-heading{font-family:'Hanken Grotesk';font-weight:700;font-size:26px;color:var(--text);margin:0 0 6px}
+.auth-heading-sub{font-family:'Hanken Grotesk';font-size:13px;color:var(--text-muted);margin:0;line-height:1.5}
 
 /* Form fields */
 .auth-form{display:flex;flex-direction:column;gap:16px}
 .auth-field{display:flex;flex-direction:column;gap:6px}
 .auth-label-row{display:flex;justify-content:space-between;align-items:center}
-.auth-label{font-family:'Hanken Grotesk';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#8B8680}
+.auth-label{font-family:'Hanken Grotesk';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted)}
 .auth-inline-link{font-family:'Hanken Grotesk';font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;padding:0;font-weight:500;text-decoration:none}
 .auth-inline-link:hover{text-decoration:underline}
-.auth-input{height:44px;padding:0 13px;border:1px solid #D0CCC8;border-radius:6px;background:#fff;font-family:'Hanken Grotesk';font-size:14px;font-weight:400;color:#2C2420;transition:border-color .12s,box-shadow .12s;outline:none;width:100%;box-sizing:border-box}
-.auth-input:focus{border-color:#2C2420;box-shadow:0 0 0 3px rgba(44,36,32,.08)}
+.auth-input{height:44px;padding:0 13px;border:1px solid var(--border);border-radius:6px;background:var(--bg-panel);font-family:'Hanken Grotesk';font-size:14px;font-weight:400;color:var(--text);transition:border-color .12s,box-shadow .12s;outline:none;width:100%;box-sizing:border-box}
+.auth-input:focus{border-color:var(--text);box-shadow:0 0 0 3px rgba(24,24,27,.08)}
 .auth-input:disabled{opacity:.6;cursor:not-allowed}
-.auth-submit{height:44px;margin-top:4px;border-radius:6px;border:none;background:#2C2420;color:#fff;font-family:'Hanken Grotesk';font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
+.auth-submit{height:44px;margin-top:4px;border-radius:6px;border:none;background:var(--text);color:#fff;font-family:'Hanken Grotesk';font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
 .auth-submit:hover:not(:disabled){background:#000}
-.auth-submit:disabled{background:#8B8680;cursor:not-allowed}
+.auth-submit:disabled{background:var(--text-muted);cursor:not-allowed}
 .auth-msg{padding:9px 12px;border-radius:6px;font-size:13px;line-height:1.4;margin-top:4px;display:none}
 .auth-msg.show{display:block}
 .auth-msg.error{background:rgba(210,59,59,0.08);border:1px solid rgba(210,59,59,0.28);color:#D23B3B}
@@ -947,21 +982,21 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .auth-submit.loading .auth-spinner{display:inline-block}
 .auth-submit.loading .auth-submit-label{opacity:.7}
 @keyframes auth-spin{to{transform:rotate(360deg)}}
-.auth-foot{margin-top:16px;font-size:13px;color:#8B8680;text-align:center;line-height:1.5}
+.auth-foot{margin-top:16px;font-size:13px;color:var(--text-muted);text-align:center;line-height:1.5}
 .auth-foot .auth-inline-link{font-size:13px}
 .auth-signup-link{background:linear-gradient(90deg,#8B9CF4,#A5B4FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:600;cursor:pointer}
-.auth-demo-box{margin-top:20px;padding:16px 18px;background:#fff;border:1px solid #E8E6E1;border-radius:8px}
-.auth-demo-label{font-family:'Hanken Grotesk';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8B8680;margin-bottom:10px}
+.auth-demo-box{margin-top:20px;padding:16px 18px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px}
+.auth-demo-label{font-family:'Hanken Grotesk';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px}
 .auth-demo-row{display:flex;align-items:baseline;gap:6px;padding:3px 0;font-size:12px;font-family:'Hanken Grotesk'}
-.auth-demo-row code{font-family:'JetBrains Mono';font-size:11px;color:#2C2420;font-weight:500}
-.auth-demo-role{color:#8B8680;font-size:11px}
-.auth-demo-pwd{margin-top:10px;padding-top:10px;border-top:1px solid #F0EEEB;font-size:11px;color:#8B8680;font-family:'JetBrains Mono'}
+.auth-demo-row code{font-family:'JetBrains Mono';font-size:11px;color:var(--text);font-weight:500}
+.auth-demo-role{color:var(--text-muted);font-size:11px}
+.auth-demo-pwd{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono'}
 @media(max-width:700px){.auth-brand-panel{display:none}.auth-form-panel{padding:32px 24px}}
 
 /* Loading / hydration state — mirrors IDD AuthGuard typing-dots */
 .auth-loading-wrap{display:flex;align-items:center;justify-content:center;min-height:220px}
 .typing-dots{display:flex;gap:7px;align-items:center}
-.typing-dots span{width:8px;height:8px;background:#8B8680;border-radius:50%;animation:typing-bounce 1.2s infinite ease-in-out;display:block}
+.typing-dots span{width:8px;height:8px;background:var(--text-muted);border-radius:50%;animation:typing-bounce 1.2s infinite ease-in-out;display:block}
 .typing-dots span:nth-child(1){animation-delay:0s}
 .typing-dots span:nth-child(2){animation-delay:.18s}
 .typing-dots span:nth-child(3){animation-delay:.36s}
@@ -970,8 +1005,8 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 /* Email-verification gate: same panel, different content */
 .auth-verify{display:flex;flex-direction:column;gap:14px;text-align:center}
 .auth-verify-icon{width:48px;height:48px;margin:0 auto;background:var(--amber-lt);color:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
-.auth-verify-title{font-size:16px;font-weight:600;color:#2C2420}
-.auth-verify-desc{font-size:13px;color:#8B8680;line-height:1.5}
+.auth-verify-title{font-size:16px;font-weight:600;color:var(--text)}
+.auth-verify-desc{font-size:13px;color:var(--text-muted);line-height:1.5}
 .auth-verify-actions{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 
 /* ── Responsive: stack panels on narrow screens ──────────── */
@@ -1015,57 +1050,127 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 
 /* ── New design system (2025 redesign) ─────────────────────────────── */
 
-/* Header segmented mode buttons */
-.hdr-seg{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:9px;background:transparent;color:#5A5652;font-family:'Hanken Grotesk';font-size:13px;font-weight:500;cursor:pointer;transition:all .15s ease;white-space:nowrap}
-.hdr-seg:hover{background:rgba(255,255,255,.7);color:#2C2420}
-.hdr-seg-active,.hdr-seg.active{background:#fff;color:#2C2420;box-shadow:0 1px 4px rgba(44,36,32,.12);font-weight:600}
+/* ── Segmented mode control ─────────────────────────────────────── */
+.hdr-mode-wrap{display:inline-flex;gap:2px;padding:3px;background:var(--bg-card);border-radius:10px;flex:none}
+.hdr-seg{
+  display:inline-flex;align-items:center;gap:5px;
+  height:28px;padding:0 10px;
+  border:none;border-radius:7px;
+  background:transparent;color:var(--text-muted);
+  font-family:'Hanken Grotesk';font-size:12.5px;font-weight:500;
+  cursor:pointer;transition:all .15s ease;white-space:nowrap;
+}
+.hdr-seg:hover{background:var(--bg-hover);color:var(--text-dim)}
+.hdr-seg-active,.hdr-seg.active{
+  background:var(--bg-panel);color:var(--text);
+  box-shadow:0 1px 3px rgba(24,24,27,.10);font-weight:600;
+}
 .hdr-seg:disabled{opacity:.4;cursor:not-allowed}
 
-/* Header tool buttons */
-.hdr-tool{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 11px;border:none;border-radius:10px;background:transparent;color:#5A5652;font-family:'Hanken Grotesk';font-size:13px;font-weight:500;cursor:pointer;transition:all .15s ease;white-space:nowrap}
-.hdr-tool:hover{background:#F0EEEB;color:#2C2420}
-.hdr-tool.active{background:#E8E6E1;color:#2C2420;font-weight:600}
+/* ── Viewport tool buttons ──────────────────────────────────────── */
+.hdr-tools-wrap{display:flex;align-items:center;gap:1px;flex:none}
+.hdr-tool{
+  display:inline-flex;align-items:center;gap:5px;
+  height:30px;padding:0 9px;
+  border:none;border-radius:8px;
+  background:transparent;color:var(--text-dim);
+  font-family:'Hanken Grotesk';font-size:12.5px;font-weight:500;
+  cursor:pointer;transition:all .15s ease;white-space:nowrap;
+}
+.hdr-tool:hover{background:var(--bg-card);color:var(--text)}
+.hdr-tool.active{background:var(--bg-hover);color:var(--text);font-weight:600}
 
-/* Header panel toggle buttons */
-.hdr-panel-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #E8E6E1;border-radius:10px;background:#fff;color:#8B8680;cursor:pointer;transition:all .15s ease}
-.hdr-panel-btn:hover{background:#F0EEEB;border-color:#C7C2BD;color:#2C2420}
-.hdr-panel-btn-active,.hdr-panel-btn.active{background:#2C2420;border-color:#2C2420;color:#fff}
+/* ── Panel toggle buttons ───────────────────────────────────────── */
+.hdr-panel-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--bg-panel);color:var(--text-muted);
+  cursor:pointer;transition:all .15s ease;
+}
+.hdr-panel-btn:hover{background:var(--bg-hover);border-color:var(--border-hi);color:var(--text)}
+.hdr-panel-btn-active,.hdr-panel-btn.active{background:var(--text);border-color:var(--text);color:#fff}
 
-/* Upload card — solid */
-.uc-card{position:relative;display:block;border:1px solid #E8E6E1;border-radius:16px;padding:14px;cursor:pointer;transition:all .15s ease;background:#fff;box-shadow:0 1px 2px rgba(44,36,32,.03),0 6px 16px -12px rgba(44,36,32,.1);overflow:hidden}
-.uc-card:hover{border-color:#C7C2BD;box-shadow:0 1px 2px rgba(44,36,32,.04),0 10px 24px -12px rgba(44,36,32,.14)}
-.uc-card-dashed{border-style:dashed;border-color:#D0CCC8;background:#F8F7F5}
-.uc-card-dashed:hover{border-color:#2C2420;background:#F0EEEB}
-.uc-card.loaded{border-style:solid;border-color:#E8E6E1}
+/* ── Dark glass app chip — IDD project-chip pattern, sidebar-aligned ── */
+.tb-app-chip{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:48px;height:100%;flex:none;
+  background:var(--text);
+  border-right:1px solid rgba(255,255,255,.07);
+  margin-left:-12px;/* cancel header left padding so chip aligns to edge */
+  padding:0;cursor:default;
+}
+.tb-app-chip svg{width:17px;height:17px;flex:none}
+.tb-app-chip .chip-label{
+  font-family:'JetBrains Mono';font-size:8px;font-weight:800;
+  letter-spacing:.07em;color:rgba(255,255,255,.6);text-transform:uppercase;
+}
 
-/* Upload card internals */
+/* ── Floating viewport toolbar — IDD ViewerToolbar pattern ── */
+.vp-toolbar{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:6px;z-index:10;pointer-events:none;
+}
+.vp-tg{/* toolbar group */
+  display:flex;align-items:center;gap:1px;
+  background:rgba(16,16,18,0.88);
+  backdrop-filter:blur(16px) saturate(1.4);
+  -webkit-backdrop-filter:blur(16px) saturate(1.4);
+  border-radius:999px;padding:4px 6px;
+  box-shadow:0 4px 20px -6px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07);
+  pointer-events:auto;
+}
+.vp-tool{
+  width:32px;height:32px;border-radius:999px;border:none;
+  background:transparent;color:rgba(255,255,255,.62);
+  cursor:pointer;transition:all .13s ease;
+  display:flex;align-items:center;justify-content:center;flex:none;
+}
+.vp-tool:hover{background:rgba(255,255,255,.12);color:#fff}
+.vp-tool.active{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.vp-tool:disabled{opacity:.28;cursor:not-allowed}
+.vp-tsep{width:1px;height:18px;background:rgba(255,255,255,.1);margin:0 4px;flex:none}
+
+/* ── Upload card ─────────────────────────────────────────────────── */
+.uc-card{
+  position:relative;display:block;
+  border:1px solid var(--border);border-radius:14px;
+  padding:14px;cursor:pointer;transition:all .15s ease;
+  background:var(--bg-panel);
+  box-shadow:var(--sh-xs);overflow:hidden;
+}
+.uc-card:hover{border-color:var(--border-hi);box-shadow:var(--sh-md)}
+.uc-card-dashed{border-style:dashed;border-color:var(--border);background:var(--bg-card)}
+.uc-card-dashed:hover{border-color:var(--text);background:var(--bg-hover)}
+.uc-card.loaded{border-style:solid;border-color:var(--border)}
+
 .uc-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:80px;text-align:center}
 .uc-card.loaded .uc-placeholder{display:none}
 .uc-card.loaded .uc-file{display:block}
 .uc-file{display:none}
-.uc-ver-label{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#8B8680}
-.uc-drop-text{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#2C2420}
-.uc-hint{font-size:11.5px;color:#8B8680}
-.uc-fname{font-size:14px;font-weight:600;color:#2C2420;line-height:1.35;word-break:break-word}
-.uc-badge-loaded{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:999px;background:#72C5A4;color:#fff;font-size:11px;font-weight:600}
+.uc-ver-label{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)}
+.uc-drop-text{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text)}
+.uc-hint{font-size:11.5px;color:var(--text-muted)}
+.uc-fname{font-size:14px;font-weight:600;color:var(--text);line-height:1.35;word-break:break-word}
+.uc-badge-loaded{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:999px;background:var(--green);color:#fff;font-size:11px;font-weight:600}
 
-/* Export dropdown item */
-.exp-item{width:100%;display:flex;align-items:center;gap:11px;padding:9px 10px;border:none;border-radius:10px;background:transparent;cursor:pointer;text-align:left;font-family:'Hanken Grotesk';font-size:13.5px;font-weight:500;color:#2C2420;transition:background .12s}
-.exp-item:hover{background:#F8F7F5}
-.exp-ico{flex:none;width:34px;height:34px;border-radius:9px;background:#F0EEEB;display:flex;align-items:center;justify-content:center}
-.exp-ico svg{width:17px;height:17px;fill:none;stroke:#5A5652;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+/* ── Export dropdown ─────────────────────────────────────────────── */
+.exp-item{width:100%;display:flex;align-items:center;gap:11px;padding:9px 10px;border:none;border-radius:10px;background:transparent;cursor:pointer;text-align:left;font-family:'Hanken Grotesk';font-size:13.5px;font-weight:500;color:var(--text);transition:background .12s}
+.exp-item:hover{background:var(--bg-card)}
+.exp-ico{flex:none;width:32px;height:32px;border-radius:8px;background:var(--bg-card);display:flex;align-items:center;justify-content:center}
+.exp-ico svg{width:16px;height:16px;fill:none;stroke:var(--text-dim);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .exp-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
-.exp-title{font-size:13px;font-weight:600;color:#4A4541}
-.exp-sub{font-size:11.5px;font-weight:500;color:#8B8680;margin-top:1px}
-.exp-ext{flex:none;font-family:'JetBrains Mono';font-size:10px;font-weight:600;letter-spacing:.04em;color:#8B8680;background:#F8F7F5;border-radius:6px;padding:2px 6px}
+.exp-title{font-size:13px;font-weight:600;color:var(--text-dim)}
+.exp-sub{font-size:11.5px;font-weight:500;color:var(--text-muted);margin-top:1px}
+.exp-ext{flex:none;font-family:'JetBrains Mono';font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--text-muted);background:var(--bg-card);border-radius:6px;padding:2px 6px}
 
 /* Animations */
 @keyframes ifcSpin{to{transform:rotate(360deg)}}
 @keyframes ifcBar{0%,100%{transform:translateX(-100%)}50%{transform:translateX(100%)}}
 .confirm-btn.danger:hover{background:#b91c1c}
 
-.auth-back-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#71717a;font-family:'Hanken Grotesk';font-size:13px;font-weight:500;cursor:pointer;padding:0;margin-bottom:24px;transition:color .15s}
-.auth-back-btn:hover{color:#18181b}
+.auth-back-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-muted);font-family:'Hanken Grotesk';font-size:13px;font-weight:500;cursor:pointer;padding:0;margin-bottom:24px;transition:color .15s}
+.auth-back-btn:hover{color:var(--text)}
 
 </style>
 </head>
@@ -1159,7 +1264,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
           <div class="auth-verify-actions">
             <button type="button" class="auth-submit" id="verifyResend"><span class="auth-spinner"></span><span class="auth-submit-label">Resend verification email</span></button>
             <button type="button" class="auth-inline-link" style="text-align:center;margin-top:8px" onclick="checkVerifiedNow()">I've verified — refresh</button>
-            <button type="button" class="auth-inline-link" style="text-align:center;margin-top:4px;color:#8B8680" onclick="signOutFromVerify()">Use a different account</button>
+            <button type="button" class="auth-inline-link" style="text-align:center;margin-top:4px;color:var(--text-muted)" onclick="signOutFromVerify()">Use a different account</button>
           </div>
         </div>
       </div>
@@ -1204,47 +1309,42 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 </div>
 
 <!-- ══════════════════ APP ══════════════════ -->
-<div id="app" style="height:100vh;width:100vw;display:flex;flex-direction:column;overflow:hidden;background:#F8F7F5;font-family:'Hanken Grotesk',-apple-system,system-ui,sans-serif;color:#4A4541;-webkit-font-smoothing:antialiased">
+<div id="app" style="height:100vh;width:100vw;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);font-family:'Hanken Grotesk',-apple-system,system-ui,sans-serif;color:var(--text-dim);-webkit-font-smoothing:antialiased">
 
   <!-- ═══════════ HEADER ═══════════ -->
-  <header style="flex:none;height:64px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#fff;border-bottom:1px solid #E8E6E1;z-index:10">
+  <header class="header">
 
-    <!-- Logo -->
-    <div style="display:flex;align-items:center;gap:10px;padding-right:4px;flex:none">
-      <div style="width:36px;height:36px;border-radius:10px;background:#2C2420;display:flex;align-items:center;justify-content:center;flex:none">
-        <svg viewBox="0 0 24 24" style="width:19px;height:19px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linejoin:round;stroke-linecap:round"><path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16l8 4 8-4"/></svg>
-      </div>
-      <div style="line-height:1.1">
-        <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:15px;font-weight:800;letter-spacing:-.02em;color:#2C2420">IFC Delta</span><span style="font-family:'JetBrains Mono';font-size:10.5px;font-weight:600;color:#8B8680">3D</span></div>
-        <div style="font-size:11px;font-weight:500;color:#8B8680" id="headerModeLbl">Version Compare</div>
-      </div>
+    <!-- Dark glass app chip — IDD project-chip pattern -->
+    <div class="tb-app-chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16l8 4 8-4"/></svg>
+      <span class="chip-label">IFC</span>
     </div>
 
-    <div style="width:1px;height:28px;background:#E8E6E1;flex:none"></div>
+    <!-- App title (tight, after chip) -->
+    <div style="padding-left:6px;flex:none">
+      <div class="logo-name">IFC Delta <span>3D</span></div>
+      <div class="logo-sub" id="headerModeLbl">Version Compare</div>
+    </div>
+
+    <div class="h-sep"></div>
 
     <!-- Mode segmented: Field / Compare / Clash -->
-    <div style="display:inline-flex;gap:2px;padding:3px;background:#E8E6E1;border-radius:12px;flex:none">
-      <button id="fieldModeBtn" onclick="fieldEnterMode()" class="hdr-seg" title="Field Mode — tablet-optimized"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/></svg>Field</button>
-      <button id="btnCompare" disabled onclick="runCompare()" class="hdr-seg hdr-seg-active" title="Compare two IFC versions"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M8 5.5l11 6.5-11 6.5z"/></svg>Compare</button>
-      <button id="btnClash" onclick="toggleClashMode()" class="hdr-seg" title="Clash detection" style="color:#D05050"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>Clash</button>
+    <div class="hdr-mode-wrap">
+      <button id="fieldModeBtn" onclick="fieldEnterMode()" class="hdr-seg" title="Field Mode — tablet-optimized">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/></svg>
+        Field
+      </button>
+      <button id="btnCompare" disabled onclick="runCompare()" class="hdr-seg hdr-seg-active" title="Compare two IFC versions">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M8 5.5l11 6.5-11 6.5z"/></svg>
+        Compare
+      </button>
+      <button id="btnClash" onclick="toggleClashMode()" class="hdr-seg" title="Clash detection" style="color:var(--red)">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>
+        Clash
+      </button>
     </div>
 
-    <div style="width:1px;height:28px;background:#E8E6E1;flex:none"></div>
-
-    <!-- Viewport tools -->
-    <div style="display:flex;align-items:center;gap:1px;flex:none">
-      <button id="btnMeasure" onclick="toggleMeasure()" class="hdr-tool" title="Measure distances"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M4 14.5L14.5 4l5.5 5.5L9.5 20z"/><path d="M8 8.5l2 2M11.2 5.3l1.6 1.6M5.3 11.2l1.6 1.6"/></svg>Measure</button>
-      <button onclick="captureScreenshot()" class="hdr-tool" title="Screenshot"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.1"/><path d="M8.5 7l1.2-2.3h4.6L15.5 7"/></svg>Screenshot</button>
-      <button id="btnSection" onclick="toggleSectionBox()" class="hdr-tool" title="Section box"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M6 2.5v15a3 3 0 0 0 3 3h12"/><path d="M2.5 6h15a3 3 0 0 1 3 3v12"/></svg>Section</button>
-      <button id="btnColorize" onclick="toggleColorize()" class="hdr-tool" title="Colorize elements"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3.5s6 6.4 6 10.4a6 6 0 0 1-12 0c0-4 6-10.4 6-10.4z"/></svg>Colorize</button>
-      <button onclick="zoomFit()" class="hdr-tool" title="Fit to view"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M20 9V5.5A1.5 1.5 0 0 0 18.5 4H15M4 15v3.5A1.5 1.5 0 0 0 5.5 20H9M20 15v3.5A1.5 1.5 0 0 1 18.5 20H15"/></svg>Fit</button>
-      <button onclick="toggleWire()" class="hdr-tool" title="Wireframe"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3v18M4 7.5l8 4.5 8-4.5"/></svg>Wire</button>
-      <button id="btnWalk" onclick="toggleWalkMode()" class="hdr-tool" title="Walk mode"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><circle cx="13" cy="4.6" r="2"/><path d="M13 8l-2.5 2 .8 4.2L8 21M13.3 11l2.7 2.4M10.5 10l-2.5 1"/></svg>Walk</button>
-      <button id="btnPlan" onclick="togglePlanOverlay()" class="hdr-tool" title="2D plan overlay"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>Plan</button>
-      <button id="btnShowAll" style="display:none" onclick="showAllHidden()" class="hdr-tool" title="Show all hidden"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Show All</button>
-    </div>
-
-    <!-- Hidden legacy export/clash buttons (JS controls visibility) -->
+    <!-- Hidden legacy buttons (JS controls visibility) -->
     <div style="display:none">
       <button id="btnRunClash" disabled onclick="runClashDetection()">Run Clash</button>
       <button id="btnExitClash" onclick="exitClashMode()">Exit Clash</button>
@@ -1257,49 +1357,59 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 
     <div id="statusBadge" class="status-badge"><span id="statusText"></span></div>
 
-    <div style="flex:1"></div>
+    <!-- ── Right actions ── -->
+    <div class="h-right">
 
-    <!-- Panel toggles -->
-    <div style="display:flex;gap:3px;flex:none">
-      <button onclick="toggleLeftPanel()" id="btnToggleLeft" class="hdr-panel-btn hdr-panel-btn-active" title="Versions panel"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="9" y1="4.5" x2="9" y2="19.5"/><rect x="4.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg></button>
-      <button onclick="toggleRightPanel()" id="btnToggleRight" class="hdr-panel-btn" title="Properties panel"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="15" y1="4.5" x2="15" y2="19.5"/><rect x="16.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg></button>
-    </div>
+      <!-- Panel toggles -->
+      <button onclick="toggleLeftPanel()" id="btnToggleLeft" class="hdr-panel-btn hdr-panel-btn-active" title="Versions panel">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="9" y1="4.5" x2="9" y2="19.5"/><rect x="4.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button onclick="toggleRightPanel()" id="btnToggleRight" class="hdr-panel-btn" title="Properties panel">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="15" y1="4.5" x2="15" y2="19.5"/><rect x="16.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
+      </button>
 
-    <div style="width:1px;height:28px;background:#E8E6E1;flex:none"></div>
+      <div class="h-sep"></div>
 
-    <!-- SG Check (dark CTA) -->
-    <button id="btnSGCheck" onclick="toggleSGCheckPanel()" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border:none;border-radius:11px;background:#2C2420;color:#fff;font-family:'Hanken Grotesk';font-size:13px;font-weight:600;cursor:pointer;flex:none;white-space:nowrap"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>SG Check</button>
+      <!-- SG Check — primary CTA -->
+      <button id="btnSGCheck" onclick="toggleSGCheckPanel()" class="btn btn-primary" style="height:32px;padding:0 13px;font-size:13px;gap:6px;border-radius:9px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>
+        SG Check
+      </button>
 
-    <!-- Export dropdown -->
-    <div style="position:relative;flex:none">
-      <button onclick="toggleExportMenu()" id="btnExportMenu" style="display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border:1px solid #D0CCC8;border-radius:11px;background:#fff;color:#4A4541;font-family:'Hanken Grotesk';font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v4a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-4"/></svg>Export<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div id="exportMenuDrop" style="display:none;position:absolute;top:46px;right:0;width:264px;background:#fff;border:1px solid #E8E6E1;border-radius:14px;box-shadow:0 20px 48px -18px rgba(44,36,32,.32);padding:6px;z-index:30">
-        <button onclick="captureScreenshot();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 16l5-5 4 4 3-3 6 6"/></svg></span><span class="exp-txt"><span class="exp-title">Snapshot image</span><span class="exp-sub">Current viewport</span></span><span class="exp-ext">PNG</span></button>
-        <button onclick="sgExportReport();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5"/></svg></span><span class="exp-txt"><span class="exp-title">SG Check report</span><span class="exp-sub">Full compliance results</span></span><span class="exp-ext">PDF</span></button>
-        <button onclick="exportCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Change list</span><span class="exp-sub">Added / modified / removed</span></span><span class="exp-ext">CSV</span></button>
-        <button onclick="exportBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Issues package</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
-        <div style="height:1px;background:#F0EEEB;margin:5px 8px"></div>
-        <button onclick="exportClashCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Clash list</span><span class="exp-sub">Clash detection results</span></span><span class="exp-ext">CSV</span></button>
-        <button onclick="exportClashBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Clash issues</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
+      <!-- Export dropdown -->
+      <div style="position:relative">
+        <button onclick="toggleExportMenu()" id="btnExportMenu" class="btn" style="height:32px;padding:0 12px;font-size:13px;gap:5px;border-radius:9px">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v4a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-4"/></svg>
+          Export
+          <svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="exportMenuDrop" style="display:none;position:absolute;top:40px;right:0;width:264px;background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-lg);padding:6px;z-index:30">
+          <button onclick="captureScreenshot();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 16l5-5 4 4 3-3 6 6"/></svg></span><span class="exp-txt"><span class="exp-title">Snapshot image</span><span class="exp-sub">Current viewport</span></span><span class="exp-ext">PNG</span></button>
+          <button onclick="sgExportReport();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5"/></svg></span><span class="exp-txt"><span class="exp-title">SG Check report</span><span class="exp-sub">Full compliance results</span></span><span class="exp-ext">PDF</span></button>
+          <button onclick="exportCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Change list</span><span class="exp-sub">Added / modified / removed</span></span><span class="exp-ext">CSV</span></button>
+          <button onclick="exportBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Issues package</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
+          <div style="height:1px;background:var(--border);margin:5px 8px"></div>
+          <button onclick="exportClashCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Clash list</span><span class="exp-sub">Clash detection results</span></span><span class="exp-ext">CSV</span></button>
+          <button onclick="exportClashBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Clash issues</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
+        </div>
+        <div id="exportMenuBg" onclick="toggleExportMenu()" style="display:none;position:fixed;inset:0;z-index:29"></div>
       </div>
-      <div id="exportMenuBg" onclick="toggleExportMenu()" style="display:none;position:fixed;inset:0;z-index:29"></div>
+
+      <div class="h-sep"></div>
+
+      <!-- User badge -->
+      <button class="user-badge" id="userBadge" onclick="toggleUserMenu(event)" style="display:none">
+        <span class="user-avatar" id="userAvatar">·</span>
+        <span class="user-name" id="userName">—</span>
+      </button>
     </div>
-
-    <!-- Reset -->
-    <button onclick="resetCam()" style="display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border:1px solid #D0CCC8;border-radius:11px;background:#fff;color:#4A4541;font-family:'Hanken Grotesk';font-size:13px;font-weight:600;cursor:pointer;flex:none;white-space:nowrap"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg>Reset</button>
-
-    <!-- User badge -->
-    <button class="user-badge" id="userBadge" onclick="toggleUserMenu(event)" style="display:none">
-      <span class="user-avatar" id="userAvatar">·</span>
-      <span class="user-name" id="userName">—</span>
-    </button>
   </header>
 
   <!-- ═══════════ BODY ═══════════ -->
   <div style="flex:1;min-height:0;display:flex">
 
     <!-- ═══ LEFT SIDEBAR ═══ -->
-    <aside id="leftPanel" style="flex:none;width:312px;background:#fff;border-right:1px solid #E8E6E1;display:flex;flex-direction:column;overflow-y:auto">
+    <aside id="leftPanel" style="flex:none;width:312px;background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto">
 
       <div style="padding:16px 16px 8px">
 
@@ -1313,48 +1423,48 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
           </div>
           <div class="uc-file">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <span style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#8B8680">Version A</span>
+              <span style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)">Version A</span>
               <span class="uc-badge-loaded" id="us0">Loading…</span>
             </div>
             <div class="uc-fname" id="fn0"></div>
-            <div style="font-family:'JetBrains Mono';font-size:11px;color:#8B8680;margin-top:4px" id="fs0"></div>
+            <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-muted);margin-top:4px" id="fs0"></div>
           </div>
         </label>
 
         <!-- Vis toggle A -->
         <div class="vis-row" id="visRow0" style="display:none">
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#5A5652;cursor:pointer;padding:4px 2px">
-            <input type="checkbox" checked id="visA" onchange="toggleModelVis(0)" style="accent-color:#2C2420;width:14px;height:14px">
+          <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-dim);cursor:pointer;padding:4px 2px">
+            <input type="checkbox" checked id="visA" onchange="toggleModelVis(0)" style="accent-color:var(--text);width:14px;height:14px">
             <span style="width:8px;height:8px;border-radius:2px;background:#ef4444;opacity:.8"></span>
             Version A (Baseline)
           </label>
         </div>
 
         <!-- Baseline label row -->
-        <div style="height:1px;background:#E8E6E1;margin:10px 0"></div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
 
         <!-- Upload card B -->
         <label class="uc-card uc-card-dashed" id="uc1" for="f1">
           <input type="file" id="f1" accept=".ifc,*/*" onchange="handleFile(1)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
           <div class="uc-placeholder">
-            <div class="uc-ver-label" style="color:#8B8680">Version B — Updated</div>
+            <div class="uc-ver-label" style="color:var(--text-muted)">Version B — Updated</div>
             <div class="uc-drop-text"><svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg>Drop IFC here</div>
             <div class="uc-hint">click or drag .ifc</div>
           </div>
           <div class="uc-file">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <span style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#8B8680">Version B</span>
+              <span style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)">Version B</span>
               <span class="uc-badge-loaded" id="us1">Loading…</span>
             </div>
             <div class="uc-fname" id="fn1"></div>
-            <div style="font-family:'JetBrains Mono';font-size:11px;color:#8B8680;margin-top:4px" id="fs1"></div>
+            <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-muted);margin-top:4px" id="fs1"></div>
           </div>
         </label>
 
         <!-- Vis toggle B -->
         <div class="vis-row" id="visRow1" style="display:none">
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#5A5652;cursor:pointer;padding:4px 2px">
-            <input type="checkbox" checked id="visB" onchange="toggleModelVis(1)" style="accent-color:#2C2420;width:14px;height:14px">
+          <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-dim);cursor:pointer;padding:4px 2px">
+            <input type="checkbox" checked id="visB" onchange="toggleModelVis(1)" style="accent-color:var(--text);width:14px;height:14px">
             <span style="width:8px;height:8px;border-radius:2px;background:#3b82f6;opacity:.8"></span>
             Version B (Updated)
           </label>
@@ -1368,7 +1478,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
         </div>
       </div>
 
-      <div style="height:1px;background:#E8E6E1;margin:0 16px"></div>
+      <div style="height:1px;background:var(--border);margin:0 16px"></div>
 
       <!-- Google Drive -->
       <div class="od-panel" id="odPanel">
@@ -1388,7 +1498,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
         </div>
       </div>
 
-      <div style="height:1px;background:#E8E6E1;margin:0 16px"></div>
+      <div style="height:1px;background:var(--border);margin:0 16px"></div>
 
       <!-- Delta summary strip -->
       <div class="summary-strip" id="sumStrip">
@@ -1412,9 +1522,9 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
       <!-- Category filter -->
       <div class="cat-filter show" id="catFilter">
         <div style="padding:6px 14px 4px">
-          <div style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#8B8680;margin-bottom:7px">Category Filter</div>
+          <div style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px">Category Filter</div>
           <div class="cat-select-btn" id="catBtn" onclick="toggleCatDropdown()">
-            <div class="cat-tags" id="catTags"><span style="color:#8B8680">All categories</span></div>
+            <div class="cat-tags" id="catTags"><span style="color:var(--text-muted)">All categories</span></div>
             <span class="arrow">▼</span>
           </div>
           <div class="cat-dropdown" id="catDropdown">
@@ -1431,7 +1541,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 
       <!-- Tabs -->
       <div style="padding:8px 14px 6px">
-        <div style="display:inline-flex;gap:2px;padding:3px;background:#E8E6E1;border-radius:11px;width:100%">
+        <div style="display:inline-flex;gap:2px;padding:3px;background:var(--bg-card);border-radius:11px;width:100%">
           <button class="ptab on" onclick="switchTab('tree')" style="flex:1">Entity Tree</button>
           <button class="ptab" onclick="switchTab('issues')" style="flex:1">Issues <span class="ptab-count" id="issueCount">0</span></button>
           <button class="ptab" onclick="switchTab('search')" style="flex:1"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg> Search <span class="ptab-count" id="searchCount" style="display:none">0</span></button>
@@ -1505,11 +1615,49 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
         <div class="view-cube-home" id="viewCubeHome" title="Reset view" onclick="resetCam()"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg></div>
 
         <!-- HUD top-center -->
-        <div id="vpHUD" style="display:none;position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border:1px solid #E8E6E1;border-radius:12px;box-shadow:0 10px 28px -16px rgba(44,36,32,.24);z-index:6;pointer-events:none">
-          <span style="width:8px;height:8px;border-radius:999px;background:#2C2420;flex:none" id="vpHUDDot"></span>
-          <span style="font-size:12.5px;font-weight:700;color:#2C2420" id="vpHUDTitle">3D View</span>
-          <span style="width:1px;height:14px;background:#E8E6E1"></span>
-          <span style="font-size:12px;font-weight:500;color:#8B8680" id="vpHUDMeta">—</span>
+        <div id="vpHUD" style="display:none;position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh-md);z-index:6;pointer-events:none">
+          <span style="width:8px;height:8px;border-radius:999px;background:var(--text);flex:none" id="vpHUDDot"></span>
+          <span style="font-size:12.5px;font-weight:700;color:var(--text)" id="vpHUDTitle">3D View</span>
+          <span style="width:1px;height:14px;background:var(--border)"></span>
+          <span style="font-size:12px;font-weight:500;color:var(--text-muted)" id="vpHUDMeta">—</span>
+        </div>
+
+        <!-- ── Floating viewport toolbar (IDD ViewerToolbar pattern) ── -->
+        <div class="vp-toolbar" id="vpToolbar">
+          <div class="vp-tg">
+            <button id="btnMeasure" onclick="toggleMeasure()" class="vp-tool" title="Measure distances">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M4 14.5L14.5 4l5.5 5.5L9.5 20z"/><path d="M8 8.5l2 2M11.2 5.3l1.6 1.6M5.3 11.2l1.6 1.6"/></svg>
+            </button>
+            <div class="vp-tsep"></div>
+            <button id="btnSection" onclick="toggleSectionBox()" class="vp-tool" title="Section box">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M6 2.5v15a3 3 0 0 0 3 3h12"/><path d="M2.5 6h15a3 3 0 0 1 3 3v12"/></svg>
+            </button>
+            <button id="btnColorize" onclick="toggleColorize()" class="vp-tool" title="Colorize elements">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3.5s6 6.4 6 10.4a6 6 0 0 1-12 0c0-4 6-10.4 6-10.4z"/></svg>
+            </button>
+            <button onclick="zoomFit()" class="vp-tool" title="Fit to view">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M20 9V5.5A1.5 1.5 0 0 0 18.5 4H15M4 15v3.5A1.5 1.5 0 0 0 5.5 20H9M20 15v3.5A1.5 1.5 0 0 1 18.5 20H15"/></svg>
+            </button>
+            <button onclick="toggleWire()" class="vp-tool" title="Wireframe">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3v18M4 7.5l8 4.5 8-4.5"/></svg>
+            </button>
+            <button id="btnWalk" onclick="toggleWalkMode()" class="vp-tool" title="Walk mode">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="13" cy="4.6" r="2"/><path d="M13 8l-2.5 2 .8 4.2L8 21M13.3 11l2.7 2.4M10.5 10l-2.5 1"/></svg>
+            </button>
+            <button id="btnPlan" onclick="togglePlanOverlay()" class="vp-tool" title="2D plan overlay">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>
+            </button>
+            <div class="vp-tsep"></div>
+            <button onclick="captureScreenshot()" class="vp-tool" title="Screenshot">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.1"/><path d="M8.5 7l1.2-2.3h4.6L15.5 7"/></svg>
+            </button>
+            <button onclick="resetCam()" class="vp-tool" title="Reset camera">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg>
+            </button>
+            <button id="btnShowAll" style="display:none" onclick="showAllHidden()" class="vp-tool" title="Show all hidden">
+              <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
 
         <!-- Compare / Clash legend overlay -->
@@ -1602,19 +1750,19 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 
         <!-- Transparency panel -->
         <div class="tp-panel" id="tpPanel">
-          <span style="font-size:12px;color:#8B8680;font-family:'JetBrains Mono'">Opacity</span>
+          <span style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono'">Opacity</span>
           <input type="range" id="slOpacity" min="5" max="100" value="100" style="width:120px;height:4px" oninput="setGlobalOpacity(this.value)">
-          <span id="opVal" style="font-size:12px;font-family:'JetBrains Mono';color:#5A5652;min-width:28px">100%</span>
+          <span id="opVal" style="font-size:12px;font-family:'JetBrains Mono';color:var(--text-dim);min-width:28px">100%</span>
         </div>
 
         <!-- Measure overlay -->
         <div class="measure-info" id="measureInfo" style="display:none">
           <div style="display:flex;gap:2px;margin-right:6px">
             <button id="modeDistance" onclick="setMeasureMode('distance')" style="font-size:12px;padding:2px 8px;border:1px solid #3b82f6;border-radius:6px;background:#eff6ff;color:#3b82f6;cursor:pointer;font-weight:600"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M2 20L20 4"/><path d="M6 16l2-2m2-2l2-2"/></svg> Distance</button>
-            <button id="modeLevel" onclick="setMeasureMode('level')" style="font-size:12px;padding:2px 8px;border:1px solid #E8E6E1;border-radius:6px;background:#fff;color:#5A5652;cursor:pointer"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M3 12h18M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg> Level</button>
+            <button id="modeLevel" onclick="setMeasureMode('level')" style="font-size:12px;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-panel);color:var(--text-dim);cursor:pointer"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M3 12h18M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg> Level</button>
           </div>
           <span style="font-family:'JetBrains Mono';font-size:13px;font-weight:600" id="measureText">Click 2 points to measure</span>
-          <button onclick="clearMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid #E8E6E1;border-radius:6px;background:#fff;color:#5A5652;cursor:pointer;margin-left:8px">Clear</button>
+          <button onclick="clearMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-panel);color:var(--text-dim);cursor:pointer;margin-left:8px">Clear</button>
           <button onclick="toggleMeasure()" style="font-size:12px;padding:2px 8px;border:1px solid #ef4444;border-radius:6px;background:#fef2f2;color:#ef4444;cursor:pointer;margin-left:4px"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Exit</button>
         </div>
 
@@ -1677,7 +1825,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
             <option value="none">No grouping</option><option value="categoryA">Source Category</option><option value="categoryB">Target Category</option><option value="level">Story Level</option>
           </select>
         </div>
-        <div class="clash-list" id="clashList"><div style="padding:20px;text-align:center;color:#8B8680;font-size:13px">Configure Source &amp; Target sets, then click <b>▶ Run Clash</b></div></div>
+        <div class="clash-list" id="clashList"><div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Configure Source &amp; Target sets, then click <b>▶ Run Clash</b></div></div>
       </div>
 
       <!-- ─── SG PANEL ─── -->
@@ -1722,11 +1870,11 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
     </main>
 
     <!-- ═══ RIGHT PANEL (Properties) ═══ -->
-    <aside id="rightPanel" style="flex:none;width:320px;background:#fff;border-left:1px solid #E8E6E1;display:none;flex-direction:column;overflow:hidden">
-      <div style="flex:none;padding:16px 18px 12px;border-bottom:1px solid #E8E6E1">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8B8680;margin-bottom:8px">Properties</div>
+    <aside id="rightPanel" style="flex:none;width:320px;background:var(--bg-panel);border-left:1px solid var(--border);display:none;flex-direction:column;overflow:hidden">
+      <div style="flex:none;padding:16px 18px 12px;border-bottom:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Properties</div>
       </div>
-      <div class="prop-area" id="propArea"><div style="padding:30px 14px;text-align:center;color:#8B8680;font-size:13px">Click element in 3D to inspect</div></div>
+      <div class="prop-area" id="propArea"><div style="padding:30px 14px;text-align:center;color:var(--text-muted);font-size:13px">Click element in 3D to inspect</div></div>
     </aside>
 
   </div><!-- /body -->

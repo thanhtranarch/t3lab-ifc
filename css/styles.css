@@ -29,8 +29,16 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Hanken Grotesk','Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
-/* Grid: header row spans full width; below, 5 columns: lcol | resize | viewport | resize | rcol */
-.app{display:grid;grid-template-rows:52px 1fr;grid-template-columns:var(--lcol) var(--resize-w) 1fr var(--resize-w) var(--rcol);height:100vh}
+/* Grid (v5 shell): header (full width) / [rail | lcol | resize | viewport | resize | rcol] / status bar (full width).
+   Rail is a fixed 52px nav column; status bar a 26px footer. */
+.app{display:grid;grid-template-rows:64px 1fr 26px;grid-template-columns:52px var(--lcol) var(--resize-w) 1fr var(--resize-w) var(--rcol);height:100vh}
+/* Left panel collapsed (no rail tab active): hide the panel + its resize handle by zeroing the track */
+.app.left-collapsed{grid-template-columns:52px 0 0 1fr var(--resize-w) var(--rcol)}
+.app.left-collapsed .left-panel,.app.left-collapsed #lresize{display:none}
+/* Right panel collapsed */
+.app.right-collapsed{grid-template-columns:52px var(--lcol) var(--resize-w) 1fr 0 0}
+.app.left-collapsed.right-collapsed{grid-template-columns:52px 0 0 1fr 0 0}
+.app.right-collapsed .right-panel,.app.right-collapsed #rresize{display:none}
 /* Drag handles: 4px wide, transparent until hover, blue on active drag */
 .col-resize{background:transparent;cursor:col-resize;position:relative;z-index:20;transition:background var(--t)}
 .col-resize:hover,.col-resize.dragging{background:var(--blue)}
@@ -1058,3 +1066,51 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 @keyframes ifcSpin{to{transform:rotate(360deg)}}
 @keyframes ifcBar{0%,100%{transform:translateX(-100%)}50%{transform:translateX(100%)}}
 .confirm-btn.danger:hover{background:#b91c1c}
+
+/* ════════════════════════════════════════════════════════════════════════
+   v5 SHELL — icon rail · floating toolbar · status bar · right-panel tabs
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Icon rail (52px, far left) ── */
+.icon-rail{grid-row:2;grid-column:1;background:var(--bg-panel);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;z-index:9}
+.rail-btn{position:relative;width:44px;height:44px;border-radius:11px;border:none;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t)}
+.rail-btn:hover{background:var(--bg-hover)}
+.rail-btn.active{background:var(--blue-lt);color:var(--blue)}
+.rail-btn svg{width:17px;height:17px}
+.rail-spacer{flex:1}
+.rail-badge{position:absolute;top:-2px;right:-2px;min-width:15px;height:15px;padding:0 4px;border-radius:999px;background:var(--red);color:#fff;font-family:'JetBrains Mono';font-size:8.5px;font-weight:700;display:none;align-items:center;justify-content:center;pointer-events:none}
+.rail-badge.show{display:flex}
+
+/* Left-panel header bar (title + close) shown above the tab content */
+.lp-head{flex:none;display:flex;align-items:center;height:44px;padding:0 10px 0 16px;border-bottom:1px solid var(--line)}
+.lp-head-title{font-size:11.5px;font-weight:700;letter-spacing:.01em;color:var(--text)}
+.lp-head-close{margin-left:auto;width:26px;height:26px;border-radius:7px;border:none;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lp-head-close:hover{background:var(--bg-hover)}
+/* Files section wrapper — toggled by rail */
+.lp-files{display:flex;flex-direction:column;overflow-y:auto}
+.lp-files.hide{display:none}
+
+/* ── Floating vertical toolbar (viewport, left-center) ── */
+.float-tools{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:2px;padding:5px;background:var(--bg-panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 14px -6px rgba(44,36,32,.18);z-index:6}
+.ft-btn{width:36px;height:36px;border-radius:9px;border:none;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t)}
+.ft-btn:hover{background:var(--bg-hover)}
+.ft-btn.active{background:var(--blue-lt);color:var(--blue)}
+.ft-btn svg{width:15px;height:15px}
+.ft-sep{height:1px;background:var(--bg-card);margin:2px 3px}
+
+/* ── Status bar (26px footer) ── */
+.status-bar{grid-column:1/-1;grid-row:3;height:26px;background:var(--text);display:flex;align-items:center;padding:0 14px;z-index:10;font-family:'JetBrains Mono';font-size:10.5px}
+.sb-dot{width:6px;height:6px;border-radius:999px;background:var(--amber);flex:none}
+.sb-mode{font-weight:600;color:#E0DDD8;padding-left:7px}
+.sb-sep{width:1px;height:11px;background:rgba(255,255,255,.12);margin:0 11px}
+.sb-info{color:#9A9590}
+.sb-spacer{flex:1}
+.sb-coords{color:#9A9590}
+
+/* ── Right-panel tab strip (Properties · SG Check) ── */
+.rp-tabs{flex:none;display:flex;align-items:stretch;border-bottom:1px solid var(--line);background:var(--bg)}
+.rp-tab{display:inline-flex;align-items:center;gap:5px;height:44px;padding:0 15px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text);font-family:'Hanken Grotesk';font-size:12.5px;font-weight:500;cursor:pointer;transition:all var(--t);white-space:nowrap}
+.rp-tab:hover{color:var(--text-dim)}
+.rp-tab.on{color:var(--text);border-bottom-color:var(--blue);font-weight:700}
+.rp-tab svg{width:12px;height:12px}
+.rp-tab-spacer{flex:1}

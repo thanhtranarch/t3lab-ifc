@@ -206,15 +206,6 @@
     <button class="btn" id="btnExportClashBCF" style="display:none;border-color:var(--green);color:var(--green)" onclick="exportClashBCF()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Clash BCF</button>
     <div id="statusBadge" class="status-badge"><span id="statusText"></span></div>
     <div class="h-right">
-      <button class="btn" id="btnMeasure" onclick="toggleMeasure()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M2 20L20 4"/><path d="M6 16l2-2m2-2l2-2"/></svg> Measure</button>
-      <button class="btn" onclick="captureScreenshot()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Screenshot</button>
-      <button class="btn" id="btnSection" onclick="toggleSectionBox()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg> Section</button>
-      <button class="btn" id="btnColorize" onclick="toggleColorize()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg> Colorize</button>
-      <button class="btn" onclick="zoomFit()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Fit</button>
-      <button class="btn" onclick="toggleWire()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Wire</button>
-      <button class="btn" id="btnShowAll" style="display:none" onclick="showAllHidden()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Show All</button>
-      <button class="btn" id="btnWalk" onclick="toggleWalkMode()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="12" cy="5" r="2"/><path d="M12 8l-2 4h4l-2 4"/><path d="M10 12l-2 6M14 12l2 6"/></svg> Walk</button>
-      <button class="btn" id="btnPlan" onclick="togglePlanOverlay()" title="Show 2D plan overlay (top-down view of current storey)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg> Plan</button>
       <button class="btn primary" id="btnSGCheck" onclick="toggleSGCheckPanel()" title="CORENET X / IFC-SG pre-submission validation (Singapore)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> SG Check</button>
       <button class="btn" onclick="resetCam()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Reset</button>
       <div class="h-sep" style="margin:0 4px"></div>
@@ -225,7 +216,19 @@
     </div>
   </header>
 
+  <!-- ===== ICON RAIL (52px) — toggles left panel + switches Files/Tree/Issues/Search ===== -->
+  <nav class="icon-rail" id="iconRail">
+    <button class="rail-btn active" id="rail-files" onclick="railSelect('files')" title="Model Files"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M3 7l9-5 9 5v4l-9 5-9-5z"/><path d="M3 11l9 5 9-5"/><path d="M3 15l9 5 9-5"/></svg></button>
+    <button class="rail-btn" id="rail-tree" onclick="railSelect('tree')" title="Entity Tree"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 18H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h4M15 18h4a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-4M12 5v8"/><circle cx="12" cy="4" r="1.5" fill="currentColor" stroke="none"/></svg></button>
+    <button class="rail-btn" id="rail-issues" onclick="railSelect('issues')" title="Changes"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg><span class="rail-badge" id="railIssueBadge">0</span></button>
+    <button class="rail-btn" id="rail-search" onclick="railSelect('search')" title="Search"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button>
+    <div class="rail-spacer"></div>
+    <button class="rail-btn active" id="rail-right" onclick="toggleRightPanelV5()" title="Toggle properties panel"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="15" y1="4.5" x2="15" y2="19.5"/><rect x="16.2" y="6" width="3.4" height="12" rx="1" fill="currentColor" stroke="none"/></svg></button>
+  </nav>
+
   <div class="left-panel">
+    <div class="lp-head"><span class="lp-head-title" id="lpHeadTitle">Model Files</span><button class="lp-head-close" onclick="railCollapse()" title="Close panel"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="lp-files" id="lpFiles">
     <div class="upload-area">
       <label class="upload-card" id="uc0" for="f0">
         <input type="file" id="f0" accept=".ifc,*/*" onchange="handleFile(0)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
@@ -274,6 +277,8 @@
         </div>
       </div>
     </div>
+    </div><!-- /lp-files -->
+    <div class="lp-model" id="lpModel" style="display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden">
     <div class="summary-strip" id="sumStrip">
       <div class="ss-card a" onclick="setFilter('added')"><div class="ss-val" id="sA">0</div><div class="ss-lbl">Added</div></div>
       <div class="ss-card r" onclick="setFilter('removed')"><div class="ss-val" id="sR">0</div><div class="ss-lbl">Removed</div></div>
@@ -362,12 +367,26 @@
         <button class="search-act-btn danger" onclick="searchClear()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Clear</button>
       </div>
     </div>
-    
+    </div><!-- /lp-model -->
   </div>
 
   <!-- Drag handle: resize left sidebar width -->
   <div class="col-resize" id="lresize" title="Drag to resize sidebar"></div>
   <div class="viewport-area" id="vpArea">
+    <!-- Floating vertical toolbar (relocated viewport tools) -->
+    <div class="float-tools" id="floatTools">
+      <button class="ft-btn" id="btnMeasure" onclick="toggleMeasure()" title="Measure"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M4 14.5L14.5 4l5.5 5.5L9.5 20z"/><path d="M8 8.5l2 2M11.2 5.3l1.6 1.6M5.3 11.2l1.6 1.6"/></svg></button>
+      <button class="ft-btn" onclick="captureScreenshot()" title="Screenshot"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="7" width="18" height="13" rx="2.6"/><circle cx="12" cy="13.5" r="3.2"/><path d="M8.5 7l1.2-2.3h4.6L15.5 7"/></svg></button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" id="btnSection" onclick="toggleSectionBox()" title="Section box"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M6 2.5v15a3 3 0 0 0 3 3h12"/><path d="M2.5 6h15a3 3 0 0 1 3 3v12"/></svg></button>
+      <button class="ft-btn" id="btnColorize" onclick="toggleColorize()" title="Colorize"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3.5s6 6.4 6 10.4a6 6 0 0 1-12 0c0-4 6-10.4 6-10.4z"/></svg></button>
+      <button class="ft-btn" onclick="zoomFit()" title="Fit to view"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M20 9V5.5A1.5 1.5 0 0 0 18.5 4H15M4 15v3.5A1.5 1.5 0 0 0 5.5 20H9M20 15v3.5A1.5 1.5 0 0 1 18.5 20H15"/></svg></button>
+      <div class="ft-sep"></div>
+      <button class="ft-btn" onclick="toggleWire()" title="Wireframe"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3v18M4 7.5l8 4.5 8-4.5"/></svg></button>
+      <button class="ft-btn" id="btnWalk" onclick="toggleWalkMode()" title="Walk mode"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="13" cy="4.6" r="2"/><path d="M13 8l-2.5 2 .8 4.2L8 21M13.3 11l2.7 2.4M10.5 10l-2.5 1"/></svg></button>
+      <button class="ft-btn" id="btnPlan" onclick="togglePlanOverlay()" title="2D plan overlay"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg></button>
+      <button class="ft-btn" id="btnShowAll" style="display:none" onclick="showAllHidden()" title="Show all hidden"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
     <!-- 3D canvas wrapper — Three.js renderer reads this element's size -->
     <div class="viewport-canvas" id="vpCanvas">
       <div class="empty-vp" id="emptyVP"><div class="ev-icon"><svg viewBox="0 0 24 24" style="width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.3"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><div class="ev-title">IFC 3D Version Compare</div><div class="ev-hint">Upload 2 IFC files and click Compare</div></div>
@@ -722,8 +741,22 @@
   <div class="col-resize" id="rresize" title="Drag to resize Properties panel"></div>
 
   <div class="right-panel">
-    <div class="ph">Properties</div>
+    <div class="rp-tabs">
+      <button class="rp-tab on" id="rpTabProps" onclick="rpSelect('props')">Properties</button>
+      <button class="rp-tab" id="rpTabSG" onclick="rpSelect('sg')"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/></svg> SG Check</button>
+      <div class="rp-tab-spacer"></div>
+    </div>
     <div class="prop-area" id="propArea"><div style="padding:30px 14px;text-align:center;color:var(--text-muted);font-size:14px">Click element in 3D to inspect</div></div>
+  </div>
+
+  <!-- ===== STATUS BAR (26px) ===== -->
+  <div class="status-bar" id="statusBar">
+    <span class="sb-dot" id="sbDot"></span>
+    <span class="sb-mode" id="sbMode">Compare</span>
+    <span class="sb-sep"></span>
+    <span class="sb-info" id="sbInfo">No model loaded</span>
+    <span class="sb-spacer"></span>
+    <span class="sb-coords" id="sbCoords">IFC Delta · web</span>
   </div>
 </div>
 
@@ -882,5 +915,120 @@
 </script>
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/app.js"></script>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     v5 SHELL WIRING — icon rail, right-panel tabs, status bar.
+     Pure UI glue on top of the existing app: reuses switchTab() /
+     toggleSGCheckPanel() / _vpResize() and preserves all element IDs.
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  window._railTab = 'files';
+  function app(){ return document.querySelector('.app'); }
+  function vpResize(){ if (window._vpResize) try { window._vpResize(); } catch(e){} }
+
+  function updateRail(){
+    ['files','tree','issues','search'].forEach(function(t){
+      var b = document.getElementById('rail-'+t);
+      if (b) b.classList.toggle('active', window._railTab === t);
+    });
+  }
+
+  window.railSelect = function(tab){
+    var a = app(); if(!a) return;
+    // clicking the active tab collapses the panel
+    if (window._railTab === tab && !a.classList.contains('left-collapsed')) {
+      a.classList.add('left-collapsed'); vpResize(); return;
+    }
+    a.classList.remove('left-collapsed');
+    window._railTab = tab;
+    var files = document.getElementById('lpFiles');
+    var model = document.getElementById('lpModel');
+    var title = document.getElementById('lpHeadTitle');
+    if (tab === 'files') {
+      if (files) files.classList.remove('hide');
+      if (model) model.style.display = 'none';
+      if (title) title.textContent = 'Model Files';
+    } else {
+      if (files) files.classList.add('hide');
+      if (model) model.style.display = 'flex';
+      if (title) title.textContent = ({tree:'Entity Tree',issues:'Changes',search:'Search'})[tab] || '';
+      if (window.switchTab) try { window.switchTab(tab); } catch(e){}
+    }
+    updateRail(); vpResize();
+  };
+
+  window.railCollapse = function(){
+    var a = app(); if(a){ a.classList.add('left-collapsed'); vpResize(); }
+  };
+
+  window.toggleRightPanelV5 = function(){
+    var a = app(); if(!a) return;
+    a.classList.toggle('right-collapsed');
+    document.getElementById('rail-right').classList.toggle('active', !a.classList.contains('right-collapsed'));
+    vpResize();
+  };
+
+  // Right-panel tabs: Properties (inline) · SG Check (opens validator)
+  window.rpSelect = function(which){
+    var a = app();
+    if (a && a.classList.contains('right-collapsed')) { window.toggleRightPanelV5(); }
+    if (which === 'sg') {
+      if (window.toggleSGCheckPanel && (!window.sgState || !window.sgState.open)) window.toggleSGCheckPanel();
+    }
+    document.getElementById('rpTabProps').classList.toggle('on', which === 'props');
+    document.getElementById('rpTabSG').classList.toggle('on', which === 'sg');
+  };
+
+  // ── Status bar ──
+  var MODES = { compare:{label:'Compare',c:'var(--amber)'}, clash:{label:'Clash',c:'var(--red)'}, field:{label:'Field',c:'var(--green)'} };
+  window.v5SetMode = function(m){
+    var cfg = MODES[m] || MODES.compare;
+    var dot = document.getElementById('sbDot'), lbl = document.getElementById('sbMode');
+    if (dot) dot.style.background = cfg.c;
+    if (lbl) lbl.textContent = cfg.label;
+  };
+  window.v5SetInfo = function(txt){ var e = document.getElementById('sbInfo'); if (e) e.textContent = txt; };
+
+  function init(){
+    updateRail();
+    window.v5SetMode('compare');
+    // When the app switches tabs programmatically (e.g. after a compare),
+    // make sure the rail-driven left panel is open and showing the model view.
+    if (window.switchTab && !window.switchTab._v5) {
+      var orig = window.switchTab;
+      window.switchTab = function(tab){
+        orig(tab);
+        if (tab === 'tree' || tab === 'issues' || tab === 'search') {
+          var a = app(); if (a) a.classList.remove('left-collapsed');
+          var files = document.getElementById('lpFiles'); if (files) files.classList.add('hide');
+          var model = document.getElementById('lpModel'); if (model) model.style.display = 'flex';
+          var title = document.getElementById('lpHeadTitle');
+          if (title) title.textContent = ({tree:'Entity Tree',issues:'Changes',search:'Search'})[tab] || '';
+          window._railTab = tab; updateRail(); vpResize();
+        }
+      };
+      window.switchTab._v5 = true;
+    }
+    // reflect compare/clash/field activation in the status bar
+    var c = document.getElementById('btnCompare'); if (c) c.addEventListener('click', function(){ window.v5SetMode('compare'); });
+    var k = document.getElementById('btnClash');   if (k) k.addEventListener('click', function(){ window.v5SetMode('clash'); });
+    var f = document.getElementById('fieldModeBtn');if (f) f.addEventListener('click', function(){ window.v5SetMode('field'); });
+    // mirror the changes count onto the rail badge
+    var src = document.getElementById('issueCount');
+    if (src) {
+      var sync = function(){
+        var n = parseInt(src.textContent, 10) || 0;
+        var b = document.getElementById('railIssueBadge');
+        if (b){ b.textContent = n; b.classList.toggle('show', n > 0); }
+      };
+      new MutationObserver(sync).observe(src, {childList:true, characterData:true, subtree:true});
+      sync();
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 </body>
 </html>

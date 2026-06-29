@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -145,26 +145,98 @@
   </div>
 </div>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• APP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  APP â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  -->
 <div id="app" style="height:100vh;width:100vw;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);font-family:'Hanken Grotesk',-apple-system,system-ui,sans-serif;color:var(--text-dim);-webkit-font-smoothing:antialiased">
 
-  <!-- â•â•â•â•â•â•â•â•â•â•â• HEADER â•â•â•â•â•â•â•â•â•â•â• -->
-  <header class="header">
+  <!-- ══════════ TOPBAR ══════════ -->
+  <header class="topbar">
 
-    <!-- Dark glass app chip â€” IDD project-chip pattern -->
-    <div class="tb-app-chip">
-      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.88)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16l8 4 8-4"/></svg>
-      <span class="chip-label">IFC</span>
+    <!-- Brand logo – IDD exact pattern -->
+    <div class="tb-brand">
+      <span class="tb-brand-name">T3LAB<span class="tb-brand-dot">.</span>IFC</span>
     </div>
+    <span class="tb-brand-sep"></span>
 
-    <!-- App title (tight, after chip) -->
-    <div style="padding-left:6px;flex:none">
-      <div class="logo-name">T3LAB<span>.IFC</span></div>
-      <div class="logo-sub" id="headerModeLbl">Version Compare</div>
+    <!-- Page title -->
+    <div class="tb-title">
+      <span class="t" id="headerModeLbl">Version Compare</span>
     </div>
-
 
     <!-- Hidden elements â€” IDs required by JS modules, not shown in UI -->
+    <!-- ── Right side (IDD style) ── -->
+    <div class="tb-right">
+
+      <div id="statusBadge" class="status-badge"><span id="statusText"></span></div>
+
+      <!-- Panel toggles -->
+      <button onclick="toggleLeftPanel()" id="btnToggleLeft" class="tb-icon-btn hdr-panel-btn hdr-panel-btn-active" title="Versions panel">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="9" y1="4.5" x2="9" y2="19.5"/><rect x="4.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button onclick="toggleRightPanel()" id="btnToggleRight" class="tb-icon-btn hdr-panel-btn" title="Properties panel">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="15" y1="4.5" x2="15" y2="19.5"/><rect x="16.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <!-- SG Check – primary CTA -->
+      <button id="btnSGCheck" onclick="toggleSGCheckPanel()" class="btn btn-primary" style="height:32px;padding:0 13px;font-size:13px;gap:6px;border-radius:9px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>
+        SG Check
+      </button>
+
+      <!-- Export dropdown -->
+      <div style="position:relative">
+        <button onclick="toggleExportMenu()" id="btnExportMenu" class="btn" style="height:32px;padding:0 12px;font-size:13px;gap:5px;border-radius:9px">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v4a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-4"/></svg>
+          Export
+          <svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="exportMenuDrop" style="display:none;position:absolute;top:40px;right:0;width:264px;background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-lg);padding:6px;z-index:1000">
+          <button onclick="captureScreenshot();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 16l5-5 4 4 3-3 6 6"/></svg></span><span class="exp-txt"><span class="exp-title">Snapshot image</span><span class="exp-sub">Current viewport</span></span><span class="exp-ext">PNG</span></button>
+          <button onclick="sgExportReport();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5"/></svg></span><span class="exp-txt"><span class="exp-title">SG Check report</span><span class="exp-sub">Full compliance results</span></span><span class="exp-ext">PDF</span></button>
+          <button onclick="exportCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Change list</span><span class="exp-sub">Added / modified / removed</span></span><span class="exp-ext">CSV</span></button>
+          <button onclick="exportBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Issues package</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
+          <div style="height:1px;background:var(--border);margin:5px 8px"></div>
+          <button onclick="exportClashCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Clash list</span><span class="exp-sub">Clash detection results</span></span><span class="exp-ext">CSV</span></button>
+          <button onclick="exportClashBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Clash issues</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
+        </div>
+        <div id="exportMenuBg" onclick="toggleExportMenu()" style="display:none;position:fixed;inset:0;z-index:999"></div>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <!-- Settings icon button -->
+      <button class="tb-icon-btn" id="btnSettings" onclick="toggleSettingsPanel()" title="Project Settings">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+
+      <!-- Account avatar + dropdown (IDD style) -->
+      <div class="tb-account" id="tbAccountWrap">
+        <button class="tb-account-trigger" id="userBadge" onclick="toggleUserMenu(event)" style="display:none" title="Account">
+          <span class="tb-account-av" id="userAvatar">·</span>
+        </button>
+        <!-- Account dropdown -->
+        <div class="account-menu" id="userMenu" style="display:none">
+          <div class="account-menu-head">
+            <span class="account-menu-av" id="acMenuAv"></span>
+            <div style="min-width:0">
+              <div class="account-menu-name" id="userMenuName">—</div>
+              <div class="account-menu-status" id="userMenuEmail">—</div>
+            </div>
+          </div>
+          <div class="account-menu-sep"></div>
+          <div class="account-menu-links">
+            <button class="account-link" onclick="confirmLogout()">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Hidden elements – IDs required by JS modules, not shown in UI -->
     <div style="display:none">
       <button id="btnCompare" disabled onclick="runCompare()">Compare</button>
       <button id="btnClash" onclick="toggleClashMode()">Clash</button>
@@ -178,98 +250,52 @@
       <button id="btnExportClashBCF" onclick="exportClashBCF()">Clash BCF</button>
     </div>
 
-    <div id="statusBadge" class="status-badge"><span id="statusText"></span></div>
-
-    <!-- â”€â”€ Right actions â”€â”€ -->
-    <div class="h-right">
-
-      <!-- Panel toggles -->
-      <button onclick="toggleLeftPanel()" id="btnToggleLeft" class="hdr-panel-btn hdr-panel-btn-active" title="Versions panel">
-        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="9" y1="4.5" x2="9" y2="19.5"/><rect x="4.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <button onclick="toggleRightPanel()" id="btnToggleRight" class="hdr-panel-btn" title="Properties panel">
-        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><line x1="15" y1="4.5" x2="15" y2="19.5"/><rect x="16.4" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none"/></svg>
-      </button>
-
-      <div class="h-sep"></div>
-
-      <!-- SG Check â€” primary CTA -->
-      <button id="btnSGCheck" onclick="toggleSGCheckPanel()" class="btn btn-primary" style="height:32px;padding:0 13px;font-size:13px;gap:6px;border-radius:9px">
-        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>
-        SG Check
-      </button>
-
-      <!-- Export dropdown -->
-      <div style="position:relative">
-        <button onclick="toggleExportMenu()" id="btnExportMenu" class="btn" style="height:32px;padding:0 12px;font-size:13px;gap:5px;border-radius:9px">
-          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v4a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-4"/></svg>
-          Export
-          <svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
-        <div id="exportMenuDrop" style="display:none;position:absolute;top:40px;right:0;width:264px;background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-lg);padding:6px;z-index:30">
-          <button onclick="captureScreenshot();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 16l5-5 4 4 3-3 6 6"/></svg></span><span class="exp-txt"><span class="exp-title">Snapshot image</span><span class="exp-sub">Current viewport</span></span><span class="exp-ext">PNG</span></button>
-          <button onclick="sgExportReport();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5"/></svg></span><span class="exp-txt"><span class="exp-title">SG Check report</span><span class="exp-sub">Full compliance results</span></span><span class="exp-ext">PDF</span></button>
-          <button onclick="exportCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Change list</span><span class="exp-sub">Added / modified / removed</span></span><span class="exp-ext">CSV</span></button>
-          <button onclick="exportBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Issues package</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
-          <div style="height:1px;background:var(--border);margin:5px 8px"></div>
-          <button onclick="exportClashCSV();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg></span><span class="exp-txt"><span class="exp-title">Clash list</span><span class="exp-sub">Clash detection results</span></span><span class="exp-ext">CSV</span></button>
-          <button onclick="exportClashBCF();toggleExportMenu()" class="exp-item"><span class="exp-ico"><svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9zM12 2v18M4 6.5l8 4.5 8-4.5"/></svg></span><span class="exp-txt"><span class="exp-title">Clash issues</span><span class="exp-sub">BCF for coordination</span></span><span class="exp-ext">BCF</span></button>
-        </div>
-        <div id="exportMenuBg" onclick="toggleExportMenu()" style="display:none;position:fixed;inset:0;z-index:29"></div>
-      </div>
-
-      <div class="h-sep"></div>
-
-      <!-- User badge -->
-      <button class="user-badge" id="userBadge" onclick="toggleUserMenu(event)" style="display:none">
-        <span class="user-avatar" id="userAvatar">Â·</span>
-        <span class="user-name" id="userName">â€”</span>
-      </button>
-    </div>
   </header>
 
-  <!-- â•â•â•â•â•â•â•â•â•â•â• BODY â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- ————————————————— BODY ————————————————— -->
   <div class="body-row" style="flex:1;min-height:0;display:flex">
 
-    <!-- â•â•â• PAGE NAV â•â•â• -->
-    <nav class="sidebar-nav" id="sidebarNav">
-      <!-- Viewer -->
-      <button class="nav-item active" data-page="viewer" onclick="navigateTo('viewer')" title="Viewer">
-        <span class="nav-icon-box">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3v18M4 7.5l8 4.5 8-4.5"/></svg>
-        </span>
-        <span class="nav-label">Viewer</span>
-      </button>
-      <!-- Compare -->
-      <button class="nav-item" data-page="compare" onclick="navigateTo('compare')" title="Compare">
-        <span class="nav-icon-box">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M12 8v8M9 11l3-3 3 3"/></svg>
-        </span>
-        <span class="nav-label">Compare</span>
-      </button>
-      <!-- Clash -->
-      <button class="nav-item" data-page="clash" onclick="navigateTo('clash')" title="Clash">
-        <span class="nav-icon-box">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2L4 14h7l-1 8 10-12h-7z"/></svg>
-        </span>
-        <span class="nav-label">Clash</span>
-      </button>
-      <div class="nav-sep"></div>
-      <!-- Validate -->
-      <button class="nav-item" data-page="validate" onclick="navigateTo('validate')" title="SG Validate">
-        <span class="nav-icon-box">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5C9 18.5 5 15 5 10.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>
-        </span>
-        <span class="nav-label">SG Validate</span>
-      </button>
-      <div class="nav-spacer"></div>
-      <!-- Field mode -->
-      <button class="nav-item" data-page="field" onclick="navigateTo('field')" title="Field Mode">
-        <span class="nav-icon-box">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/></svg>
-        </span>
-        <span class="nav-label">Field Mode</span>
-      </button>
+    <!-- ═══ PAGE NAV (IDD sidebar style) ═══ -->
+    <nav class="sidebar" id="sidebarNav">
+      <div class="sb-nav">
+        <!-- Viewer -->
+        <button class="sb-item active" data-page="viewer" onclick="navigateTo('viewer')" title="Viewer">
+          <span class="sb-icon-box">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3v18M4 7.5l8 4.5 8-4.5"/></svg>
+          </span>
+          <span class="sb-label">Viewer</span>
+        </button>
+        <!-- Compare -->
+        <button class="sb-item" data-page="compare" onclick="navigateTo('compare')" title="Compare">
+          <span class="sb-icon-box">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M12 8v8M9 11l3-3 3 3"/></svg>
+          </span>
+          <span class="sb-label">Compare</span>
+        </button>
+        <!-- Clash -->
+        <button class="sb-item" data-page="clash" onclick="navigateTo('clash')" title="Clash">
+          <span class="sb-icon-box">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2L4 14h7l-1 8 10-12h-7z"/></svg>
+          </span>
+          <span class="sb-label">Clash</span>
+        </button>
+        <div class="sb-divider"></div>
+        <!-- Validate -->
+        <button class="sb-item" data-page="validate" onclick="navigateTo('validate')" title="SG Validate">
+          <span class="sb-icon-box">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5C9 18.5 5 15 5 10.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>
+          </span>
+          <span class="sb-label">SG Validate</span>
+        </button>
+        <div class="nav-spacer"></div>
+        <!-- Field mode -->
+        <button class="sb-item" data-page="field" onclick="navigateTo('field')" title="Field Mode">
+          <span class="sb-icon-box">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/></svg>
+          </span>
+          <span class="sb-label">Field Mode</span>
+        </button>
+      </div>
     </nav>
 
     <!-- â•â•â• LEFT SIDEBAR â•â•â• -->

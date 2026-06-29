@@ -10525,22 +10525,22 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
       ctx
     ].join("\n");
   }
-  const history = [];
+  const history2 = [];
   let busy = false;
   const MAX_HISTORY_MSGS = 24;
   function trimHistory() {
-    if (history.length <= MAX_HISTORY_MSGS) return;
-    let start = history.length - MAX_HISTORY_MSGS;
-    while (start < history.length && !(history[start].role === "user" && typeof history[start].content === "string")) {
+    if (history2.length <= MAX_HISTORY_MSGS) return;
+    let start = history2.length - MAX_HISTORY_MSGS;
+    while (start < history2.length && !(history2[start].role === "user" && typeof history2[start].content === "string")) {
       start++;
     }
-    if (start > 0 && start < history.length) history.splice(0, start);
+    if (start > 0 && start < history2.length) history2.splice(0, start);
   }
   async function ask(question) {
     if (busy) return;
     busy = true;
     sendBtn.disabled = true;
-    history.push({ role: "user", content: question });
+    history2.push({ role: "user", content: question });
     trimHistory();
     render("user", question);
     const system = await buildSystem();
@@ -10556,7 +10556,7 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
             max_tokens: AI_CONFIG.maxTokens,
             system,
             tools: window.AI_TOOLS,
-            messages: history
+            messages: history2
           })
         });
         if (!res.ok) {
@@ -10564,7 +10564,7 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
           throw new Error("API " + res.status + ": " + t.slice(0, 400));
         }
         const data = await res.json();
-        history.push({ role: "assistant", content: data.content });
+        history2.push({ role: "assistant", content: data.content });
         if (data.stop_reason === "tool_use") {
           const toolUses = (data.content || []).filter((b) => b.type === "tool_use");
           const results = [];
@@ -10577,7 +10577,7 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
             }
             results.push({ type: "tool_result", tool_use_id: tu.id, content: JSON.stringify(out) });
           }
-          history.push({ role: "user", content: results });
+          history2.push({ role: "user", content: results });
           continue;
         }
         const texts = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
@@ -10613,7 +10613,7 @@ if (window.DEBUG) console.log('      await sumQuantity({category:"Floors"}, "vol
     fab.style.display = "flex";
   };
   panel.querySelector("[data-act=clear]").onclick = () => {
-    history.length = 0;
+    history2.length = 0;
     msgs.innerHTML = "";
   };
   function autoGrow() {
@@ -10642,3 +10642,79 @@ initThree();
 initSectionDrag();
 initViewCube();
 log("Ready");
+const PAGE_LABELS = {
+  viewer: "3D Viewer",
+  compare: "Version Compare",
+  clash: "Clash Detection",
+  validate: "SG Validate",
+  field: "Field Mode"
+};
+let activePage = "viewer";
+function hashToPage() {
+  const h = window.location.hash.slice(1);
+  return h in PAGE_LABELS ? h : "viewer";
+}
+function syncNav(page) {
+  document.querySelectorAll(".nav-item[data-page]").forEach((el) => {
+    el.classList.toggle("active", el.dataset.page === page);
+  });
+  const lbl = document.getElementById("headerModeLbl");
+  if (lbl) lbl.textContent = PAGE_LABELS[page];
+}
+function applyPage(page, isInit = false) {
+  if (page === activePage && !isInit) return;
+  activePage = page;
+  syncNav(page);
+  const exitClash = () => {
+    if (typeof clashMode !== "undefined" && clashMode) window.exitClashMode?.();
+  };
+  const exitSG = () => {
+    if (typeof sgState !== "undefined" && sgState.open) window.toggleSGCheckPanel?.();
+  };
+  switch (page) {
+    case "viewer":
+      exitClash();
+      exitSG();
+      break;
+    case "compare":
+      exitClash();
+      exitSG();
+      break;
+    case "clash":
+      exitSG();
+      if (typeof clashMode !== "undefined" && !clashMode) window.toggleClashMode?.();
+      break;
+    case "validate":
+      exitClash();
+      if (typeof sgState !== "undefined" && !sgState.open) window.toggleSGCheckPanel?.();
+      break;
+    case "field":
+      exitClash();
+      exitSG();
+      window.fieldEnterMode?.();
+      break;
+  }
+  try {
+    localStorage.setItem("ifc.page", page);
+  } catch {
+  }
+}
+function navigateTo(page) {
+  if (window.location.hash !== "#" + page) {
+    history.pushState(null, "", "#" + page);
+  }
+  applyPage(page);
+}
+window.navigateTo = navigateTo;
+function initRouter() {
+  window.addEventListener("popstate", () => applyPage(hashToPage()));
+  const fromHash = hashToPage();
+  const fromStore = localStorage.getItem("ifc.page");
+  const initial = fromHash !== "viewer" ? fromHash : fromStore && fromStore in PAGE_LABELS ? fromStore : "viewer";
+  setTimeout(() => applyPage(initial, true), 120);
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initRouter);
+} else {
+  initRouter();
+}

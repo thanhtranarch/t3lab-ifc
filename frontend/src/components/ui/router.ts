@@ -7,11 +7,11 @@ import { appState } from '../../store/index.js';
 export type Page = 'viewer' | 'compare' | 'clash' | 'validate' | 'field';
 
 const PAGE_LABELS: Record<Page, string> = {
-  viewer:   '3D Viewer',
-  compare:  'Version Compare',
-  clash:    'Clash Detection',
+  viewer: '3D Viewer',
+  compare: 'Version Compare',
+  clash: 'Clash Detection',
   validate: 'SG Validate',
-  field:    'Field Mode',
+  field: 'Field Mode',
 };
 
 let activePage: Page = 'viewer';
@@ -37,7 +37,7 @@ function applyPage(page: Page, isInit = false) {
   // Exit modes that conflict with target page
   const sg = appState.sgState as any;
   const exitClash = () => { if (appState.clashMode) (window as any).exitClashMode?.(); };
-  const exitSG    = () => { if (sg.open) (window as any).toggleSGCheckPanel?.(); };
+  const exitSG = () => { if (sg.open) (window as any).toggleSGCheckPanel?.(); };
 
   switch (page) {
     case 'viewer':
@@ -81,8 +81,8 @@ export function initRouter() {
   window.addEventListener('popstate', () => applyPage(hashToPage()));
 
   // Restore: prefer URL hash, fall back to localStorage
-  const fromHash   = hashToPage();
-  const fromStore  = localStorage.getItem('ifc.page') as Page | null;
+  const fromHash = hashToPage();
+  const fromStore = localStorage.getItem('ifc.page') as Page | null;
   const initial: Page =
     fromHash !== 'viewer'
       ? fromHash

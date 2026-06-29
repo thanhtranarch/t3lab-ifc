@@ -55,17 +55,17 @@ function setHasHydrated() {
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const overlay = $('authOverlay');
 const viewLoading = $('authViewLoading');
-const viewLogin  = $('authViewLogin');
+const viewLogin = $('authViewLogin');
 const viewVerify = $('authViewVerify');
-const viewReset  = $('authViewReset');
+const viewReset = $('authViewReset');
 const viewSignup = $('authViewSignup');
 
 function showView(which: 'loading' | 'login' | 'verify' | 'reset' | 'signup') {
   viewLoading.style.display = which === 'loading' ? '' : 'none';
-  viewLogin.style.display   = which === 'login'   ? '' : 'none';
-  viewVerify.style.display  = which === 'verify'  ? '' : 'none';
-  viewReset.style.display   = which === 'reset'   ? '' : 'none';
-  viewSignup.style.display  = which === 'signup'  ? '' : 'none';
+  viewLogin.style.display = which === 'login' ? '' : 'none';
+  viewVerify.style.display = which === 'verify' ? '' : 'none';
+  viewReset.style.display = which === 'reset' ? '' : 'none';
+  viewSignup.style.display = which === 'signup' ? '' : 'none';
 }
 
 // Start in loading state — same as AuthGuard waiting for hasHydrated.
@@ -89,21 +89,21 @@ function clearMsg(elId: string) {
 function setLoading(btnId: string, on: boolean) {
   const b = $(btnId) as HTMLButtonElement;
   if (on) { b.classList.add('loading'); b.disabled = true; }
-  else    { b.classList.remove('loading'); b.disabled = false; }
+  else { b.classList.remove('loading'); b.disabled = false; }
 }
 
 // Map common Firebase auth error codes to friendly messages
 function friendlyAuthError(e: any): string {
   const c = e?.code || '';
   switch (c) {
-    case 'auth/invalid-email':       return 'Invalid email address.';
-    case 'auth/user-disabled':       return 'This account has been disabled. Contact your admin.';
+    case 'auth/invalid-email': return 'Invalid email address.';
+    case 'auth/user-disabled': return 'This account has been disabled. Contact your admin.';
     case 'auth/user-not-found':
     case 'auth/wrong-password':
-    case 'auth/invalid-credential':  return 'Email or password is incorrect.';
-    case 'auth/too-many-requests':   return 'Too many failed attempts. Try again later or reset your password.';
+    case 'auth/invalid-credential': return 'Email or password is incorrect.';
+    case 'auth/too-many-requests': return 'Too many failed attempts. Try again later or reset your password.';
     case 'auth/network-request-failed': return 'Network error. Check your connection.';
-    case 'auth/missing-password':    return 'Please enter your password.';
+    case 'auth/missing-password': return 'Please enter your password.';
     case 'auth/operation-not-allowed': return 'Email/password sign-in is not enabled in Firebase. Contact your admin.';
     default: return e?.message || 'Sign-in failed. Please try again.';
   }
@@ -175,7 +175,7 @@ function showLoggedInUser(user: User) {
   if (!auth) return;
   clearMsg('loginMsg');
   const email = ($('loginEmail') as HTMLInputElement).value.trim();
-  const pass  = ($('loginPassword') as HTMLInputElement).value;
+  const pass = ($('loginPassword') as HTMLInputElement).value;
   if (!email || !pass) { showMsg('loginMsg', 'Please enter both email and password.'); return; }
   setLoading('loginSubmit', true);
   try {
@@ -220,7 +220,7 @@ window.checkVerifiedNow = async function () {
 
 window.signOutFromVerify = async function () {
   if (!auth) return;
-  try { await signOut(auth); } catch (e) {}
+  try { await signOut(auth); } catch (e) { }
   sessionStorage.clear();
 };
 
@@ -267,9 +267,9 @@ window.toggleUserMenu = function (ev?: Event) {
   const menu = $('userMenu');
   if (menu.classList.contains('show')) { menu.classList.remove('show'); return; }
   const badge = $('userBadge').getBoundingClientRect();
-  menu.style.top   = (badge.bottom + 4) + 'px';
+  menu.style.top = (badge.bottom + 4) + 'px';
   menu.style.right = (window.innerWidth - badge.right) + 'px';
-  menu.style.left  = '';
+  menu.style.left = '';
   menu.classList.add('show');
 };
 document.addEventListener('click', e => {
@@ -308,9 +308,9 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   if (!auth) return;
   clearMsg('signupMsg');
-  const name  = ($('signupName') as HTMLInputElement).value.trim();
+  const name = ($('signupName') as HTMLInputElement).value.trim();
   const email = ($('signupEmail') as HTMLInputElement).value.trim();
-  const pass  = ($('signupPassword') as HTMLInputElement).value;
+  const pass = ($('signupPassword') as HTMLInputElement).value;
   const pass2 = ($('signupPasswordConfirm') as HTMLInputElement).value;
 
   if (!name || !email || !pass || !pass2) {
@@ -330,7 +330,7 @@ document.addEventListener('keydown', e => {
   try {
     const { user } = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(user, { displayName: name });
-    await sendEmailVerification(user).catch(() => {});
+    await sendEmailVerification(user).catch(() => { });
     showMsg('signupMsg', 'Account created! Please check your email for verification.', 'success');
   } catch (err: any) {
     const c = err?.code || '';

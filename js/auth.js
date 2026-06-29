@@ -21,9 +21,9 @@ const firebaseConfig = {
   appId: "1:200458024135:web:16c51183d7f8a713463ae2"
 };
 const isConfigPlaceholder = Object.values(firebaseConfig).some((v) => String(v).includes("REPLACE_ME"));
-let app, auth;
+let auth = null;
 if (!isConfigPlaceholder) {
-  app = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   setPersistence(auth, browserLocalPersistence).catch((e) => console.warn("[auth] setPersistence failed:", e));
 }
@@ -100,7 +100,7 @@ function friendlyAuthError(e) {
 }
 if (isConfigPlaceholder) {
   showView("login");
-  viewLogin.innerHTML = '<div class="auth-heading-block"><h2 class="auth-heading">Setup needed</h2></div><div class="auth-msg show error" style="margin-top:4px"><b>Firebase config missing.</b><br>Open <code>js/auth.js</code>, find <code>firebaseConfig</code> and replace placeholder values with your Firebase project config.</div>';
+  viewLogin.innerHTML = '<div class="auth-heading-block"><h2 class="auth-heading">Setup needed</h2></div><div class="auth-msg show error" style="margin-top:4px"><b>Firebase config missing.</b><br>Open <code>frontend/src/auth.ts</code>, find <code>firebaseConfig</code> and replace placeholder values with your Firebase project config.</div>';
   console.error("[auth] Firebase config contains REPLACE_ME placeholders.");
 }
 if (auth) {

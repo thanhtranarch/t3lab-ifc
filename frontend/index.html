@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>T3LAB.IFC â€” 3D Version Compare</title>
+<title>T3LAB.IFC — 3D Version Compare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -29,7 +29,7 @@
       </div>
       <div class="auth-brand-hero">
         <h1 class="auth-brand-headline">BIM comparison,<br/>visualized.</h1>
-        <p class="auth-brand-tagline">Version compare, clash detection, SG validation, and AI-powered analysis â€” unified in your browser.</p>
+        <p class="auth-brand-tagline">Version compare, clash detection, SG validation, and AI-powered analysis — unified in your browser.</p>
       </div>
     </div>
     <div class="auth-brand-bottom">
@@ -59,14 +59,14 @@
               <label class="auth-label" for="loginPassword">Password</label>
               <button type="button" class="auth-inline-link" onclick="showResetView()">Forgot Password?</button>
             </div>
-            <input class="auth-input" type="password" id="loginPassword" name="password" autocomplete="current-password" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+            <input class="auth-input" type="password" id="loginPassword" name="password" autocomplete="current-password" required placeholder="••••••••">
           </div>
           <button type="submit" class="auth-submit" id="loginSubmit"><span class="auth-spinner"></span><span class="auth-submit-label">Sign in</span></button>
         </form>
         <div class="auth-foot">Don't have an account? <span class="auth-signup-link" onclick="showSignupView()">Sign up</span></div>
       </div>
       <div id="authViewSignup" style="display:none">
-        <button type="button" class="auth-back-btn" onclick="showLoginView()">â† Back to Sign in</button>
+        <button type="button" class="auth-back-btn" onclick="showLoginView()">← Back to Sign in</button>
         <div class="auth-heading-block">
           <h2 class="auth-heading">Create an account</h2>
           <p class="auth-heading-sub">Already have an account? <span class="auth-inline-link" onclick="showLoginView()">Sign in</span></p>
@@ -83,11 +83,11 @@
           </div>
           <div class="auth-field">
             <label class="auth-label" for="signupPassword">Password</label>
-            <input class="auth-input" type="password" id="signupPassword" name="new-password" autocomplete="new-password" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+            <input class="auth-input" type="password" id="signupPassword" name="new-password" autocomplete="new-password" required placeholder="••••••••">
           </div>
           <div class="auth-field">
             <label class="auth-label" for="signupPasswordConfirm">Confirm Password</label>
-            <input class="auth-input" type="password" id="signupPasswordConfirm" name="new-password" autocomplete="new-password" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+            <input class="auth-input" type="password" id="signupPasswordConfirm" name="new-password" autocomplete="new-password" required placeholder="••••••••">
           </div>
           <button type="submit" class="auth-submit" id="signupSubmit"><span class="auth-spinner"></span><span class="auth-submit-label">Sign up</span></button>
         </form>
@@ -96,17 +96,17 @@
         <div class="auth-verify">
           <div class="auth-verify-icon">âœ‰</div>
           <div class="auth-verify-title">Verify your email</div>
-          <div class="auth-verify-desc">We sent a verification link to <b id="verifyEmail">â€”</b>.<br>Click the link in your inbox, then refresh this page.</div>
+          <div class="auth-verify-desc">We sent a verification link to <b id="verifyEmail">—</b>.<br>Click the link in your inbox, then refresh this page.</div>
           <div class="auth-msg" id="verifyMsg"></div>
           <div class="auth-verify-actions">
             <button type="button" class="auth-submit" id="verifyResend"><span class="auth-spinner"></span><span class="auth-submit-label">Resend verification email</span></button>
-            <button type="button" class="auth-inline-link" style="text-align:center;margin-top:8px" onclick="checkVerifiedNow()">I've verified â€” refresh</button>
+            <button type="button" class="auth-inline-link" style="text-align:center;margin-top:8px" onclick="checkVerifiedNow()">I've verified — refresh</button>
             <button type="button" class="auth-inline-link" style="text-align:center;margin-top:4px;color:var(--text-muted)" onclick="signOutFromVerify()">Use a different account</button>
           </div>
         </div>
       </div>
       <div id="authViewReset" style="display:none">
-        <button type="button" class="auth-back-btn" onclick="showLoginView()">â† Back to Sign in</button>
+        <button type="button" class="auth-back-btn" onclick="showLoginView()">← Back to Sign in</button>
         <div class="auth-heading-block">
           <h2 class="auth-heading">Forgot password?</h2>
           <p class="auth-heading-sub">Remembered? <span class="auth-inline-link" onclick="showLoginView()">Sign in</span></p>
@@ -127,8 +127,8 @@
 <!-- User dropdown menu -->
 <div class="user-menu" id="userMenu">
   <div class="user-menu-header">
-    <div class="user-menu-header-name" id="userMenuName">â€”</div>
-    <div class="user-menu-header-email" id="userMenuEmail">â€”</div>
+    <div class="user-menu-header-name" id="userMenuName">—</div>
+    <div class="user-menu-header-email" id="userMenuEmail">—</div>
   </div>
   <button class="user-menu-item" onclick="confirmLogout()">â¤´ Sign out</button>
 </div>
@@ -162,7 +162,7 @@
       <span class="t" id="headerModeLbl">Version Compare</span>
     </div>
 
-    <!-- Hidden elements â€” IDs required by JS modules, not shown in UI -->
+    <!-- Hidden elements — IDs required by JS modules, not shown in UI -->
     <!-- ── Right side (IDD style) ── -->
     <div class="tb-right">
 
@@ -307,14 +307,14 @@
         <label class="uc-card" id="uc0" for="f0">
           <input type="file" id="f0" accept=".ifc,*/*" onchange="handleFile(0)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
           <div class="uc-placeholder">
-            <div class="uc-ver-label">Version A â€” Baseline</div>
+            <div class="uc-ver-label">Version A — Baseline</div>
             <div class="uc-drop-text"><svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg>Drop IFC here</div>
             <div class="uc-hint">click or drag .ifc</div>
           </div>
           <div class="uc-file">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
               <span style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)">Version A</span>
-              <span class="uc-badge-loaded" id="us0">Loadingâ€¦</span>
+              <span class="uc-badge-loaded" id="us0">Loading…</span>
             </div>
             <div class="uc-fname" id="fn0"></div>
             <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-muted);margin-top:4px" id="fs0"></div>
@@ -337,14 +337,14 @@
         <label class="uc-card uc-card-dashed" id="uc1" for="f1">
           <input type="file" id="f1" accept=".ifc,*/*" onchange="handleFile(1)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
           <div class="uc-placeholder">
-            <div class="uc-ver-label" style="color:var(--text-muted)">Version B â€” Updated</div>
+            <div class="uc-ver-label" style="color:var(--text-muted)">Version B — Updated</div>
             <div class="uc-drop-text"><svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg>Drop IFC here</div>
             <div class="uc-hint">click or drag .ifc</div>
           </div>
           <div class="uc-file">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
               <span style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted)">Version B</span>
-              <span class="uc-badge-loaded" id="us1">Loadingâ€¦</span>
+              <span class="uc-badge-loaded" id="us1">Loading…</span>
             </div>
             <div class="uc-fname" id="fn1"></div>
             <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-muted);margin-top:4px" id="fs1"></div>
@@ -367,7 +367,7 @@
           <input type="file" id="fedFileInput" accept=".ifc,*/*" style="display:none" onchange="fedHandleFile(event)">
         </div>
 
-        <!-- Run Compare CTA â€” shown when both A/B slots are loaded -->
+        <!-- Run Compare CTA — shown when both A/B slots are loaded -->
         <button id="btnRunComparePanel" onclick="runCompare()" disabled
           style="margin-top:10px;width:100%;height:36px;border-radius:9px;border:none;background:var(--text);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;opacity:.35;transition:opacity .15s ease">
           <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M8 5.5l11 6.5-11 6.5z"/></svg>
@@ -461,7 +461,7 @@
       <!-- Search Panel -->
       <div class="search-panel" id="searchPanel">
         <div class="search-bar">
-          <input class="search-input" id="searchInput" placeholder="Search by name, type, tagâ€¦" oninput="searchDebounce()" onkeydown="if(event.key==='Enter')searchRun()">
+          <input class="search-input" id="searchInput" placeholder="Search by name, type, tag…" oninput="searchDebounce()" onkeydown="if(event.key==='Enter')searchRun()">
           <div class="search-filters">
             <select class="search-type-select" id="searchTypeFilter" onchange="searchRun()"><option value="">All types</option></select>
             <div class="search-chip" onclick="searchToggleChip(this,'missing')" title="Missing prop"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Missing prop</div>
@@ -516,7 +516,7 @@
           <span style="width:8px;height:8px;border-radius:999px;background:var(--text);flex:none" id="vpHUDDot"></span>
           <span style="font-size:12.5px;font-weight:700;color:var(--text)" id="vpHUDTitle">3D View</span>
           <span style="width:1px;height:14px;background:var(--border)"></span>
-          <span style="font-size:12px;font-weight:500;color:var(--text-muted)" id="vpHUDMeta">â€”</span>
+          <span style="font-size:12px;font-weight:500;color:var(--text-muted)" id="vpHUDMeta">—</span>
         </div>
 
         <!-- â”€â”€ Floating viewport toolbar (IDD ViewerToolbar pattern) â”€â”€ -->
@@ -572,7 +572,7 @@
         <div class="plan-overlay" id="planOverlay">
           <div class="plan-hdr" id="planHdr">
             <span class="plan-hdr-icon"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg></span>
-            <select class="plan-storey-select" id="planStoreySelect" onchange="planSelectStorey(this.value)"><option value="">â€” No storeys â€”</option></select>
+            <select class="plan-storey-select" id="planStoreySelect" onchange="planSelectStorey(this.value)"><option value="">— No storeys —</option></select>
             <span class="plan-hdr-btn" id="planFollowBtn" onclick="planToggleFollow()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg></span>
             <span class="plan-hdr-btn" id="planFitBtn" onclick="planFit()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></span>
             <span class="plan-hdr-btn" id="planCloseBtn" onclick="togglePlanOverlay()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
@@ -582,7 +582,7 @@
             <svg class="plan-marker-svg" id="planMarkerSvg" viewBox="0 0 340 240" preserveAspectRatio="none"></svg>
             <div class="plan-empty" id="planEmpty" style="display:none">Load a model with IfcBuildingStorey to use the plan overlay.</div>
           </div>
-          <div class="plan-info-bar"><span id="planInfoStorey">â€”</span><span id="planInfoCam">cam: â€”</span></div>
+          <div class="plan-info-bar"><span id="planInfoStorey">—</span><span id="planInfoCam">cam: —</span></div>
           <div class="plan-resize" id="planResize" title="Drag to resize"></div>
         </div>
 
@@ -590,7 +590,7 @@
         <div class="colorize-panel" id="colorizePanel">
           <div class="cz-head">
             <div class="cz-title" id="czTitle">Colorize</div>
-            <button class="cz-x" onclick="colorizeToggleCollapse()" id="czCollapseBtn">â€“</button>
+            <button class="cz-x" onclick="colorizeToggleCollapse()" id="czCollapseBtn">–</button>
             <button class="cz-x" onclick="toggleColorize()">Ã—</button>
           </div>
           <div id="czBody" style="display:flex;flex-direction:column;min-height:0;flex:1">
@@ -666,7 +666,7 @@
         <!-- Walk HUD -->
         <div id="walkHUD" style="display:none;position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:15;padding:8px 16px;background:rgba(44,36,32,.8);border-radius:10px;color:#fff;font-family:'JetBrains Mono';font-size:11px;text-align:center;pointer-events:none;backdrop-filter:blur(4px)">
           <div style="font-size:13px;font-weight:700;margin-bottom:4px"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><circle cx="12" cy="5" r="2"/><path d="M12 8l-2 4h4l-2 4"/><path d="M10 12l-2 6M14 12l2 6"/></svg> WALK MODE</div>
-          <div><b>WASD</b> Move Â· <b>QE</b> Up/Down Â· <b>Mouse</b> Look Â· <b>Shift</b> Sprint Â· <b>Scroll</b> Speed Â· <b>Esc</b> Exit</div>
+          <div><b>WASD</b> Move · <b>QE</b> Up/Down · <b>Mouse</b> Look · <b>Shift</b> Sprint · <b>Scroll</b> Speed · <b>Esc</b> Exit</div>
         </div>
 
         <!-- Walk crosshair -->
@@ -694,12 +694,12 @@
           </div>
           <div class="clash-bottom-grid">
             <div class="clash-set-section">
-              <div class="clash-set-title-row"><span class="clash-set-title-text"><span class="cs-dot" style="background:#ef4444"></span> Source Set <span class="clash-file-tag" id="clashFileA">â€”</span></span><div class="clash-set-actions"><button class="clash-row-act" onclick="addClashRow('A')">+</button><button class="clash-row-act" onclick="removeLastClashRow('A')">âˆ’</button></div></div>
+              <div class="clash-set-title-row"><span class="clash-set-title-text"><span class="cs-dot" style="background:#ef4444"></span> Source Set <span class="clash-file-tag" id="clashFileA">—</span></span><div class="clash-set-actions"><button class="clash-row-act" onclick="addClashRow('A')">+</button><button class="clash-row-act" onclick="removeLastClashRow('A')">âˆ’</button></div></div>
               <table class="clash-rule-table"><thead><tr><th style="width:25%">Element Type</th><th style="width:22%">Property</th><th style="width:16%">Operator</th><th style="width:22%">Value</th><th style="width:15%">Action</th></tr></thead><tbody id="clashRulesA"></tbody></table>
               <label class="clash-include-parts"><input type="checkbox" id="clashIncludePartsA" checked> Include parts</label>
             </div>
             <div class="clash-set-section">
-              <div class="clash-set-title-row"><span class="clash-set-title-text"><span class="cs-dot" style="background:#f97316"></span> Target Set <span class="clash-file-tag" id="clashFileB">â€”</span></span><div class="clash-set-actions"><button class="clash-row-act" onclick="addClashRow('B')">+</button><button class="clash-row-act" onclick="removeLastClashRow('B')">âˆ’</button></div></div>
+              <div class="clash-set-title-row"><span class="clash-set-title-text"><span class="cs-dot" style="background:#f97316"></span> Target Set <span class="clash-file-tag" id="clashFileB">—</span></span><div class="clash-set-actions"><button class="clash-row-act" onclick="addClashRow('B')">+</button><button class="clash-row-act" onclick="removeLastClashRow('B')">âˆ’</button></div></div>
               <table class="clash-rule-table"><thead><tr><th style="width:25%">Element Type</th><th style="width:22%">Property</th><th style="width:16%">Operator</th><th style="width:22%">Value</th><th style="width:15%">Action</th></tr></thead><tbody id="clashRulesB"></tbody></table>
               <label class="clash-include-parts"><input type="checkbox" id="clashIncludePartsB" checked> Include parts</label>
             </div>
@@ -730,7 +730,7 @@
         <div class="sg-header">
           <span class="sg-header-icon"><svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:#D05050;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
           <span class="sg-header-title">CORENET X / IFC-SG Pre-Submission Validator</span>
-          <span class="sg-header-sub" id="sgHeaderSub">â€” <span id="sgRuleSrc">Built-in rules</span></span>
+          <span class="sg-header-sub" id="sgHeaderSub">— <span id="sgRuleSrc">Built-in rules</span></span>
           <select class="sg-gateway-select" id="sgGateway" onchange="sgChangeGateway()"><option value="design">Design Gateway</option><option value="piling">Piling Gateway</option><option value="construction">Construction Gateway</option><option value="completion">Completion Gateway</option></select>
           <div class="sg-actions">
             <button class="sg-btn" id="sgRunBtn" onclick="sgRunValidation()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><polygon points="5 3 19 12 5 21 5 3"/></svg> Validate</button>
@@ -746,7 +746,7 @@
           <div class="sg-col">
             <div class="sg-col-hdr">Compliance Dashboard</div>
             <div class="sg-col-body" id="sgDashboard">
-              <div class="sg-dash-section"><div class="sg-dash-pct" id="sgPctValue">â€”</div><div class="sg-dash-pct-lbl">Overall compliance</div></div>
+              <div class="sg-dash-section"><div class="sg-dash-pct" id="sgPctValue">—</div><div class="sg-dash-pct-lbl">Overall compliance</div></div>
               <div class="sg-dash-section">
                 <div class="sg-dash-row"><span class="k">Rules checked</span><span class="v" id="sgStatRules">0</span></div>
                 <div class="sg-dash-row"><span class="k">Rules passing</span><span class="v pass" id="sgStatPass">0</span></div>
@@ -841,7 +841,7 @@
 <div class="sg-json-overlay" id="sgJsonOverlay">
   <div class="sg-json-dialog">
     <div class="sg-json-dialog-hdr">
-      <h3><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> IFC-SG Industry Mapping â€” JSON Rule Loader</h3>
+      <h3><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> IFC-SG Industry Mapping — JSON Rule Loader</h3>
       <button class="sg-json-dialog-close" onclick="sgCloseJsonDialog()"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="sg-json-dialog-body">

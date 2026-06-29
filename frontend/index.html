@@ -65,7 +65,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   background:var(--bg-panel);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;
-  padding:0 12px;gap:7px;z-index:50;
+  padding:0 14px;gap:10px;z-index:50;
   overflow-x:auto;scrollbar-width:none;
 }
 .header::-webkit-scrollbar{display:none}
@@ -759,6 +759,8 @@ body.field-mode .left-panel{display:none !important}
 body.field-mode .right-panel{display:none !important}
 body.field-mode .col-resize{display:none !important}
 body.field-mode .sg-panel{display:none !important}
+body.field-mode .sidebar-nav{display:none !important}
+body.field-mode .body-row{padding-left:0 !important}
 body.field-mode .viewport-area{grid-column:1/-1 !important;grid-row:1/-1 !important}
 body.field-mode .empty-vp .ev-title{font-size:18px}
 body.field-mode .empty-vp .ev-hint{font-size:13px}
@@ -1094,10 +1096,10 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 /* ── Dark glass app chip — IDD project-chip pattern, sidebar-aligned ── */
 .tb-app-chip{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  width:48px;height:100%;flex:none;
+  width:60px;height:100%;flex:none;
   background:var(--text);
   border-right:1px solid rgba(255,255,255,.07);
-  margin-left:-12px;/* cancel header left padding so chip aligns to edge */
+  margin-left:-14px;/* cancel header left padding so chip aligns to edge */
   padding:0;cursor:default;
 }
 .tb-app-chip svg{width:17px;height:17px;flex:none}
@@ -1132,23 +1134,86 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
 .vp-tsep{width:1px;height:18px;background:rgba(255,255,255,.1);margin:0 4px;flex:none}
 
 /* ── Sidebar page navigation (IDD-style icon nav) ─────────────── */
+.body-row {
+  position: relative;
+  padding-left: 60px;
+}
 .sidebar-nav{
-  flex:none;width:48px;
-  background:var(--bg-panel);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;align-items:center;
-  padding:8px 0;gap:2px;z-index:5;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  background: #ffffff !important;
+  border-right: 1px solid var(--border) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 16px 0;
+  gap: 2px;
+  z-index: 210;
+  transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms ease;
+  overflow: hidden !important;
+}
+.sidebar-nav:hover {
+  width: 230px;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.08) !important;
 }
 .nav-item{
-  width:36px;height:36px;border-radius:10px;
-  border:none;background:transparent;color:var(--text-muted);
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:background .13s ease,color .13s ease;
-  position:relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 2px 8px;
+  height: 40px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  user-select: none;
+  color: #4B5563;
+  overflow: hidden;
+  transition: background 140ms ease, color 140ms ease;
+  position: relative;
+  align-self: stretch;
 }
-.nav-item:hover{background:var(--bg-hover);color:var(--text-dim)}
-.nav-item.active{background:var(--bg-card);color:var(--text)}
+.nav-item:hover,
+.nav-item.active {
+  background: #F3F4F6;
+  color: #111827;
+}
+.nav-item.active {
+  font-weight: 600;
+}
+.nav-icon-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  color: inherit;
+  flex-shrink: 0;
+}
+.nav-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+.sidebar-nav:hover .nav-label {
+  opacity: 1;
+  pointer-events: auto;
+}
 .nav-item[title]::after{
   content:attr(title);
   position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
@@ -1158,7 +1223,10 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
   opacity:0;transition:opacity .1s .12s;z-index:200;
 }
 .nav-item:hover[title]::after{opacity:1}
-.nav-sep{width:24px;height:1px;background:var(--border);margin:4px 0;flex:none}
+.sidebar-nav:hover .nav-item[title]::after {
+  display: none !important;
+}
+.nav-sep{height:1px;background:var(--border);margin:6px 16px;flex:none;align-self:stretch}
 .nav-spacer{flex:1}
 
 /* ── Upload card ─────────────────────────────────────────────────── */
@@ -1422,31 +1490,46 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
   </header>
 
   <!-- ═══════════ BODY ═══════════ -->
-  <div style="flex:1;min-height:0;display:flex">
+  <div class="body-row" style="flex:1;min-height:0;display:flex">
 
     <!-- ═══ PAGE NAV ═══ -->
     <nav class="sidebar-nav" id="sidebarNav">
       <!-- Viewer -->
       <button class="nav-item active" data-page="viewer" onclick="navigateTo('viewer')" title="Viewer">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3v18M4 7.5l8 4.5 8-4.5"/></svg>
+        <span class="nav-icon-box">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3v18M4 7.5l8 4.5 8-4.5"/></svg>
+        </span>
+        <span class="nav-label">Viewer</span>
       </button>
       <!-- Compare -->
       <button class="nav-item" data-page="compare" onclick="navigateTo('compare')" title="Compare">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M12 8v8M9 11l3-3 3 3"/></svg>
+        <span class="nav-icon-box">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M12 8v8M9 11l3-3 3 3"/></svg>
+        </span>
+        <span class="nav-label">Compare</span>
       </button>
       <!-- Clash -->
       <button class="nav-item" data-page="clash" onclick="navigateTo('clash')" title="Clash">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2L4 14h7l-1 8 10-12h-7z"/></svg>
+        <span class="nav-icon-box">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2L4 14h7l-1 8 10-12h-7z"/></svg>
+        </span>
+        <span class="nav-label">Clash</span>
       </button>
       <div class="nav-sep"></div>
       <!-- Validate -->
       <button class="nav-item" data-page="validate" onclick="navigateTo('validate')" title="SG Validate">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5C9 18.5 5 15 5 10.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>
+        <span class="nav-icon-box">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M12 3l7 2.5v5c0 4.5-3 8-7 9.5C9 18.5 5 15 5 10.5v-5z"/><path d="M9 12l2 2 4-4.5"/></svg>
+        </span>
+        <span class="nav-label">SG Validate</span>
       </button>
       <div class="nav-spacer"></div>
       <!-- Field mode -->
       <button class="nav-item" data-page="field" onclick="navigateTo('field')" title="Field Mode">
-        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/></svg>
+        <span class="nav-icon-box">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/></svg>
+        </span>
+        <span class="nav-label">Field Mode</span>
       </button>
     </nav>
 

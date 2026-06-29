@@ -1,8 +1,8 @@
 # CLAUDE.md — IFC Delta
 
 Web-based BIM viewer (xem · so sánh · clash · validate · AI) cho team BIM nội bộ.
-Three.js + web-ifc (WASM), chạy 100% trong trình duyệt, deploy GitHub Pages / Vercel.
-Giao diện tiếng Việt.
+Three.js + web-ifc (WASM), chạy 100% trong trình duyệt, deploy trên cả Vercel và Firebase Hosting tại https://ifc.t3lab.space.
+Giao diện tiếng Anh. Assistant có thể trả lời bằng tiếng Anh hoặc tiếng Việt và xử lý được thông tin tiếng Việt từ model.
 
 ## Cấu trúc dự án
 
@@ -104,4 +104,9 @@ Xem `frontend/src/state/index.ts`. Quan trọng nhất:
 - Backend lấy `ANTHROPIC_API_KEY` từ biến môi trường (`backend/.env`)
 - `frontend/src/auth.ts` chứa Firebase config (public theo thiết kế Firebase)
 
+## Lưu ý Deploy & Tối ưu hóa (Vercel & Firebase)
+- Web được deploy trên cả **Vercel** và **Firebase Hosting**. Khi update project, cần đặc biệt chú ý tương thích và optimize cho cả 2 bên.
+- Đảm bảo SPA Routing, headers, rewrites/redirects, và caching cho các tài nguyên tĩnh (đặc biệt là file WASM dung lượng lớn của web-ifc) được cấu hình đúng trên cả Vercel (`vercel.json` ở root dự án) và Firebase. Đảm bảo các asset tải mượt mà, không gặp lỗi 404 hoặc bị cache phiên bản cũ.
+
 ## Bản đồ module: xem `.claude/ARCHITECTURE.md`. Lộ trình: `.claude/IMPLEMENTATION_PLAN.md`.
+

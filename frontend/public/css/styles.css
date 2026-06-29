@@ -53,7 +53,7 @@ body.resizing,body.resizing *{user-select:none !important;cursor:col-resize !imp
 body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-resize !important}
 
 /* Header / Topbar */
-.topbar{grid-column:1/-1;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;z-index:50;overflow-x:auto;scrollbar-width:none;height:48px}
+.topbar{flex-shrink:0;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;z-index:50;overflow-x:auto;scrollbar-width:none;height:48px}
 .topbar::-webkit-scrollbar{display:none}
 
 /* ── Topbar brand logo ── */
@@ -1293,7 +1293,7 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
   position: relative;
   padding-left: 60px;
 }
-..sidebar {
+.sidebar {
   position: absolute;
   top: 0;
   left: 0;

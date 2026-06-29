@@ -10,7 +10,7 @@
 // to avoid duplicating checks for the same property across components.
 
 import * as THREE from 'three';
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 import { log } from '../core/ifc-category.js';
 
 // ── Active rule set — starts as the built-in Phase 1 rules ──────────

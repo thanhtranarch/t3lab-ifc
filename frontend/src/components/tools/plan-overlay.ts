@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════════════════════════
 // ── 2D Plan Overlay (Option A: top-down ortho mini-renderer) ─────────
 // ══════════════════════════════════════════════════════════════════════
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 import { log } from '../core/ifc-category.js';
 
 interface PlanStorey {

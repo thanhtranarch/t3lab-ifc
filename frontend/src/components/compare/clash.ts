@@ -2,7 +2,7 @@
 // ══ CLASH DETECTION MODULE ══
 // ══════════════════════════════════════════════════════════════
 import * as THREE from 'three';
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 
 // Module-level variables (not in appState)
 let clashSubsets: THREE.Group[] = [];

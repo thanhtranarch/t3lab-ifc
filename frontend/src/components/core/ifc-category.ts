@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 
 // ── IFC class → Revit Category friendly name ──────────────────────────
 // Sourced from the Autodesk IFC-for-Revit mapping table

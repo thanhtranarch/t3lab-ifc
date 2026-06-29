@@ -2,7 +2,7 @@
 // Each page maps to existing window.* mode-switching globals.
 // The sidebar nav buttons update the hash; this module reacts to hashchange.
 
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 
 export type Page = 'viewer' | 'compare' | 'clash' | 'validate' | 'field';
 

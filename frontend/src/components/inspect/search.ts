@@ -5,7 +5,7 @@
 // Results can be clicked to highlight+zoom, or bulk isolated/hidden.
 
 import * as THREE from 'three';
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 import { log } from '../core/ifc-category.js';
 
 // Cross-module functions/values

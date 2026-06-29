@@ -27,11 +27,11 @@ const IFCFURNISHINGELEMENT = 263784265;
 const IFCFLOWSEGMENT = 987401354;
 const IFCFLOWTERMINAL = 2223149337;
 const IFCFLOWFITTING = 4278956645;
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 import { log } from '../core/ifc-category.js';
 import { setStatus } from './focus-highlight.js';
 import { fedRenderSlots } from '../compare/federation-load.js';
-import { IFC_NAMES } from '../../constants.js';
+import { IFC_NAMES } from '../../lib/constants.js';
 
 // ── Section Plan parallel to clicked face (Dalux-style) ──
 // Only creates ONE clipping plane at the face position. All other directions stay fully open.

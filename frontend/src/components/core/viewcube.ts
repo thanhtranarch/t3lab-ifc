@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 
 // ══════════════════════════════════════════════════════════════════════
 // Note: viewCube is a local object that mirrors appState.viewCube.

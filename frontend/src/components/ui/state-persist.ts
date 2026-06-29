@@ -3,7 +3,7 @@
 //        colorize prefs, camera position.
 // NOT saved: loaded File objects (browser security) — user re-uploads.
 
-import { appState } from '../../state/index.js';
+import { appState } from '../../store/index.js';
 
 const K = {
   panels:  'ifc.panels',

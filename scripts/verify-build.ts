@@ -34,10 +34,13 @@ async function main(): Promise<void> {
     ? ok(`js/app.js is up to date with ${files.length} TypeScript sources`)
     : bad('js/app.js is stale — run `npm run build:standalone`');
 
-  // 2. js/auth.js must equal a fresh transpile of js/auth.ts
-  const freshAuth = await tsToJs(readFileSync(join(ROOT, 'js/auth.ts'), 'utf8'), 'auth.ts');
+  // 2. js/auth.js must equal a fresh transpile of frontend/src/lib/auth.ts
+  let authTs = readFileSync(join(ROOT, 'frontend/src/lib/auth.ts'), 'utf8');
+  authTs = authTs.replace(/['"]firebase\/app['"]/g, "'https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js'");
+  authTs = authTs.replace(/['"]firebase\/auth['"]/g, "'https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js'");
+  const freshAuth = await tsToJs(authTs, 'auth.ts');
   readFileSync(join(ROOT, 'js/auth.js'), 'utf8') === freshAuth
-    ? ok('js/auth.js is up to date with js/auth.ts')
+    ? ok('js/auth.js is up to date with frontend/src/lib/auth.ts')
     : bad('js/auth.js is stale — run `npm run build:standalone`');
 
   // 3. index.html wiring. The standalone references external CSS/JS,
@@ -53,6 +56,13 @@ async function main(): Promise<void> {
   iMap !== -1 && iApp !== -1 && iMap < iApp
     ? ok('importmap precedes the app module script')
     : bad('importmap must come before <script type="module" src="js/app.js">');
+
+  // 4. css/styles.css must equal frontend/public/css/styles.css
+  const srcCss = readFileSync(join(ROOT, 'frontend/public/css/styles.css'), 'utf8');
+  const destCss = readFileSync(join(ROOT, 'css/styles.css'), 'utf8');
+  srcCss === destCss
+    ? ok('css/styles.css is in sync with frontend/public/css/styles.css')
+    : bad('css/styles.css is out of sync — run `npm run build:standalone`');
 
   console.log(failed ? `\n${failed} check(s) failed.` : '\nAll checks passed.');
   process.exit(failed ? 1 : 0);

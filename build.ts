@@ -65,10 +65,14 @@ async function main(): Promise<void> {
   console.log(`Built js/app.js from ${files.length} TypeScript sources (${appJs.length} bytes):`);
   for (const f of files) console.log('  •', f);
 
-  // 2. Auth: js/auth.ts → js/auth.js
-  const authJs = await tsToJs(readFileSync(join(ROOT, 'js', 'auth.ts'), 'utf8'), 'auth.ts');
+  // 2. Auth: frontend/src/lib/auth.ts → js/auth.js
+  let authTs = readFileSync(join(ROOT, 'frontend', 'src', 'lib', 'auth.ts'), 'utf8');
+  // Rewrite npm imports to CDN URLs for the browser
+  authTs = authTs.replace(/['"]firebase\/app['"]/g, "'https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js'");
+  authTs = authTs.replace(/['"]firebase\/auth['"]/g, "'https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js'");
+  const authJs = await tsToJs(authTs, 'auth.ts');
   writeFileSync(join(ROOT, 'js', 'auth.js'), authJs);
-  console.log(`Built js/auth.js (${authJs.length} bytes).`);
+  console.log(`Built js/auth.js from frontend/src/lib/auth.ts (${authJs.length} bytes).`);
 
   // 3. CSS: frontend/public/css/styles.css → css/styles.css
   const cssDestDir = join(ROOT, 'css');

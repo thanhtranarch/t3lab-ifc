@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import topLevelAwait from 'vite-plugin-top-level-await';
 
 export default defineConfig({
@@ -39,5 +39,10 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  test: {
+    // Feature modules attach helpers to `window` at import time; the setup file
+    // stubs a global `window` so pure-logic unit tests can import them in Node.
+    setupFiles: ['./vitest.setup.ts'],
   },
 });

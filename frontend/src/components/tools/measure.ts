@@ -547,3 +547,9 @@ window.focusIssue = function (idx: number): void {
 };
 
 export { buildIssues, handleMeasurePoint, applyCatVis, buildCatDropdown, updateCatTags, filterIssuesList };
+
+// ── Expose the category-dropdown helpers on window ──
+// color-schemes.ts and section-visibility.ts call these via window.X() after
+// visibility changes. This module owns the category dropdown UI, so its versions
+// are the canonical ones (compare.ts carries equivalent copies for its own use).
+Object.assign(window as any, { applyCatVis, buildCatDropdown, updateCatTags });

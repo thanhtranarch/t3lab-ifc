@@ -465,26 +465,12 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   .aic-fab{
     position:relative;z-index:2;
     width:56px;height:56px;border-radius:50%;
-    background:#0a0a0c;
+    background:transparent;
     border:none;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
     transition:transform .12s cubic-bezier(.22,.68,0,1.4);
   }
   .aic-fab:active{transform:scale(0.94)}
-  /* small color-cycling halo behind the icon, glowing through its transparent center */
-  @keyframes aic-halo-spin{to{--aic-halo-angle:360deg}}
-  @property --aic-halo-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
-  .aic-fab::before{
-    content:'';
-    position:absolute;z-index:1;
-    width:30px;height:30px;border-radius:50%;
-    background:conic-gradient(
-      from var(--aic-halo-angle,0deg),
-      #FF6B6B,#FF8E53,#FFD93D,#6BCB77,#4D96FF,#C77DFF,#FF6B9D,#FF6B6B
-    );
-    filter:blur(9px);
-    animation:aic-halo-spin 4s linear infinite;
-  }
   /* rainbow ring logo inside FAB — gentle continuous rotation, like a voice/breathing indicator */
   @keyframes aic-ring-rotate{to{transform:rotate(360deg)}}
   .aic-fab-icon{

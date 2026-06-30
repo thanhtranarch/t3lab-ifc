@@ -9437,17 +9437,21 @@ window.searchToggleAdvanced = function() {
 let fieldActive = false;
 let _fieldLongPressTimer = null;
 let _fieldToastTimer = null;
+function fieldResizeViewport() {
+  if (typeof window._vpResize === "function") {
+    window._vpResize();
+    return;
+  }
+  if (!renderer) return;
+  const vp = document.getElementById("vpCanvas");
+  renderer.setSize(vp.clientWidth, vp.clientHeight);
+  camera.aspect = vp.clientWidth / vp.clientHeight;
+  camera.updateProjectionMatrix();
+}
 window.fieldEnterMode = function() {
   fieldActive = true;
   document.body.classList.add("field-mode");
-  setTimeout(() => {
-    if (renderer) {
-      const vp = document.getElementById("vpCanvas");
-      renderer.setSize(vp.clientWidth, vp.clientHeight);
-      camera.aspect = vp.clientWidth / vp.clientHeight;
-      camera.updateProjectionMatrix();
-    }
-  }, 100);
+  fieldResizeViewport();
   fieldToast("Field Mode \u2014 tap elements to inspect");
   fieldSetupLongPress();
   log("Field mode activated");
@@ -9457,14 +9461,7 @@ window.fieldExitMode = function() {
   document.body.classList.remove("field-mode");
   fieldCloseSheet();
   document.getElementById("fieldStoreys").classList.remove("show");
-  setTimeout(() => {
-    if (renderer) {
-      const vp = document.getElementById("vpCanvas");
-      renderer.setSize(vp.clientWidth, vp.clientHeight);
-      camera.aspect = vp.clientWidth / vp.clientHeight;
-      camera.updateProjectionMatrix();
-    }
-  }, 100);
+  fieldResizeViewport();
   log("Field mode deactivated");
 };
 function fieldToast(msg, duration = 2500) {

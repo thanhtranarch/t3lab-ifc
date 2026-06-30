@@ -911,12 +911,14 @@
 
     </main>
 
-    <!-- === RIGHT PANEL (Properties) === -->
+    <!-- === RIGHT PANEL (Properties / SG Check) === -->
     <aside id="rightPanel" style="flex:none;width:320px;background:var(--bg-panel);border-left:1px solid var(--border);display:none;flex-direction:column;overflow:hidden">
-      <div style="flex:none;padding:16px 18px 12px;border-bottom:1px solid var(--border)">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Properties</div>
+      <div style="flex:none;display:flex;border-bottom:1px solid var(--border)">
+        <button class="ptab on" id="rpTabProps" onclick="rpSelect('props')" style="flex:1">Properties</button>
+        <button class="ptab" id="rpTabSG" onclick="rpSelect('sg')" style="flex:1"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> SG Check</button>
       </div>
       <div class="prop-area" id="propArea"><div style="padding:30px 14px;text-align:center;color:var(--text-muted);font-size:13px">Click element in 3D to inspect</div></div>
+      <div id="rpSGEmpty" style="display:none;flex:1;padding:30px 14px;text-align:center;color:var(--text-muted);font-size:13px">Click <b>▶ Validate</b> to run the IFC-SG checker</div>
     </aside>
 
   </div><!-- /body -->

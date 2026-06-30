@@ -222,7 +222,7 @@ $('verifyCheck').addEventListener('click', async () => {
   } catch (err) {
     showMsg('verifyMsg', friendlyAuthError(err));
   }
-};
+});
 
 window.signOutFromVerify = async function () {
   if (!auth) return;

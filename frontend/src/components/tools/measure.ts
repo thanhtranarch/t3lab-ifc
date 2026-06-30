@@ -527,7 +527,7 @@ function buildIssues(): void {
     });
   }
   (document.getElementById('issuesList') as HTMLElement).innerHTML = html;
-  document.getElementById('panelTabs')!.classList.add('show');
+  document.getElementById('panelTabs')?.classList.add('show');
 
   // Always switch to issues tab after compare
   window.switchTab!('issues');

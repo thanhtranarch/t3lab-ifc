@@ -25,6 +25,8 @@ let _gdCurrentFolder: { id: string; name: string } | null = null;
 let _gdFolderStack: { id: string; name: string }[] = [];
 let _odExpanded: boolean = false;
 let _gdTokenClient: any = null;
+let _pendingLoad: { fileId: string; slot: number } | null = null;
+let _pendingLoadViewer = false;
 
 window.odToggle = function (): void {
   _odExpanded = !_odExpanded;
@@ -40,6 +42,8 @@ function odUpdateBadge(state: 'on' | 'offline'): void {
 window.gdLogin = function (): void {
   if (GD_CONFIG.CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
     alert('Google Drive not configured.\n\n1. Go to console.cloud.google.com\n2. Create project → Enable Google Drive API\n3. Credentials → Create OAuth 2.0 Client ID\n4. Authorized JS origins: https://gjnz106.github.io\n5. Open this HTML → search GD_CONFIG\n6. Replace YOUR_GOOGLE_CLIENT_ID_HERE');
+    _pendingLoad = null;
+    _pendingLoadViewer = false;
     return;
   }
   if (!_gdTokenClient) {
@@ -47,11 +51,30 @@ window.gdLogin = function (): void {
       client_id: GD_CONFIG.CLIENT_ID,
       scope: GD_CONFIG.SCOPES,
       callback: (resp: any) => {
-        if (resp.error) { log('GDrive auth error:', resp.error); return; }
+        if (resp.error) { log('GDrive auth error:', resp.error); _pendingLoad = null; _pendingLoadViewer = false; return; }
         _gdToken = resp.access_token;
         odUpdateBadge('on');
         gdGetUserInfo();
-        gdBrowseRoot();
+        if (_pendingLoadViewer) {
+          _pendingLoadViewer = false;
+          (window as any).loadProjectDriveModelsViewer();
+        } else if (_pendingLoad) {
+          const { fileId, slot } = _pendingLoad;
+          _pendingLoad = null;
+          if (slot === -99) {
+            _gdFolderStack = [{ id: fileId, name: 'Project Folder' }];
+            _gdCurrentFolder = { id: fileId, name: 'Project Folder' };
+            gdBrowseFolder(fileId);
+            const odBody = document.getElementById('odBody');
+            if (odBody && !odBody.classList.contains('show')) {
+              window.odToggle();
+            }
+          } else {
+            (window as any).gdLoadFile(fileId, 'Model from Drive', slot);
+          }
+        } else {
+          gdBrowseRoot();
+        }
       }
     });
   }
@@ -144,7 +167,7 @@ window.gdNavigateTo = function (idx: number): void {
   gdBrowseFolder(_gdCurrentFolder.id);
 };
 
-window.gdLoadFile = async function (fileId: string, fileName: string): Promise<void> {
+window.gdLoadFile = async function (fileId: string, fileName: string, forcedSlot?: number): Promise<void> {
   const content = document.getElementById('odContent')!;
   const origHtml = content.innerHTML;
   content.innerHTML = '<div class="od-loading">⏳ Downloading ' + escapeHtml(fileName) + '…</div>';
@@ -155,9 +178,13 @@ window.gdLoadFile = async function (fileId: string, fileName: string): Promise<v
     content.innerHTML = '<div class="od-loading">⏳ Loading into viewer…</div>';
     const file = new File([blob], fileName, { type: 'application/octet-stream' });
     let targetSlot = -1;
-    if (!appState.loadedModels[0]) targetSlot = 0;
-    else if (!appState.loadedModels[1]) targetSlot = 1;
-    else { targetSlot = appState.fedNextSlot; appState.fedNextSlot++; }
+    if (forcedSlot !== undefined && forcedSlot >= 0) {
+      targetSlot = forcedSlot;
+    } else {
+      if (!appState.loadedModels[0]) targetSlot = 0;
+      else if (!appState.loadedModels[1]) targetSlot = 1;
+      else { targetSlot = appState.fedNextSlot; appState.fedNextSlot++; }
+    }
     appState.files[targetSlot] = file;
     if (targetSlot < 2) {
       const uc = document.getElementById('uc' + targetSlot);
@@ -181,11 +208,150 @@ window.gdLoadFile = async function (fileId: string, fileName: string): Promise<v
   }
 };
 
+function extractDriveId(url: string): { type: 'file' | 'folder'; id: string } | null {
+  const folderMatch = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  if (folderMatch) return { type: 'folder', id: folderMatch[1] };
+  const fileDMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch) return { type: 'file', id: fileDMatch[1] };
+  const fileIdMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (fileIdMatch) return { type: 'file', id: fileIdMatch[1] };
+  return null;
+}
+
+(window as any).updateDriveActionButtons = function (): void {
+  const input = document.getElementById('projectDriveLink') as HTMLInputElement | null;
+  const actions = document.getElementById('driveStreamActions');
+  const btnA = document.getElementById('btnStreamA');
+  const btnB = document.getElementById('btnStreamB');
+  const btnBrowse = document.getElementById('btnBrowseFolder');
+  
+  if (!input || !actions) return;
+  const url = input.value.trim();
+  if (!url) {
+    actions.style.display = 'none';
+    return;
+  }
+  
+  const parsed = extractDriveId(url);
+  if (parsed) {
+    actions.style.display = 'block';
+    if (parsed.type === 'file') {
+      if (btnA) btnA.style.display = 'inline-block';
+      if (btnB) btnB.style.display = 'inline-block';
+      if (btnBrowse) btnBrowse.style.display = 'none';
+    } else {
+      if (btnA) btnA.style.display = 'none';
+      if (btnB) btnB.style.display = 'none';
+      if (btnBrowse) btnBrowse.style.display = 'inline-block';
+    }
+  } else {
+    actions.style.display = 'none';
+  }
+};
+
+(window as any).streamProjectDrive = function (slot: number): void {
+  const input = document.getElementById('projectDriveLink') as HTMLInputElement | null;
+  if (!input) return;
+  const url = input.value.trim();
+  const parsed = extractDriveId(url);
+  if (!parsed || parsed.type !== 'file') {
+    alert('Please enter a valid Google Drive file link.');
+    return;
+  }
+  
+  if ((window as any).toggleSettingsPanel) (window as any).toggleSettingsPanel();
+  
+  if (_gdToken) {
+    (window as any).gdLoadFile(parsed.id, 'Model from Drive', slot);
+  } else {
+    _pendingLoad = { fileId: parsed.id, slot };
+    (window as any).gdLogin();
+  }
+};
+
+(window as any).browseProjectDriveFolder = function (): void {
+  const input = document.getElementById('projectDriveLink') as HTMLInputElement | null;
+  if (!input) return;
+  const url = input.value.trim();
+  const parsed = extractDriveId(url);
+  if (!parsed || parsed.type !== 'folder') {
+    alert('Please enter a valid Google Drive folder link.');
+    return;
+  }
+  
+  if ((window as any).toggleSettingsPanel) (window as any).toggleSettingsPanel();
+  
+  if (_gdToken) {
+    _gdFolderStack = [{ id: parsed.id, name: 'Project Folder' }];
+    _gdCurrentFolder = { id: parsed.id, name: 'Project Folder' };
+    gdBrowseFolder(parsed.id);
+    const odBody = document.getElementById('odBody');
+    if (odBody && !odBody.classList.contains('show')) {
+      window.odToggle();
+    }
+  } else {
+    _pendingLoad = { fileId: parsed.id, slot: -99 };
+    window.gdLogin();
+  }
+};
+
 window.gdLogout = function (): void {
   if (_gdToken) try { (window as any).google.accounts.oauth2.revoke(_gdToken); } catch (e) {}
   _gdToken = null; _gdUser = null;
   odUpdateBadge('offline');
   document.getElementById('odContent')!.innerHTML = '<button class="od-login-btn" onclick="gdLogin()" style="border-color:#4285f4;color:#4285f4;background:rgba(66,133,244,.06)"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</button><div class="od-status">Connect Google Drive to browse IFC files</div>';
+};
+
+(window as any).loadProjectDriveModelsViewer = async function (): Promise<void> {
+  const link = localStorage.getItem('projectDriveLink');
+  if (!link) return;
+  const parsed = extractDriveId(link);
+  if (!parsed) return;
+
+  if (!_gdToken) {
+    _pendingLoadViewer = true;
+    (window as any).gdLogin();
+    return;
+  }
+
+  const card = document.getElementById('projectDriveViewerCard');
+  const btn = card?.querySelector('button');
+  const origBtnText = btn ? btn.textContent : 'Load Perspective Models';
+  const showLoading = (msg: string) => {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ ' + msg;
+    }
+  };
+
+  try {
+    if (parsed.type === 'file') {
+      showLoading('Downloading project model...');
+      await (window as any).gdLoadFile(parsed.id, 'Project Model', 0);
+    } else {
+      showLoading('Listing folder...');
+      const q = `'${parsed.id}' in parents and name contains '.ifc' and trashed=false`;
+      const r = await gdFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name,size)&pageSize=50');
+      if (!r || !r.ok) throw new Error('Failed to list folder contents');
+      const data = await r.json();
+      const filesList: any[] = data.files || [];
+      if (filesList.length === 0) {
+        alert('No IFC models found in the project folder.');
+        if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+        return;
+      }
+
+      for (let i = 0; i < filesList.length; i++) {
+        const f = filesList[i];
+        showLoading(`Loading ${i + 1}/${filesList.length}: ${f.name}`);
+        await (window as any).gdLoadFile(f.id, f.name, i);
+      }
+    }
+    if (card) card.style.display = 'none';
+  } catch (err: any) {
+    alert('Failed to load project models: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+  }
 };
 
 function escapeHtml(s: any): string {

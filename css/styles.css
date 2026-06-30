@@ -53,10 +53,10 @@ body.resizing,body.resizing *{user-select:none !important;cursor:col-resize !imp
 body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-resize !important}
 
 /* Header / Topbar */
-.topbar{flex-shrink:0;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;z-index:50;overflow-x:auto;scrollbar-width:none;height:48px}
+.topbar{flex-shrink:0;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:50;overflow-x:auto;scrollbar-width:none;height:48px}
 .topbar::-webkit-scrollbar{display:none}
 
-/* ── Topbar brand logo ── */
+/* ── Topbar brand logo (IDD Lumina pattern) ── */
 .tb-brand {
   display: flex;
   align-items: center;
@@ -64,12 +64,19 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   flex-shrink: 0;
   text-decoration: none;
 }
+.tb-brand-mark {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: var(--text-dim);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
 .tb-brand-name {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: #2C2421;
   white-space: nowrap;
   line-height: 1;
 }
@@ -81,7 +88,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   height: 20px;
   background: var(--border);
   flex-shrink: 0;
-  margin: 0 2px;
+  margin: 0 4px;
 }
 .tb-title {
   min-width: 0;
@@ -89,31 +96,39 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
 }
 .tb-title .t {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1;
-  color: var(--text-dim);
+  color: #2C2421;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tb-title .s {
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .btn{height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);font-family:'Hanken Grotesk';font-size:14px;font-weight:500;cursor:pointer;transition:all var(--t);display:flex;align-items:center;gap:4px;white-space:nowrap}
 .btn:hover{background:var(--bg-hover);border-color:var(--border-hi)}
-.btn.primary,.btn.btn-primary{background:var(--text);border-color:var(--text);color:#fff;box-shadow:0 2px 8px -2px rgba(44,36,32,.35)}
+.btn.primary,.btn.btn-primary{background:#18181B;border-color:#18181B;color:#fff;box-shadow:0 2px 8px -2px rgba(44,36,32,.35)}
 .btn.primary:hover,.btn.btn-primary:hover{background:#000;border-color:#000}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .btn.active{background:var(--blue-lt);border-color:var(--border);color:var(--text)}
 .h-right{margin-left:auto;display:flex;gap:4px;align-items:center}
-.status-badge{font-family:'JetBrains Mono';font-size:12px;font-weight:600;padding:3px 7px;border-radius:4px;display:none;align-items:center;gap:3px}
+.status-badge{font-family:'JetBrains Mono';font-size:12px;font-weight:600;padding:3px 7px;border-radius:6px;display:none;align-items:center;gap:3px}
 .status-badge.show{display:flex}
 .status-badge.loading{background:var(--blue-lt);color:var(--blue)}
 .status-badge.error{background:var(--red-lt);color:var(--red)}
 .status-badge.done{background:var(--green-lt);color:var(--green)}
 
-/* ── Topbar right group (IDD) ── */
+/* ── Topbar right group ── */
 .tb-right {
   display: flex;
   align-items: center;
@@ -124,14 +139,14 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   width: 1px;
   height: 20px;
   background: var(--border);
-  margin: 0 4px;
+  margin: 0 6px;
   flex-shrink: 0;
 }
-/* IDD-style icon button */
+/* Icon button — IDD Lumina style */
 .tb-icon-btn {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 9px;
   border: none;
   background: transparent;
   color: var(--text-dim);
@@ -139,38 +154,58 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   place-items: center;
   cursor: pointer;
   position: relative;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
 .tb-icon-btn:hover {
   background: var(--bg-card);
-  color: var(--text);
+  color: #2C2421;
+  box-shadow: 0 1px 3px rgba(44,36,32,.08);
 }
 .tb-icon-btn.hdr-panel-btn-active {
   color: var(--blue);
+  background: var(--blue-bg);
 }
 
-/* ── Account avatar + menu (IDD) ── */
-.tb-account { position: relative; flex-shrink: 0; margin-left: 2px; }
+/* Notification badge on bell icon */
+.tb-badge {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 14px; height: 14px; border-radius: 999px;
+  background: var(--accent); color: #fff;
+  font-size: 8.5px; font-weight: 700; font-family: 'JetBrains Mono';
+  display: grid; place-items: center; padding: 0 3px;
+  border: 1.5px solid var(--bg-panel);
+  pointer-events: none;
+}
+
+/* ── Account avatar + menu (IDD Lumina) ── */
+.tb-account { position: relative; flex-shrink: 0; margin-left: 4px; }
 .tb-account-trigger {
   border: none; background: transparent; cursor: pointer; padding: 2px;
   border-radius: 50%; display: grid; place-items: center;
   transition: box-shadow 140ms ease;
 }
 .tb-account-trigger:hover, .tb-account-trigger.open {
-  box-shadow: 0 0 0 2px var(--border);
+  box-shadow: 0 0 0 2.5px var(--border-hi);
 }
 .tb-account-av {
   position: relative;
   width: 28px; height: 28px; border-radius: 50%;
-  background: var(--text); color: #fff;
+  background: #2C2421; color: #fff;
   display: grid; place-items: center; font-size: 11px; font-weight: 800;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+/* Online indicator dot */
+.tb-account-dot {
+  position: absolute; bottom: -1px; right: -1px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); border: 1.5px solid var(--bg-panel);
 }
 .account-menu {
   position: absolute; top: calc(100% + 8px); right: 0;
   width: 240px; z-index: 1100;
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  box-shadow: var(--sh-lg);
+  box-shadow: 0 8px 32px -4px rgba(44,36,32,.16), 0 2px 8px -2px rgba(44,36,32,.10);
   border-radius: 14px; overflow: hidden; padding: 6px;
   animation: acMenuFadeIn 0.15s ease both;
 }
@@ -179,16 +214,18 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   to   { opacity: 1; transform: translateY(0); }
 }
 .account-menu-head {
-  display: flex; align-items: center; gap: 10px; padding: 10px 10px 8px;
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px;
 }
 .account-menu-av {
   position: relative;
   width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-  background: var(--text); color: #fff;
+  background: #2C2421; color: #fff;
   display: grid; place-items: center; font-size: 13px; font-weight: 800;
+  border: 1px solid rgba(0,0,0,0.12);
 }
-.account-menu-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.account-menu-status { font-size: 11px; color: var(--text-muted); }
+.account-menu-name { font-size: 13px; font-weight: 700; color: #2C2421; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-menu-status { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.account-menu-status::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 .account-menu-sep { height: 1px; background: var(--border); margin: 4px 6px; }
 .account-menu-links { display: flex; flex-direction: column; }
 .account-link {
@@ -196,11 +233,14 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
   padding: 9px 10px; border-radius: 9px; border: none;
   background: transparent; font-size: 13px; font-weight: 500;
   font-family: 'Hanken Grotesk', sans-serif;
-  color: var(--text); text-align: left; cursor: pointer;
-  transition: background 140ms ease;
+  color: var(--text-dim); text-align: left; cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
 }
-.account-link svg { color: var(--text-dim); flex-shrink: 0; }
-.account-link:hover { background: var(--bg-hover); }
+.account-link svg { color: var(--text-muted); flex-shrink: 0; transition: color 140ms ease; }
+.account-link:hover { background: var(--bg-card); color: #2C2421; }
+.account-link:hover svg { color: var(--text-dim); }
+.account-link.logout-btn:hover { background: var(--red-bg,#fdeaea); color: var(--red,#dc2626); }
+.account-link.logout-btn:hover svg { color: var(--red,#dc2626); }
 
 /* ── Settings panel overlay (stub) ── */
 .settings-panel {
@@ -639,7 +679,7 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 .ctx-header{padding:6px 14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);font-family:'JetBrains Mono'}
 
 /* Transparency panel */
-.tp-panel{position:absolute;bottom:12px;right:12px;display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;z-index:10;opacity:.85;transition:opacity var(--t)}
+.tp-panel{position:absolute;top:50px;left:12px;display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;z-index:10;opacity:.85;transition:opacity var(--t)}
 .tp-panel:hover{opacity:1}
 
 /* Measure info bar */
@@ -881,24 +921,22 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
    Activated via 📱 Field button or auto on touch + screen ≤ 1200px
    ══════════════════════════════════════════════════════════════════ */
 
-/* Field mode toggle button in header (always visible, before Compare) */
-.field-toggle{padding:6px 12px;border-radius:6px;border:1.5px solid var(--green);background:none;cursor:pointer;font-size:13px;font-family:'Hanken Grotesk';color:var(--green);transition:all var(--t);flex-shrink:0;white-space:nowrap}
+/* Field mode toggle button in header — dedicated, always-visible entry point */
+.field-toggle{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1.5px solid var(--green);background:none;cursor:pointer;font-size:13px;font-family:'Hanken Grotesk';font-weight:600;color:var(--green);transition:all var(--t);flex-shrink:0;white-space:nowrap}
 .field-toggle:hover{background:var(--green);color:#fff}
 body.field-mode .field-toggle{background:var(--green);color:#fff;border-color:var(--green)}
-/* On touch devices, make Field button bigger */
-@media(pointer:coarse){.field-toggle{padding:8px 14px;font-size:14px;font-weight:600}}
+/* On touch devices, make Field button bigger (easier to hit with a finger) */
+@media(pointer:coarse){.field-toggle{padding:8px 14px;font-size:14px}}
+/* On narrow phones, collapse to icon-only to keep the header from overflowing */
+@media(max-width:480px){.field-toggle{padding:7px;gap:0}.field-toggle-label{display:none}}
 
 /* ── Field mode overrides ── */
-body.field-mode .app{
-  grid-template-columns:0 0 1fr 0 0 !important;
-  grid-template-rows:0 1fr !important; /* hide header row */
-}
-body.field-mode .header{display:none !important}
-body.field-mode .left-panel{display:none !important}
-body.field-mode .right-panel{display:none !important}
-body.field-mode .col-resize{display:none !important}
+body.field-mode .topbar{display:none !important}
+body.field-mode .sidebar{display:none !important}
+body.field-mode .body-row{padding-left:0 !important}
+body.field-mode #leftPanel{display:none !important}
+body.field-mode #rightPanel{display:none !important}
 body.field-mode .sg-panel{display:none !important}
-body.field-mode .viewport-area{grid-column:1/-1 !important;grid-row:1/-1 !important}
 body.field-mode .empty-vp .ev-title{font-size:18px}
 body.field-mode .empty-vp .ev-hint{font-size:13px}
 
@@ -1402,6 +1440,21 @@ body.field-mode .walk-touch.show{display:flex;justify-content:space-between;alig
   flex-shrink: 0;
 }
 .nav-spacer{flex:1}
+
+/* ── Responsive: #leftPanel / #rightPanel as overlay drawers ────────
+   Below 760px, #leftPanel (312px) + the 60px rail leave almost no room
+   for the 3D viewport (<main>, flex:1). Taking the panels out of the
+   .body-row flex flow lets <main> reclaim the full width; the existing
+   toggleLeftPanel()/toggleRightPanel() handlers (ui-shell.ts) keep
+   working unchanged since they only ever touch `display`. */
+@media(max-width:760px){
+  #leftPanel,#rightPanel{
+    position:fixed;top:48px;bottom:0;z-index:150;
+    box-shadow:0 8px 30px -8px rgba(44,36,32,.35);
+  }
+  #leftPanel{left:60px;width:calc(100vw - 60px);max-width:340px}
+  #rightPanel{right:0;width:min(340px,calc(100vw - 60px))}
+}
 
 /* ── Upload card ─────────────────────────────────────────────────── */
 .uc-card{

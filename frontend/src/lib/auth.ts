@@ -128,13 +128,20 @@ if (auth) {
 
     if (!user) {
       clearAuth();
+      (window as any).isAdmin = false;
       overlay.classList.remove('hidden');
       showView('login');
       $('userBadge').style.display = 'none';
-      $('userMenu').classList.remove('show');
+      const menu = document.getElementById('userMenu');
+      if (menu) menu.classList.remove('show');
+      const acMenu = document.querySelector('.account-menu') as HTMLElement;
+      if (acMenu) acMenu.style.display = 'none';
+      const profileOverlay = document.getElementById('profileOverlay');
+      if (profileOverlay) profileOverlay.style.display = 'none';
       return;
     }
     setAuth(user);
+    (window as any).isAdmin = !!(user.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
 
     if (!user.emailVerified) {
       overlay.classList.remove('hidden');
@@ -162,11 +169,33 @@ function showLoggedInUser(user: User) {
   const email = user.email || '';
   const local = email.split('@')[0] || 'user';
   const initials = (local.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2) || 'U').toUpperCase();
-  $('userName').textContent = local;
   $('userAvatar').textContent = initials;
   $('userBadge').style.display = '';
-  $('userMenuName').textContent = local;
-  $('userMenuEmail').textContent = email;
+  const oldName = document.getElementById('userMenuName');
+  if (oldName) oldName.textContent = local;
+  const oldEmail = document.getElementById('userMenuEmail');
+  if (oldEmail) oldEmail.textContent = email;
+  // Also populate the topbar account-menu avatar if it exists (new UI design)
+  const acMenuAv = document.getElementById('acMenuAv');
+  if (acMenuAv) acMenuAv.textContent = initials;
+  const acName = document.querySelector('.account-menu-name');
+  if (acName) acName.textContent = local;
+  const acStatus = document.querySelector('.account-menu-status');
+  if (acStatus) acStatus.textContent = email;
+  // My Profile dialog
+  const profileAv = document.getElementById('profileAv');
+  if (profileAv) profileAv.textContent = initials;
+  const profileName = document.getElementById('profileName');
+  if (profileName) profileName.textContent = user.displayName || local;
+  const profileEmail = document.getElementById('profileEmail');
+  if (profileEmail) profileEmail.textContent = email;
+  const profileVerified = document.getElementById('profileVerified');
+  if (profileVerified) {
+    profileVerified.textContent = user.emailVerified ? 'Verified' : 'Not verified';
+    profileVerified.style.color = user.emailVerified ? 'var(--green, #009668)' : '#b75a00';
+  }
+  const profileRole = document.getElementById('profileRole');
+  if (profileRole) profileRole.textContent = (window as any).isAdmin ? 'Admin' : 'Member';
 }
 
 // ── LOGIN form ──────────────────────────────────────────────────────────
@@ -202,11 +231,11 @@ $('verifyResend').addEventListener('click', async () => {
   }
 });
 
-window.checkVerifiedNow = async function () {
+$('verifyCheck').addEventListener('click', async () => {
   if (!auth?.currentUser) return;
-  clearMsg('verifyMsg');
+  setLoading('verifyCheck', true);
   try {
-    await reloadUser(auth.currentUser);
+    await auth.currentUser.reload();
     if (auth.currentUser.emailVerified) {
       overlay.classList.add('hidden');
       showLoggedInUser(auth.currentUser);
@@ -216,13 +245,33 @@ window.checkVerifiedNow = async function () {
   } catch (err) {
     showMsg('verifyMsg', friendlyAuthError(err));
   }
-};
+});
 
 window.signOutFromVerify = async function () {
   if (!auth) return;
   try { await signOut(auth); } catch (e) { }
   sessionStorage.clear();
 };
+
+// Used by the AI chat proxy call (src/app/22-ai.ts and
+// frontend/.../integrations/ai.ts) to authenticate POST /api/ai/chat.
+// Firebase SDK caches the token and silently refreshes it ~5 min before
+// expiry, so this is cheap to call before every request.
+(window as any).getAuthToken = async function (): Promise<string | null> {
+  if (!auth?.currentUser) return null;
+  try { return await auth.currentUser.getIdToken(); } catch { return null; }
+};
+
+// ── Minimal role gate ────────────────────────────────────────────────────
+// No backend persistence/Firestore in this app today, so there is no shared
+// resource for a full RBAC system to protect — every viewer/export/delete
+// action only touches the user's own loaded model, locally. The one real
+// shared/billable resource is the AI proxy's provider+model choice, so that
+// is the only thing gated here. `window.isAdmin` is read by the AI chat
+// settings UI (src/app/22-ai.ts and frontend/.../integrations/ai.ts) to hide
+// the provider/model picker from non-admins.
+const ADMIN_EMAILS = new Set(['trantienthanh909@gmail.com']);
+(window as any).isAdmin = false;
 
 // ── PASSWORD-RESET view ─────────────────────────────────────────────────
 (window as any).showResetView = function () {
@@ -264,24 +313,22 @@ window.signOutFromVerify = async function () {
 // ── User menu (dropdown from header badge) ──────────────────────────────
 window.toggleUserMenu = function (ev?: Event) {
   ev?.stopPropagation();
-  const menu = $('userMenu');
-  if (menu.classList.contains('show')) { menu.classList.remove('show'); return; }
-  const badge = $('userBadge').getBoundingClientRect();
-  menu.style.top = (badge.bottom + 4) + 'px';
-  menu.style.right = (window.innerWidth - badge.right) + 'px';
-  menu.style.left = '';
-  menu.classList.add('show');
+  const menu = document.querySelector('.account-menu') as HTMLElement;
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
 };
 document.addEventListener('click', e => {
-  const menu = $('userMenu');
-  if (!menu.classList.contains('show')) return;
-  if ((e.target as Element).closest('#userMenu') || (e.target as Element).closest('#userBadge')) return;
-  menu.classList.remove('show');
+  const menu = document.querySelector('.account-menu') as HTMLElement;
+  if (!menu || menu.style.display === 'none') return;
+  if ((e.target as Element).closest('.account-menu') || (e.target as Element).closest('#userBadge')) return;
+  menu.style.display = 'none';
 });
 
 // ── LOGOUT confirm flow ─────────────────────────────────────────────────
 (window as any).confirmLogout = function () {
-  $('userMenu').classList.remove('show');
+  const menu = document.querySelector('.account-menu') as HTMLElement;
+  if (menu) menu.style.display = 'none';
   $('confirmBackdrop').classList.add('show');
 };
 (window as any).cancelLogout = function () {

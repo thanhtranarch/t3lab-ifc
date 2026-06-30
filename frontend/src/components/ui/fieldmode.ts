@@ -31,18 +31,29 @@ let fieldActive = false;
 let _fieldLongPressTimer: ReturnType<typeof setTimeout> | null = null;
 let _fieldToastTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Resize the 3D viewport to whatever size #vpCanvas currently is. The
+// field-mode CSS toggles grid-template-columns/rows with no transition, so
+// the new layout is already committed by the time this runs — reading
+// clientWidth/Height here forces the (already-pending) reflow instead of
+// guessing a timeout long enough to outlast it. Prefer the shared
+// window._vpResize() (same calc used by the window 'resize' listener and
+// the column-drag handles in viewer-core.ts) so this can't drift from it.
+function fieldResizeViewport(){
+  if(typeof window._vpResize === 'function'){
+    window._vpResize();
+    return;
+  }
+  if(!appState.renderer) return;
+  const vp = document.getElementById('vpCanvas')!;
+  appState.renderer.setSize(vp.clientWidth, vp.clientHeight);
+  appState.camera!.aspect = vp.clientWidth / vp.clientHeight;
+  appState.camera!.updateProjectionMatrix();
+}
+
 window.fieldEnterMode = function(){
   fieldActive = true;
   document.body.classList.add('field-mode');
-  // Resize renderer to fill viewport
-  setTimeout(()=>{
-    if(appState.renderer){
-      const vp = document.getElementById('vpCanvas')!;
-      appState.renderer.setSize(vp.clientWidth, vp.clientHeight);
-      appState.camera!.aspect = vp.clientWidth / vp.clientHeight;
-      appState.camera!.updateProjectionMatrix();
-    }
-  }, 100);
+  fieldResizeViewport();
   fieldToast('Field Mode — tap elements to inspect');
   // Setup long-press for context menu on touch devices
   fieldSetupLongPress();
@@ -54,15 +65,7 @@ window.fieldExitMode = function(){
   document.body.classList.remove('field-mode');
   (window as any).fieldCloseSheet();
   document.getElementById('fieldStoreys')!.classList.remove('show');
-  // Resize renderer back
-  setTimeout(()=>{
-    if(appState.renderer){
-      const vp = document.getElementById('vpCanvas')!;
-      appState.renderer.setSize(vp.clientWidth, vp.clientHeight);
-      appState.camera!.aspect = vp.clientWidth / vp.clientHeight;
-      appState.camera!.updateProjectionMatrix();
-    }
-  }, 100);
+  fieldResizeViewport();
   log('Field mode deactivated');
 };
 

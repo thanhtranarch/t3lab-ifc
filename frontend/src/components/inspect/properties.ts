@@ -86,6 +86,10 @@ window.rpSelect = function(tab: 'props' | 'sg'){
 };
 
 async function showProps(props: any, modelIdx: number): Promise<void> {
+  // Reveal the right panel if it's collapsed so the properties table is visible
+  // when an element is picked (it defaults to display:none).
+  const rp = document.getElementById('rightPanel');
+  if (rp && getComputedStyle(rp).display === 'none') rp.style.display = 'flex';
   (window as any).rpSelect?.('props');
   const mid=(appState.loadedModels[modelIdx] as any)?.modelID;
   const eid=props.expressID;

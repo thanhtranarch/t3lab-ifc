@@ -561,7 +561,9 @@ async function buildCatFromModels(){
   log('Categories found:',Object.keys(window._catData).length,'types');
   document.getElementById('catFilter')!.classList.add('show');
   // Show panel tabs so Search is accessible even without compare
-  document.getElementById('panelTabs')!.classList.add('show');
+  // (#panelTabs is vestigial — the redesigned tab strip is always visible — so
+  // guard against null instead of crashing the load/compare flow.)
+  document.getElementById('panelTabs')?.classList.add('show');
   appState.activeCategories=new Set();
   (window as any).buildCatDropdown?.();
   (window as any).updateCatTags?.();
@@ -679,7 +681,7 @@ window.exitCompare=function(){
   (document.getElementById('eTree') as HTMLElement).style.display='';
 
   // Hide issues
-  document.getElementById('panelTabs')!.classList.remove('show');
+  document.getElementById('panelTabs')?.classList.remove('show');
   document.getElementById('issuesList')!.classList.remove('show');
   document.getElementById('issuesList')!.innerHTML='';
   document.getElementById('issueNav')!.classList.remove('show');

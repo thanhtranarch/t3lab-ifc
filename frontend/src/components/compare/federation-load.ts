@@ -457,3 +457,8 @@ export function computeGeometryHashes(modelIdx: number): Record<number, any> {
 
   return hashes;
 }
+
+// ── Expose cross-module callers on window ──
+// window.getAllProps (AI index), window.findModelIdx (pick), window.fedRenderSlots
+// (federation UI) are called from other modules.
+Object.assign(window as any, { fedRenderSlots, findModelIdx, getAllProps });

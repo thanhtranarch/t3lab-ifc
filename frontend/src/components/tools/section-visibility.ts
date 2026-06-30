@@ -1016,3 +1016,12 @@ window.handleFile=async function(idx: number){
     document.getElementById('fn'+idx)!.textContent=f.name;document.getElementById('fs'+idx)!.textContent=(f.size/1048576).toFixed(2)+' MB';
     (async()=>{if(!appState.ifcLoader){if(!await initIFC())return}await loadIFC(idx)})()}});
 });
+
+// ── Expose cross-module callers on window ──
+// Invoked as window.X() from other modules (viewer-core pick handler, file-input
+// /drive loaders, focus tools). In the deployed standalone these share one scope;
+// the Vite port must attach them so the runtime calls resolve.
+Object.assign(window as any, {
+  clearHighlight, createSectionBox3D, initIFC, loadIFC,
+  sectionPlanParallelToFace, updateSectionHandleSizes, zoomToElement,
+});

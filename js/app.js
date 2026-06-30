@@ -427,7 +427,6 @@ function initThree() {
         break;
       }
       if (!validHit) validHit = hit2;
-      break;
     }
     if (!validHit) {
       restoreViewSnap();

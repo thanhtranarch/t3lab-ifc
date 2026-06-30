@@ -32,6 +32,19 @@ function applyPage(page: Page, isInit = false) {
   activePage = page;
   syncNav(page);
 
+  // Toggle GDrive panel visibility based on page mode (only in compare)
+  const odPanel = document.getElementById('odPanel');
+  const odPanelSep = document.getElementById('odPanelSep');
+  if (odPanel) odPanel.style.display = page === 'compare' ? 'block' : 'none';
+  if (odPanelSep) odPanelSep.style.display = page === 'compare' ? 'block' : 'none';
+
+  // Toggle project drive viewer loader card (only in viewer if link exists)
+  const viewerCard = document.getElementById('projectDriveViewerCard');
+  if (viewerCard) {
+    const hasLink = !!localStorage.getItem('projectDriveLink');
+    viewerCard.style.display = (page === 'viewer' && hasLink) ? 'block' : 'none';
+  }
+
   // Exit modes that conflict with target page
   // sgState is declared globally in 16-validator-rules.ts
   const exitClash = () => { if (typeof clashMode !== 'undefined' && clashMode) (window as any).exitClashMode?.(); };
@@ -105,7 +118,7 @@ if (document.readyState === 'loading') {
 // ── Account menu toggle (IDD-style) ──────────────────────────────────
 (window as any).toggleUserMenu = function(e: MouseEvent) {
   e.stopPropagation();
-  const menu = document.getElementById('userMenu');
+  const menu = document.querySelector('.account-menu') as HTMLElement;
   const trigger = document.getElementById('userBadge');
   if (!menu) return;
   const open = menu.style.display !== 'none';

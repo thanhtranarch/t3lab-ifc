@@ -34,6 +34,19 @@ function applyPage(page: Page, isInit = false) {
   activePage = page;
   syncNav(page);
 
+  // Toggle GDrive panel visibility based on page mode (only in compare)
+  const odPanel = document.getElementById('odPanel');
+  const odPanelSep = document.getElementById('odPanelSep');
+  if (odPanel) odPanel.style.display = page === 'compare' ? 'block' : 'none';
+  if (odPanelSep) odPanelSep.style.display = page === 'compare' ? 'block' : 'none';
+
+  // Toggle project drive viewer loader card (only in viewer if link exists)
+  const viewerCard = document.getElementById('projectDriveViewerCard');
+  if (viewerCard) {
+    const hasLink = !!localStorage.getItem('projectDriveLink');
+    viewerCard.style.display = (page === 'viewer' && hasLink) ? 'block' : 'none';
+  }
+
   // Exit modes that conflict with target page
   const sg = appState.sgState as any;
   const exitClash = () => { if (appState.clashMode) (window as any).exitClashMode?.(); };

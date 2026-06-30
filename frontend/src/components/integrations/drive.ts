@@ -26,6 +26,7 @@ let _gdFolderStack: { id: string; name: string }[] = [];
 let _odExpanded: boolean = false;
 let _gdTokenClient: any = null;
 let _pendingLoad: { fileId: string; slot: number } | null = null;
+let _pendingLoadViewer = false;
 
 window.odToggle = function (): void {
   _odExpanded = !_odExpanded;
@@ -42,6 +43,7 @@ window.gdLogin = function (): void {
   if (GD_CONFIG.CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
     alert('Google Drive not configured.\n\n1. Go to console.cloud.google.com\n2. Create project → Enable Google Drive API\n3. Credentials → Create OAuth 2.0 Client ID\n4. Authorized JS origins: https://gjnz106.github.io\n5. Open this HTML → search GD_CONFIG\n6. Replace YOUR_GOOGLE_CLIENT_ID_HERE');
     _pendingLoad = null;
+    _pendingLoadViewer = false;
     return;
   }
   if (!_gdTokenClient) {
@@ -49,11 +51,14 @@ window.gdLogin = function (): void {
       client_id: GD_CONFIG.CLIENT_ID,
       scope: GD_CONFIG.SCOPES,
       callback: (resp: any) => {
-        if (resp.error) { log('GDrive auth error:', resp.error); _pendingLoad = null; return; }
+        if (resp.error) { log('GDrive auth error:', resp.error); _pendingLoad = null; _pendingLoadViewer = false; return; }
         _gdToken = resp.access_token;
         odUpdateBadge('on');
         gdGetUserInfo();
-        if (_pendingLoad) {
+        if (_pendingLoadViewer) {
+          _pendingLoadViewer = false;
+          (window as any).loadProjectDriveModelsViewer();
+        } else if (_pendingLoad) {
           const { fileId, slot } = _pendingLoad;
           _pendingLoad = null;
           if (slot === -99) {
@@ -295,6 +300,58 @@ window.gdLogout = function (): void {
   _gdToken = null; _gdUser = null;
   odUpdateBadge('offline');
   document.getElementById('odContent')!.innerHTML = '<button class="od-login-btn" onclick="gdLogin()" style="border-color:#4285f4;color:#4285f4;background:rgba(66,133,244,.06)"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Sign in with Google</button><div class="od-status">Connect Google Drive to browse IFC files</div>';
+};
+
+(window as any).loadProjectDriveModelsViewer = async function (): Promise<void> {
+  const link = localStorage.getItem('projectDriveLink');
+  if (!link) return;
+  const parsed = extractDriveId(link);
+  if (!parsed) return;
+
+  if (!_gdToken) {
+    _pendingLoadViewer = true;
+    (window as any).gdLogin();
+    return;
+  }
+
+  const card = document.getElementById('projectDriveViewerCard');
+  const btn = card?.querySelector('button');
+  const origBtnText = btn ? btn.textContent : 'Load Perspective Models';
+  const showLoading = (msg: string) => {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ ' + msg;
+    }
+  };
+
+  try {
+    if (parsed.type === 'file') {
+      showLoading('Downloading project model...');
+      await (window as any).gdLoadFile(parsed.id, 'Project Model', 0);
+    } else {
+      showLoading('Listing folder...');
+      const q = `'${parsed.id}' in parents and name contains '.ifc' and trashed=false`;
+      const r = await gdFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name,size)&pageSize=50');
+      if (!r || !r.ok) throw new Error('Failed to list folder contents');
+      const data = await r.json();
+      const filesList: any[] = data.files || [];
+      if (filesList.length === 0) {
+        alert('No IFC models found in the project folder.');
+        if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+        return;
+      }
+
+      for (let i = 0; i < filesList.length; i++) {
+        const f = filesList[i];
+        showLoading(`Loading ${i + 1}/${filesList.length}: ${f.name}`);
+        await (window as any).gdLoadFile(f.id, f.name, i);
+      }
+    }
+    if (card) card.style.display = 'none';
+  } catch (err: any) {
+    alert('Failed to load project models: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+  }
 };
 
 function escapeHtml(s: any): string {

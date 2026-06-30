@@ -417,45 +417,210 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
 
   // ── styles (scoped .aic-) khớp biến màu app ──
   const css = `
-  .aic-fab{position:fixed;right:20px;bottom:20px;z-index:9998;width:52px;height:52px;border-radius:50%;
-    background:var(--blue,#2563eb);color:#fff;border:none;cursor:pointer;font-size:22px;
-    box-shadow:0 4px 14px rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;transition:transform .15s ease}
-  .aic-fab:hover{transform:scale(1.06)}
-  .aic-panel{position:fixed;right:20px;bottom:20px;z-index:9999;width:380px;max-width:calc(100vw - 40px);
-    height:560px;max-height:calc(100vh - 40px);background:var(--bg-panel,#fff);border:1px solid var(--border,#d5d9e2);
-    border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;
-    font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--text,#4A4541)}
-  .aic-panel.open{display:flex}
-  .aic-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border,#d5d9e2);background:var(--bg-card,#f0f1f4)}
-  .aic-head b{font-size:14px;flex:1}
-  .aic-head .aic-dot{width:8px;height:8px;border-radius:50%;background:var(--green,#16a34a)}
-  .aic-iconbtn{background:none;border:none;cursor:pointer;color:var(--text-dim,#4a5068);font-size:16px;padding:4px;border-radius:6px;line-height:1}
-  .aic-iconbtn:hover{background:var(--bg-hover,#e8eaef)}
-  .aic-cfg{display:none;padding:10px 14px;border-bottom:1px solid var(--border,#d5d9e2);background:var(--amber-bg,#fef9ed);font-size:12px}
-  .aic-cfg.show{display:block}
-  .aic-cfg label{display:block;font-weight:600;margin-bottom:4px;color:var(--text-dim,#4a5068)}
-  .aic-cfg input{width:100%;padding:7px 9px;border:1px solid var(--border,#d5d9e2);border-radius:6px;font-size:12px;font-family:inherit;box-sizing:border-box}
-  .aic-cfg .aic-note{margin-top:7px;color:var(--amber,#d97706);line-height:1.4}
+  /* ── FAB wrapper (magnetic motion handled by JS) ── */
+  .aic-fab-wrap{
+    position:fixed;right:20px;bottom:20px;z-index:9998;
+    width:56px;height:56px;
+    will-change:transform;
+    transition:transform .08s cubic-bezier(.22,.68,0,1.2);
+  }
+  /* ── Ring canvas ── */
+  .aic-fab-ring{
+    position:absolute;inset:-4px;
+    border-radius:50%;
+    background:conic-gradient(
+      from var(--aic-ring-angle,0deg),
+      #FF6B6B 0%,
+      #FF8E53 12%,
+      #FFD93D 25%,
+      #6BCB77 38%,
+      #4D96FF 51%,
+      #C77DFF 64%,
+      #FF6B9D 77%,
+      #FF6B6B 100%
+    );
+    opacity:0.85;
+    transition:opacity .25s ease;
+  }
+  .aic-fab-ring-mask{
+    position:absolute;inset:4px;
+    border-radius:50%;
+    background:var(--bg-panel,#fff);
+    z-index:1;
+  }
+  /* spinning ring when busy */
+  @keyframes aic-spin{to{--aic-ring-angle:360deg}}
+  @property --aic-ring-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
+  .aic-fab-wrap.busy .aic-fab-ring{
+    animation:aic-spin 1.4s linear infinite;
+    opacity:1;
+  }
+  /* pulse glow behind ring when busy */
+  @keyframes aic-glow{
+    0%,100%{box-shadow:0 0 0 0 rgba(139,156,244,.35), 0 4px 18px rgba(0,0,0,.14)}
+    50%{box-shadow:0 0 0 7px rgba(139,156,244,.10), 0 4px 18px rgba(0,0,0,.18)}
+  }
+  .aic-fab-wrap.busy{animation:aic-glow 1.8s ease-in-out infinite}
+  /* ── FAB button itself ── */
+  .aic-fab{
+    position:relative;z-index:2;
+    width:56px;height:56px;border-radius:50%;
+    background:var(--bg-panel,#fff);
+    border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .12s cubic-bezier(.22,.68,0,1.4);
+  }
+  .aic-fab:hover{transform:scale(1.07)}
+  .aic-fab:active{transform:scale(0.94)}
+  /* ring icon SVG inside FAB */
+  .aic-fab-icon{
+    width:32px;height:32px;
+    border-radius:50%;
+    background:conic-gradient(
+      #FF6B6B 0%,#FF8E53 12%,#FFD93D 25%,
+      #6BCB77 38%,#4D96FF 51%,#C77DFF 64%,
+      #FF6B9D 77%,#FF6B6B 100%
+    );
+    mask:radial-gradient(circle, transparent 38%, #000 39%);
+    -webkit-mask:radial-gradient(circle, transparent 38%, #000 39%);
+    transition:transform .3s ease;
+  }
+  .aic-fab-wrap.busy .aic-fab-icon{
+    animation:aic-spin 1.4s linear infinite;
+  }
+  .aic-fab:hover .aic-fab-icon{transform:rotate(30deg) scale(1.08)}
+  /* ── Panel ── */
+  .aic-panel{
+    position:fixed;right:20px;bottom:86px;z-index:9999;
+    width:390px;max-width:calc(100vw - 40px);
+    height:570px;max-height:calc(100vh - 110px);
+    background:var(--bg-panel,#fff);
+    border:1px solid var(--border,#d5d9e2);
+    border-radius:16px;
+    box-shadow:0 16px 48px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.06);
+    display:none;flex-direction:column;overflow:hidden;
+    font-family:'Hanken Grotesk',Inter,system-ui,sans-serif;
+    color:var(--text,#1a1d26);
+    transform-origin:bottom right;
+    will-change:transform;
+    transition:transform .08s ease;
+  }
+  /* panel open animation */
+  @keyframes aic-panel-in{
+    from{opacity:0;transform:scale(.94) translateY(12px)}
+    to{opacity:1;transform:scale(1) translateY(0)}
+  }
+  .aic-panel.open{display:flex;animation:aic-panel-in .2s cubic-bezier(.22,.68,0,1.15) both}
+  /* ── Head with live gradient shimmer when busy ── */
+  .aic-head{
+    display:flex;align-items:center;gap:9px;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border,#d5d9e2);
+    background:var(--bg-card,#f0f1f4);
+    position:relative;overflow:hidden;
+    transition:background .3s ease;
+  }
+  @keyframes aic-shimmer{
+    0%{transform:translateX(-100%)}
+    100%{transform:translateX(260%)}
+  }
+  .aic-head::after{
+    content:'';
+    position:absolute;top:0;left:0;width:40%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(139,156,244,.18),transparent);
+    transform:translateX(-100%);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s;
+  }
+  .aic-panel.busy .aic-head{background:linear-gradient(135deg,#f8f8ff,#f0f1f4 60%,#f5f3ff)}
+  .aic-panel.busy .aic-head::after{animation:aic-shimmer 2s linear infinite;opacity:1}
+  /* ── Head content ── */
+  .aic-head-logo{
+    width:22px;height:22px;border-radius:50%;flex-shrink:0;
+    background:conic-gradient(
+      #FF6B6B 0%,#FF8E53 12%,#FFD93D 25%,
+      #6BCB77 38%,#4D96FF 51%,#C77DFF 64%,
+      #FF6B9D 77%,#FF6B6B 100%
+    );
+    mask:radial-gradient(circle, transparent 36%, #000 37%);
+    -webkit-mask:radial-gradient(circle, transparent 36%, #000 37%);
+  }
+  .aic-panel.busy .aic-head-logo{animation:aic-spin .9s linear infinite}
+  .aic-head-title{flex:1;display:flex;flex-direction:column;gap:1px}
+  .aic-head-title b{font-size:13.5px;font-weight:700;color:#18181B;line-height:1}
+  .aic-head-title span{font-size:10px;color:var(--text-muted,#8590a6);line-height:1;font-family:'JetBrains Mono',monospace}
+  .aic-iconbtn{
+    background:none;border:none;cursor:pointer;
+    color:var(--text-dim,#4a5068);font-size:15px;
+    padding:5px;border-radius:8px;line-height:1;
+    transition:background .12s ease,color .12s ease;
+  }
+  .aic-iconbtn:hover{background:var(--bg-hover,#e8eaef);color:#18181B}
+  /* ── Messages ── */
   .aic-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg,#f5f6f8)}
-  .aic-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
-  .aic-msg.user{align-self:flex-end;background:var(--blue,#2563eb);color:#fff;border-bottom-right-radius:4px}
-  .aic-msg.assistant{align-self:flex-start;background:var(--bg-panel,#fff);border:1px solid var(--border,#d5d9e2);border-bottom-left-radius:4px}
-  .aic-msg.error{align-self:stretch;background:var(--red-bg,#fdeaea);color:var(--red,#D05050);border:1px solid var(--red,#D05050);font-size:12px;max-width:100%}
+  .aic-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word}
+  .aic-msg.user{
+    align-self:flex-end;background:#18181B;color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .aic-msg.assistant{
+    align-self:flex-start;background:var(--bg-panel,#fff);
+    border:1px solid var(--border,#d5d9e2);border-bottom-left-radius:4px;
+  }
+  .aic-msg.error{align-self:stretch;background:var(--red-bg,#fdeaea);color:var(--red,#dc2626);border:1px solid var(--red,#dc2626);font-size:12px;max-width:100%}
   .aic-tool{align-self:flex-start;font-size:11px;color:var(--text-muted,#8590a6);background:var(--bg-card,#f0f1f4);
     border:1px solid var(--border,#d5d9e2);border-radius:8px;padding:5px 9px;font-family:'JetBrains Mono',monospace}
-  .aic-think{align-self:flex-start;font-size:12px;color:var(--text-muted,#8590a6);font-style:italic;padding:4px 8px}
-  .aic-foot{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border,#d5d9e2);background:var(--bg-panel,#fff)}
-  .aic-foot textarea{flex:1;resize:none;border:1px solid var(--border,#d5d9e2);border-radius:8px;padding:9px 11px;font-size:13px;
-    font-family:inherit;max-height:90px;min-height:38px;box-sizing:border-box}
-  .aic-send{background:var(--blue,#2563eb);color:#fff;border:none;border-radius:8px;width:40px;cursor:pointer;font-size:16px;flex-shrink:0}
-  .aic-send:disabled{opacity:.5;cursor:default}
-  .aic-msg.assistant strong{font-weight:600}
+  /* animated thinking dots */
+  .aic-think{
+    align-self:flex-start;display:flex;align-items:center;gap:5px;
+    padding:9px 14px;background:var(--bg-panel,#fff);
+    border:1px solid var(--border,#d5d9e2);border-radius:12px;border-bottom-left-radius:4px;
+  }
+  @keyframes aic-dot-bounce{
+    0%,80%,100%{transform:translateY(0);opacity:.4}
+    40%{transform:translateY(-5px);opacity:1}
+  }
+  .aic-think-dot{
+    width:6px;height:6px;border-radius:50%;background:var(--text-muted,#8590a6);
+    animation:aic-dot-bounce 1.2s ease-in-out infinite;
+  }
+  .aic-think-dot:nth-child(2){animation-delay:.16s;background:#8B9CF4}
+  .aic-think-dot:nth-child(3){animation-delay:.32s;background:#C77DFF}
+  /* ── Footer ── */
+  .aic-foot{
+    display:flex;gap:8px;padding:10px;
+    border-top:1px solid var(--border,#d5d9e2);
+    background:var(--bg-panel,#fff);
+  }
+  .aic-foot textarea{
+    flex:1;resize:none;border:1px solid var(--border,#d5d9e2);
+    border-radius:10px;padding:9px 11px;font-size:13px;
+    font-family:inherit;max-height:90px;min-height:38px;box-sizing:border-box;
+    transition:border-color .15s ease,box-shadow .15s ease;
+    outline:none;
+  }
+  .aic-foot textarea:focus{
+    border-color:#8B9CF4;
+    box-shadow:0 0 0 3px rgba(139,156,244,.15);
+  }
+  .aic-send{
+    background:#18181B;color:#fff;border:none;
+    border-radius:10px;width:40px;cursor:pointer;
+    font-size:15px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s ease,transform .1s ease;
+  }
+  .aic-send:hover{background:#000;transform:scale(1.05)}
+  .aic-send:active{transform:scale(.95)}
+  .aic-send:disabled{opacity:.4;cursor:default;transform:none}
+  .aic-msg.assistant strong{font-weight:700}
   .aic-msg.assistant em{font-style:italic}
   .aic-msg.assistant code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg-card,#f0f1f4);padding:1px 4px;border-radius:4px}
-  .aic-md-h{font-weight:600;margin:3px 0 1px}
+  .aic-md-h{font-weight:700;margin:4px 0 2px}
   .aic-md-ul{margin:4px 0;padding-left:18px}
-  .aic-md-ul li{margin:1px 0}
-  .aic-md-sp{height:6px}
+  .aic-md-ul li{margin:2px 0}
+  .aic-md-sp{height:5px}
   .aic-md-table{border-collapse:collapse;margin:6px 0;font-size:12px;width:100%}
   .aic-md-table th,.aic-md-table td{border:1px solid var(--border,#d5d9e2);padding:3px 7px;text-align:left;vertical-align:top}
   .aic-md-table th{background:var(--bg-card,#f0f1f4);font-weight:600}
@@ -464,16 +629,52 @@ if(window.DEBUG)console.log('      await sumQuantity({category:"Floors"}, "volum
   styleEl.textContent = css;
   document.head.appendChild(styleEl);
 
-  // ── DOM ──
+  // ── FAB wrapper (magnetic motion) ──
+  const fabWrap = document.createElement('div');
+  fabWrap.className = 'aic-fab-wrap';
+
+  const fabRing = document.createElement('div');
+  fabRing.className = 'aic-fab-ring';
+  const fabRingMask = document.createElement('div');
+  fabRingMask.className = 'aic-fab-ring-mask';
+  fabRing.appendChild(fabRingMask);
+
   const fab = document.createElement('button');
-  fab.className = 'aic-fab'; fab.title = 'Trợ lý AI'; fab.textContent = '✦';
-  document.body.appendChild(fab);
+  fab.className = 'aic-fab'; fab.title = 'T3Lab Assistant';
+  const fabIcon = document.createElement('div');
+  fabIcon.className = 'aic-fab-icon';
+  fab.appendChild(fabIcon);
+
+  fabWrap.appendChild(fabRing);
+  fabWrap.appendChild(fab);
+  document.body.appendChild(fabWrap);
+
+  // ── Mouse magnetic pull on FAB ──
+  document.addEventListener('mousemove', (e) => {
+    const rect = fabWrap.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const radius = 120;
+    if (dist < radius) {
+      const strength = (1 - dist / radius) * 12;
+      fabWrap.style.transform = `translate(${dx / dist * strength}px, ${dy / dist * strength}px)`;
+    } else {
+      fabWrap.style.transform = '';
+    }
+  });
 
   const panel = document.createElement('div');
   panel.className = 'aic-panel';
   panel.innerHTML = `
     <div class="aic-head">
-      <span class="aic-dot"></span><b>Trợ lý AI · IFC Delta</b>
+      <div class="aic-head-logo"></div>
+      <div class="aic-head-title">
+        <b>T3Lab Assistant</b>
+        <span>IFC AI Copilot</span>
+      </div>
       <button class="aic-iconbtn" data-act="clear" title="Xoá hội thoại">🗑</button>
       <button class="aic-iconbtn" data-act="close" title="Đóng">✕</button>
     </div>

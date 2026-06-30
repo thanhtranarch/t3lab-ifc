@@ -239,6 +239,8 @@ body.resizing-row,body.resizing-row *{user-select:none !important;cursor:row-res
 .account-link svg { color: var(--text-muted); flex-shrink: 0; transition: color 140ms ease; }
 .account-link:hover { background: var(--bg-card); color: #2C2421; }
 .account-link:hover svg { color: var(--text-dim); }
+.account-link.logout-btn:hover { background: var(--red-bg,#fdeaea); color: var(--red,#dc2626); }
+.account-link.logout-btn:hover svg { color: var(--red,#dc2626); }
 
 /* ── Settings panel overlay (stub) ── */
 .settings-panel {

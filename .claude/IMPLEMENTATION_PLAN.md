@@ -75,7 +75,7 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
   chỉ còn giới hạn chi tiêu ở Console provider là tuỳ chọn bổ sung.
 
 ### 1.2 Mở rộng tool AI
-- [ ] `src/app/22-ai.js`: thêm lọc đa điều kiện (category + tầng + vật liệu + lớp IFC).
+- [ ] `frontend/src/components/integrations/ai.ts`: thêm lọc đa điều kiện (category + tầng + vật liệu + lớp IFC).
 - [ ] Tool liệt kê cấu kiện (trả danh sách, không chỉ con số).
 - [ ] Tool xuất bảng khối lượng (quantity takeoff) → CSV/markdown.
 - **Done khi:** trả lời được "liệt kê cột tầng L3 kèm khối lượng" và xuất bảng.
@@ -88,7 +88,7 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
 - [ ] Căn chỉnh geo-reference giữa các bộ môn (so IfcSite/MapConversion).
 - [ ] Kiểm tra quy ước đặt tên tầng (storey) nhất quán giữa file.
 - [ ] Phát hiện xung đột GUID trùng giữa các bộ môn.
-- Liên quan: `src/app/08-federation-load.js`, `09-compare.js`.
+- Liên quan: `frontend/src/components/compare/federation-load.ts`, `compare/compare.ts`.
 
 ### 2.2 BCF export cho Validator ✅ Đã xong (không còn là stub)
 - [x] `src/app/18-validator-export.ts:110-324`: export BCF 2.1 (zip) đầy đủ — markup/
@@ -97,7 +97,7 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
       đã rà soát lại code thực tế (2026-06-30) và xác nhận hoàn thiện.
 
 ### 2.3 Đào sâu thuộc tính vật liệu
-- [ ] `src/app/10-properties.js`: đọc `IfcMaterialLayerSet`, hiển thị cấp độ/lớp vật liệu.
+- [ ] `frontend/src/components/inspect/properties.ts`: đọc `IfcMaterialLayerSet`, hiển thị cấp độ/lớp vật liệu.
 
 ### 2.4 Snapshot kiểm tra theo thời gian
 - [ ] Lưu kết quả validate/clash theo mốc thời gian để theo dõi thay đổi.
@@ -106,7 +106,7 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
 
 ## Giai đoạn 3 — Khi có thời gian (báo cáo §4)
 
-- [ ] Chế độ so sánh dạng thanh trượt side-by-side (`09-compare.js`).
+- [ ] Chế độ so sánh dạng thanh trượt side-by-side (`frontend/src/components/compare/compare.ts`).
 - [x] Phân quyền tối thiểu (2026-06-30): app không có Firestore/DB nên không có tài
       nguyên dùng chung để bảo vệ bằng RBAC đầy đủ — mọi thao tác export/delete chỉ tác
       động dữ liệu cục bộ của chính người dùng. Tài nguyên dùng chung thật sự duy nhất là
@@ -120,8 +120,8 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
 
 ## Bug đang theo dõi (báo cáo §5)
 
-- [ ] Chọn cấu kiện sau khi chạy Compare đôi khi không nhận → `09-compare.js` + `12-focus-highlight.js`.
-- [ ] Xoay theo TrueNorth cho mặt bằng 2D → `15-plan-overlay.js`.
+- [ ] Chọn cấu kiện sau khi chạy Compare đôi khi không nhận → `frontend/src/components/compare/compare.ts` + `tools/focus-highlight.ts`.
+- [ ] Xoay theo TrueNorth cho mặt bằng 2D → `frontend/src/components/tools/plan-overlay.ts`.
 - [x] (Đã sửa) Crash listener phím ở Walk mode.
 
 ---
@@ -137,98 +137,29 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
 
 ---
 
-## Giai đoạn R — Migrate sang `frontend/` (Vite), nghỉ hưu `src/app/`
+## Giai đoạn R — Hợp nhất về một codebase `frontend/` ✅ ĐÃ XONG
 
-**Quyết định (2026-06-30):** thay vì chỉ tách module trong `src/app/` (kế hoạch cũ bên dưới,
-nay đã lỗi thời), hướng đi đã chọn là **hoàn thiện `frontend/` rồi cắt deploy sang đó**, cuối
-cùng xoá hẳn `src/app/*.ts` + `build.ts` + root `index.html`/`js/`/`css/`.
+**Hoàn tất (2026-06-30):** dự án chưa release nên đã quyết định hợp nhất **một lần duy nhất**
+(big-bang) thay vì migrate từng module qua nhiều PR. Trạng thái cuối:
 
-### Phát hiện quan trọng: `frontend/` đã là app hoàn chỉnh, KHÔNG phải code rời rạc cần "wire"
+- **Codebase duy nhất: `frontend/` (Vite + TypeScript, ESM thật).** Production build trực
+  tiếp từ đây — `vercel.json` (`buildCommand: npm run build --workspace=frontend`,
+  `outputDirectory: frontend/dist`) và `firebase.json` (`public: frontend/dist`, predeploy
+  build) **đã trỏ sẵn vào `frontend/`** từ trước; bản standalone thực chất đã là code chết.
+- **Đã xoá hẳn bản standalone:** `src/app/`, `build.ts`, root `index.html`/`js/`/`css/`/
+  `icons/`/`vendor/`, `scripts/*` (fetch-vendor/verify-build/typecheck-standalone), root
+  `tsconfig.json`, `.gitattributes`, CI `verify-standalone.yml`, và `.claude/REFACTOR_MAP.md`.
+- **Dọn root `package.json`:** bỏ script `fetch:vendor`/`build:standalone`/`verify:standalone`/
+  `typecheck:standalone` và devDep chỉ phục vụ standalone (`esbuild`, `tsx`, `typescript`,
+  `@types/node`) — giữ `concurrently` cho script `dev`.
+- **Đối chiếu hành vi:** `frontend/` đã là bản đang được deploy + sửa lỗi gần đây (các commit
+  web-ifc WASM, fix auth AI `getAuthToken`/`Authorization: Bearer` đã có trong `frontend/`),
+  nên nó là nguồn sự thật. Lịch sử git còn giữ `src/app/` nếu cần tra cứu hành vi cũ.
 
-`frontend/src/main.ts` đã import + khởi tạo **toàn bộ 23 module** theo đúng thứ tự phụ thuộc
-(auth → core → tools → compare → validate → integrations → ui), và `frontend/index.html` +
-`vite.config.ts` đã là một Vite app build được, chạy được (`npm run dev`/`npm run build`).
-→ Việc còn thiếu **không phải "wiring"**, mà là **đối chiếu hành vi (behavioral parity)**:
-hai codebase đã phát triển tách rời nhau một thời gian và lệch nhau theo **cả hai hướng**
-(không chỉ frontend "chậm hơn" — có module frontend còn *nhiều* hơn, có module *ít* hơn).
-
-### Mức độ lệch thực tế (đo `wc -l` + `git log --oneline` từng file, 2026-06-30)
-
-| Module (`src/app/NN-*.ts` → `frontend/.../*.ts`) | Dòng (src/app) | Dòng (frontend) | Lệch | Commit (src/app) | Commit (frontend) |
-|---|---:|---:|---:|---:|---:|
-| 22-ai → integrations/ai.ts | 908 | 927 | +19 | **12** | 3 |
-| 23-router → ui/router.ts | 242 | 111 | **−131** | 4 | 3 |
-| 07-section-visibility → tools/section-visibility.ts | 981 | 1018 | +37 | 3 | 1 |
-| 03-viewer-core → core/viewer-core.ts | 615 | 800 | **+185** | 3 | 1 |
-| 09-compare → compare/compare.ts | 346 | 754 | **+408** | 1 | 1 |
-| 19-drive → integrations/drive.ts | 295 | 362 | +67 | 2 | 3 |
-| 16-validator-rules → validate/validator-rules.ts | 980 | 887 | **−93** | 1 | 1 |
-| 06-color-schemes → tools/color-schemes.ts | 465 | 307 | **−158** | 2 | 1 |
-| 15-plan-overlay → tools/plan-overlay.ts | 663 | 564 | −99 | 2 | 1 |
-| 05-colorize → tools/colorize.ts | 651 | 835 | +184 | 1 | 1 |
-| 10-properties → inspect/properties.ts | 532 | 449 | −83 | 1 | 1 |
-| 21-fieldmode → ui/fieldmode.ts | 770 | 788 | +18 | 1 | 1 |
-| 14-walk → tools/walk.ts | 144 | 196 | +52 | 1 | 1 |
-| 02/04/08/11/12/13/17/18/20 (còn lại) | — | — | lệch nhỏ (<10%) | 1 | 1 |
-| *(frontend-only, không có trong src/app)* ui/state-persist.ts | — | 118 | n/a | — | 1 |
-
-Kết luận: **mọi cặp module đều lệch**, không có cặp nào "giống hệt". `09-compare` và
-`03-viewer-core` lệch lớn nhất theo hướng frontend *nhiều hơn* (có thể chứa tính năng/refactor
-chưa đưa ngược vào `src/app`); `16-validator-rules` và `06-color-schemes` lệch theo hướng
-frontend *ít hơn* (nghi thiếu rule/tính năng so với bản đang chạy production). `22-ai` đáng lo
-nhất vì là module được sửa nhiều nhất trên `src/app` (12 commit, gần nhất chính là fix icon FAB
-vừa làm) — khả năng cao còn fix khác chưa đưa sang `frontend/`.
-
-### Nguyên tắc
-
-- **`src/app/*.ts` là nguồn sự thật về hành vi** (đó là code đang chạy production) cho tới khi
-  từng module ở `frontend/` được xác minh tương đương hoặc tốt hơn.
-- Đi **từng module một**, không "big-bang" — đúng tinh thần cảnh báo cũ của tài liệu này: không
-  có test tự động, phải kiểm chứng bằng tay trên trình duyệt sau mỗi bước.
-- **Không cắt deploy production sang `frontend/` cho tới khi toàn bộ 23 module đã đối chiếu xong.**
-  Trước đó hai codebase tiếp tục tồn tại song song; mọi fix hành vi quan trọng (như fix AI gần
-  đây) vẫn cần áp dụng ở **cả hai nơi** cho tới lúc cắt hẳn.
-
-### Quy trình cho mỗi module
-
-1. Diff `src/app/NN-x.ts` và `frontend/.../x.ts` theo hàm — liệt kê: (a) hành vi chỉ có ở
-   `src/app` (cần port sang frontend), (b) hành vi chỉ có ở `frontend` (đánh giá: giữ lại hay là
-   code thừa/dở dang?), (c) khác biệt khiến hành vi không tương đương.
-2. Sửa `frontend/.../x.ts` cho tới khi tương đương (hoặc tốt hơn có chủ đích) so với `src/app`.
-3. Kiểm chứng trên trình duyệt: `cd frontend && npm run dev`, test golden path + 1-2 edge case
-   của module đó (theo route/tính năng tương ứng).
-4. Đánh dấu module "đã đối chiếu" trong bảng trên (cập nhật file này); **chưa xoá `src/app/NN-x.ts`**
-   — chỉ xoá sau bước cắt deploy ở cuối.
-
-### Thứ tự đề xuất (rủi ro thấp → cao, dựa trên độ lệch + tần suất sửa)
-
-1. **Lệch nhỏ, ít sửa** — làm trước để kiểm chứng quy trình: `02-ifc-category`, `04-viewcube`,
-   `12-focus-highlight`, `14-walk`, `18-validator-export`, `20-search`.
-2. **Lệch vừa**: `08-federation-load`, `10-properties`, `11-measure`, `17-validator-json-loader`,
-   `19-drive`, `21-fieldmode`.
-3. **Lệch lớn, cần đối chiếu kỹ**: `05-colorize`, `06-color-schemes`, `09-compare`,
-   `13-clash`, `15-plan-overlay`, `16-validator-rules`, `23-router`.
-4. **Rủi ro cao nhất, làm cuối** (sửa nhiều nhất trên production → nhiều khả năng frontend thiếu
-   fix mới nhất): `03-viewer-core`, `07-section-visibility`, `22-ai`.
-5. **Trước bước 4**: hợp nhất state — `01-imports-state.ts` (biến global trong `src/app`) vs
-   `frontend/src/store/index.ts` (`appState`, 92 dòng) cần đối chiếu xong trước, vì mọi module
-   khác phụ thuộc vào nó.
-
-### Bước cắt deploy (chỉ làm sau khi cả 23 module đã đối chiếu xong)
-
-1. Lập checklist smoke-test thủ công cho toàn bộ tính năng (không có test tự động) — chạy trên
-   `frontend/` build production (`npm run build` + serve `dist/`).
-2. Đổi `vercel.json`: `buildCommand` từ `npm run build:standalone` sang build `frontend/`,
-   `outputDirectory` trỏ vào `frontend/dist`.
-3. Đổi `firebase.json`: bỏ exclude `frontend/**`, trỏ `public` vào `frontend/dist`, build trước
-   khi deploy (Firebase hiện không có build step riêng — cần thêm bước build vào quy trình deploy).
-4. Deploy thử lên preview, kiểm chứng đầy đủ checklist, rồi mới deploy production.
-5. Sau khi production ổn định trên `frontend/` (theo dõi ít nhất vài ngày sử dụng thực tế): xoá
-   `src/app/`, `build.ts`, root `index.html`/`js/`/`css/`, các script `*:standalone` trong
-   `package.json`, và cập nhật `.claude/ARCHITECTURE.md`/`README.md` để chỉ còn mô tả một codebase.
-
-> Đây là việc nhiều phiên làm việc (22+ module cần đối chiếu thủ công), không làm trong 1 PR.
-> Mỗi module nên là 1 PR riêng để dễ review/rollback.
+> ⚠️ **Còn lại (kiểm chứng thủ công, vì chưa có test tự động đầy đủ):** chạy smoke-test toàn bộ
+> tính năng trên build production `frontend/` (`npm run build` + serve `dist/`) theo từng route
+> (viewer/compare/clash/validate/field) trước lần deploy production kế tiếp. Nếu phát hiện tính
+> năng nào ở bản standalone cũ tốt hơn, tra `git show <commit>:src/app/NN-x.ts` để port lại.
 
 ---
 

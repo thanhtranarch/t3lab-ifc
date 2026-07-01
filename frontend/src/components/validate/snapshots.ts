@@ -23,13 +23,27 @@ export function addSnapshot(list: Snapshot[], snap: Snapshot, maxKeep = 50): Sna
   return [snap, ...(list || [])].slice(0, Math.max(1, maxKeep));
 }
 
-// So thống kê 2 lần chạy theo các trường số quan tâm.
+// So thống kê 2 lần chạy theo các trường số quan tâm. Không truyền `keys` thì
+// tự suy ra: hợp các khoá xuất hiện ở prev hoặc curr mà giá trị là number ở
+// ít nhất một bên (bỏ qua khoá kiểu chuỗi như "gateway") — nhờ vậy dùng chung
+// được cho mọi loại snapshot (validate: findings/fail/warn/…, clash: total/hard/near…)
+// mà không cần hardcode danh sách khoá theo từng loại.
+function inferNumericKeys(a: Record<string, any> | null | undefined, b: Record<string, any> | null | undefined): string[] {
+  const keys = new Set<string>();
+  for (const obj of [a, b]) {
+    if (!obj) continue;
+    for (const k of Object.keys(obj)) if (typeof obj[k] === 'number') keys.add(k);
+  }
+  return [...keys].sort();
+}
+
 export function diffStats(
   prev: Record<string, any> | null | undefined,
   curr: Record<string, any> | null | undefined,
-  keys: string[] = ['findings', 'fail', 'warn', 'pass', 'badElements'],
+  keys?: string[],
 ): StatDelta[] {
-  return keys.map(k => {
+  const ks = keys && keys.length ? keys : inferNumericKeys(prev, curr);
+  return ks.map(k => {
     const p = Number((prev && prev[k]) ?? 0);
     const c = Number((curr && curr[k]) ?? 0);
     return { key: k, prev: p, curr: c, delta: c - p };

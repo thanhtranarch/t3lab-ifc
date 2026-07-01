@@ -927,6 +927,7 @@ function initSectionDrag(){
     if(hits.length>0){
       const hitObj=hits[0].object;
       dragHandle={obj:hitObj,faceIdx:hitObj.userData.faceIdx,axis:hitObj.userData.axis,dir:hitObj.userData.dir};
+      (window as any).dragHandle=dragHandle; // mirrored: viewer-core's pick handler reads this to skip a click right after a handle drag
       const camDir=new THREE.Vector3();appState.camera.getWorldDirection(camDir);
       const axis=dragHandle.axis;
       let pn: THREE.Vector3;
@@ -953,7 +954,7 @@ function initSectionDrag(){
     dragStart.copy(pt);updateSectionFromSliders();
   });
 
-  window.addEventListener('pointerup',()=>{if(dragHandle){dragHandle=null;dragPlane=null;dragStart=null;appState.controls.enabled=true}});
+  window.addEventListener('pointerup',()=>{if(dragHandle){dragHandle=null;(window as any).dragHandle=null;dragPlane=null;dragStart=null;appState.controls.enabled=true}});
 
   // Hover — only arrows
   let lastH: any=null;

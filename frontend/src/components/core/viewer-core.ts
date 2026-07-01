@@ -147,10 +147,17 @@ export function initThree(): void {
   appState.clipPlanes.push(new THREE.Plane(new THREE.Vector3(0,0,-1), 99999));
   appState.clipPlanes.push(new THREE.Plane(new THREE.Vector3(0,0,1), 99999));
 
-  appState.camera = new THREE.PerspectiveCamera(50,c.clientWidth/c.clientHeight,0.01,100000);
+  // near=0.05 (not 0.01): a 0.01→100000 range is a 10^7 depth ratio that
+  // destroys depth-buffer precision → z-fighting where building faces flicker
+  // and drop out while orbiting. logarithmicDepthBuffer (below) restores
+  // precision across the whole range; the modest near bump adds headroom.
+  appState.camera = new THREE.PerspectiveCamera(50,c.clientWidth/c.clientHeight,0.05,100000);
   appState.camera.position.set(30,25,30);
 
-  appState.renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
+  // logarithmicDepthBuffer: BIM scenes span cm-scale detail to km-scale sites,
+  // so a linear depth buffer z-fights badly (faces disappear on rotate). The
+  // log buffer spreads precision evenly across near..far and fixes that.
+  appState.renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true,logarithmicDepthBuffer:true});
   appState.renderer.setSize(c.clientWidth,c.clientHeight);
   appState.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   appState.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -576,14 +583,20 @@ export function initThree(): void {
       window._pendingPivot=null;
       return;
     }
-    // Atomic shift: target and camera move by the same delta → camera-to-
-    // target offset is unchanged → view is pixel-identical.
+    // Move ONLY the orbit target to the clicked element; leave the camera
+    // exactly where it is. The camera doesn't move and the scene is fixed, so
+    // the rendered frame is truly unchanged (no jump) — and from this drag on,
+    // rotation orbits the clicked element.
+    //
+    // (Previously the camera was ALSO shifted by the same delta, on the
+    // assumption that "same delta on camera+target keeps the view identical".
+    // For a perspective camera against a FIXED scene that is false: shifting
+    // the camera in world space moves the whole scene across the viewport, so
+    // starting a rotate right after selecting an off-centre element teleported
+    // the view — the "xoay nhảy tứ tung" the user reported.)
     appState.controls.target.x = newT.x;
     appState.controls.target.y = newT.y;
     appState.controls.target.z = newT.z;
-    appState.camera.position.x += dx;
-    appState.camera.position.y += dy;
-    appState.camera.position.z += dz;
     // No controls.update() here — letting OrbitControls' own pointerdown
     // (which fires next, in bubble phase) capture the new state freshly.
     // Calling update() here can interfere with damping state.

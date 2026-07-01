@@ -748,7 +748,12 @@ export function initThree(): void {
     // like glide instead of a series of instant steps.
     applyZoomVelocity();
     appState.controls.update();
-    if((window as any).sectionBox)(window as any).updateSectionHandleSizes();
+    // NOTE: previously guarded by `if((window as any).sectionBox)`, but
+    // `sectionBox` (the existence flag) was never actually assigned to
+    // `window` — only the function itself was — so that guard was always
+    // false and the handles never rescaled on zoom. updateSectionHandleSizes()
+    // already no-ops safely when there's no section box, so call it directly.
+    if(typeof (window as any).updateSectionHandleSizes==='function')(window as any).updateSectionHandleSizes();
     if(typeof (window as any).updateViewCube==='function')(window as any).updateViewCube();
     // Side-by-side compare slider (plan 3): if active it renders the scene
     // itself (two scissored passes, A|B) and returns true → skip normal render.

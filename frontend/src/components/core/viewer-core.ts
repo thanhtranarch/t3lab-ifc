@@ -537,85 +537,28 @@ export function initThree(): void {
     }catch(pe: any){log('Props err:',pe.message)}
   });
 
-  // ── Apply pending pivot when the user starts a rotate drag ──
-  // We intercept pointerdown in the CAPTURE phase (third arg = true) so this
-  // handler runs BEFORE OrbitControls' own pointerdown. That way, by the
-  // time OrbitControls captures the initial camera/target state for its
-  // rotation gesture, our pivot swap is already done — OrbitControls sees
-  // the new target and the (offset) camera, computes spherical from the
-  // post-swap offset, and rotation behaves correctly.
-  //
-  // View preservation: target moves to bb.center; camera shifts by the same
-  // delta. Since the camera-to-target offset is unchanged, the rendered
-  // frame is identical (no visible jump). From this drag onwards the orbit
-  // pivots around the picked element.
-  //
-  // Only consume the pivot on LEFT button (rotate). Right/middle (pan) keep
-  // the pivot pending until the user actually rotates.
-  appState.renderer.domElement.addEventListener('pointerdown',(e: PointerEvent)=>{
-    // Snapshot camera + target BEFORE any pivot work, so a click that turns
-    // out to be on empty space (deselect) can restore the exact view.
+  // ── Snapshot the view on every pointerdown ──
+  // Used by restoreViewSnap() when a click misses all geometry (deselect) —
+  // NOT for moving the orbit pivot (see note below).
+  appState.renderer.domElement.addEventListener('pointerdown',()=>{
     (window as any)._viewSnap={px:appState.camera.position.x,py:appState.camera.position.y,pz:appState.camera.position.z,tx:appState.controls.target.x,ty:appState.controls.target.y,tz:appState.controls.target.z};
-    // ── Stale-pivot guard ──
-    // If the user clicked an element earlier (which staged a pendingPivot),
-    // then performed a pan or middle-click drag (which moves controls.target
-    // independently), the pivot is now stale: applying it on the next rotate
-    // would shift camera by a huge accumulated delta → view jumps to fit.
-    // So: any non-left button click invalidates the pending pivot before it
-    // can do harm. The user's next click on a fresh element will set a new one.
-    if(e.button!==0){
-      window._pendingPivot=null;
-      return;
-    }
-    if(!window._pendingPivot)return;
-    const newT=window._pendingPivot;
-    const dx=newT.x-appState.controls.target.x;
-    const dy=newT.y-appState.controls.target.y;
-    const dz=newT.z-appState.controls.target.z;
-    // Skip if delta is negligible (target already at pivot — no work needed)
-    if(Math.abs(dx)<1e-6 && Math.abs(dy)<1e-6 && Math.abs(dz)<1e-6){
-      window._pendingPivot=null;
-      return;
-    }
-    // Sanity check: if the pivot is unreasonably far from the current target
-    // (more than 10× the camera-to-target distance), it's stale — discard
-    // rather than blast the camera into orbit. This catches cases where
-    // panning + wheel zoom moved the target hundreds of metres while the
-    // pivot still points at the originally clicked element.
-    const camDist=appState.camera.position.distanceTo(appState.controls.target)||1;
-    const pivotDist=Math.sqrt(dx*dx+dy*dy+dz*dz);
-    if(pivotDist > camDist*10){
-      log('Pivot rejected: stale (delta '+pivotDist.toFixed(1)+' >> camDist '+camDist.toFixed(1)+')');
-      window._pendingPivot=null;
-      return;
-    }
-    // Move ONLY the orbit target to the clicked element; leave the camera
-    // exactly where it is. The camera doesn't move and the scene is fixed, so
-    // the rendered frame is truly unchanged (no jump) — and from this drag on,
-    // rotation orbits the clicked element.
-    //
-    // (Previously the camera was ALSO shifted by the same delta, on the
-    // assumption that "same delta on camera+target keeps the view identical".
-    // For a perspective camera against a FIXED scene that is false: shifting
-    // the camera in world space moves the whole scene across the viewport, so
-    // starting a rotate right after selecting an off-centre element teleported
-    // the view — the "xoay nhảy tứ tung" the user reported.)
-    appState.controls.target.x = newT.x;
-    appState.controls.target.y = newT.y;
-    appState.controls.target.z = newT.z;
-    // No controls.update() here — letting OrbitControls' own pointerdown
-    // (which fires next, in bubble phase) capture the new state freshly.
-    // Calling update() here can interfere with damping state.
-    window._pendingPivot=null;
-  }, true /* capture phase: run before OrbitControls' bubble-phase listener */);
+  }, true);
 
-  // Wheel zoom also invalidates pendingPivot — wheel moves both camera and
-  // target via our custom wheel handler, so the pivot's relationship to the
-  // current target is broken. Without this guard, scrolling after a click
-  // leaves the pivot stale → next rotate jumps.
-  appState.renderer.domElement.addEventListener('wheel',()=>{
-    window._pendingPivot=null;
-  }, {passive:true, capture:true});
+  // ── Why picking no longer re-centres the orbit pivot ──
+  // This used to move controls.target to the clicked element so the NEXT
+  // rotate-drag would orbit around it. Both variants tried (shift camera+target
+  // together, or target only) caused a visible snap: OrbitControls.update()
+  // runs every frame and unconditionally calls camera.lookAt(target), so the
+  // instant controls.target changed, the very next frame's lookAt() snapped
+  // the camera to face the new point — a sudden jerk right as the user pressed
+  // down to rotate (reported as "giật khi bấm vô các element, view không cố
+  // định"). There is no way to relocate an OrbitControls pivot without EITHER
+  // teleporting the camera OR snapping its orientation on the next update();
+  // the only jump-free option is to leave the pivot alone and let rotation
+  // always orbit the model's existing target — the standard, stable behavior.
+  // `_pendingPivot` is still set at pick time (above) purely to aim wheel/pinch
+  // zoom at the clicked element — that only changes zoom distance via smoothed
+  // applyZoomVelocity(), never orientation, so it has no jump/jerk risk.
 
   // ── Reusable resize hook ──
   // Called from window 'resize' event AND from the column/row drag handlers

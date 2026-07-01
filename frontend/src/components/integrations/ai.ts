@@ -444,9 +444,14 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
 
   // ── styles (scoped .aic-) ──
   const css = `
-  /* ── FAB wrapper ── */
+  /* ── FAB wrapper ──
+     Snug to the corner, respecting notch/gesture-bar safe areas so it never
+     sits under an OS overlay on phones. */
   .aic-fab-wrap{
-    position:fixed;right:20px;bottom:20px;z-index:9998;
+    position:fixed;
+    right:max(14px, env(safe-area-inset-right));
+    bottom:max(14px, env(safe-area-inset-bottom));
+    z-index:9998;
     width:56px;height:56px;
     will-change:transform;
     transition:transform .08s cubic-bezier(.22,.68,0,1.2);
@@ -510,21 +515,36 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
   .aic-fab-wrap.busy .aic-fab-icon{
     animation:aic-ring-rotate 1.3s linear infinite;
   }
-  /* ── Panel ── */
+  /* ── Panel ──
+     Snug to the same corner as the FAB (same right offset, sitting directly
+     above it), compact size, and a "liquid glass" look: translucent + blurred
+     background so the 3D viewport shows through softly, with a thin bright
+     top-edge highlight for the glass-rim feel. dvh (not vh) tracks the
+     browser's actual visible area, so opening the on-screen keyboard on a
+     phone resizes the cap smoothly instead of the panel appearing to "jump"
+     when the layout viewport and visual viewport disagree. */
   .aic-panel{
-    position:fixed;right:20px;bottom:86px;z-index:9999;
-    width:390px;max-width:calc(100vw - 40px);
-    height:570px;max-height:calc(100vh - 110px);
-    background:var(--bg-panel,#fff);
-    border:1px solid var(--border,#d5d9e2);
-    border-radius:16px;
-    box-shadow:0 16px 48px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.06);
+    position:fixed;
+    right:max(14px, env(safe-area-inset-right));
+    bottom:calc(56px + max(14px, env(safe-area-inset-bottom)) + 8px);
+    z-index:9999;
+    width:352px;max-width:calc(100vw - 28px);
+    height:500px;max-height:min(calc(100vh - 96px), calc(100dvh - 96px));
+    background:rgba(255,255,255,.62);
+    backdrop-filter:blur(22px) saturate(180%);
+    -webkit-backdrop-filter:blur(22px) saturate(180%);
+    border:1px solid rgba(255,255,255,.55);
+    border-radius:20px;
+    box-shadow:0 16px 48px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.8);
     display:none;flex-direction:column;overflow:hidden;
     font-family:'Hanken Grotesk',Inter,system-ui,sans-serif;
     color:var(--text,#1a1d26);
     transform-origin:bottom right;
     will-change:transform;
     transition:transform .08s ease;
+  }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .aic-panel{background:var(--bg-panel,#fff)}
   }
   /* panel open animation — subtle fade/rise, no overshoot */
   @keyframes aic-panel-in{
@@ -535,12 +555,15 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
   /* ── Head with live gradient shimmer when busy ── */
   .aic-head{
     display:flex;align-items:center;gap:9px;
-    padding:12px 14px;
-    border-bottom:1px solid var(--border,#d5d9e2);
-    background:var(--bg-card,#f0f1f4);
+    padding:11px 12px 11px 14px;
+    border-bottom:1px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.28);
     position:relative;overflow:hidden;
     transition:background .3s ease;
   }
+  .aic-head b{flex:1;font-size:13px}
+  /* Icon buttons grouped tightly at the end, close always last/rightmost */
+  .aic-head-actions{display:flex;align-items:center;gap:1px;flex-shrink:0}
   @keyframes aic-shimmer{
     0%{transform:translateX(-100%)}
     100%{transform:translateX(260%)}
@@ -554,7 +577,7 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
     pointer-events:none;
     transition:opacity .3s;
   }
-  .aic-panel.busy .aic-head{background:linear-gradient(135deg,#f8f8ff,#f0f1f4 60%,#f5f3ff)}
+  .aic-panel.busy .aic-head{background:linear-gradient(135deg,rgba(248,248,255,.4),rgba(240,241,244,.4) 60%,rgba(245,243,255,.4))}
   .aic-panel.busy .aic-head::after{animation:aic-shimmer 2s linear infinite;opacity:1}
   /* ── Head content ── */
   .aic-head-logo{
@@ -569,25 +592,25 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
     transition:background .12s ease,color .12s ease;
   }
   .aic-iconbtn:hover{background:var(--bg-hover,#e8eaef);color:#18181B}
-  /* ── Messages ── */
-  .aic-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg,#f5f6f8)}
+  /* ── Messages (transparent so the glass panel shows through) ── */
+  .aic-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;background:transparent}
   .aic-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-wrap:break-word}
   .aic-msg.user{
     align-self:flex-end;background:#18181B;color:#fff;
     border-bottom-right-radius:4px;
   }
   .aic-msg.assistant{
-    align-self:flex-start;background:var(--bg-panel,#fff);
-    border:1px solid var(--border,#d5d9e2);border-bottom-left-radius:4px;
+    align-self:flex-start;background:rgba(255,255,255,.55);
+    border:1px solid rgba(255,255,255,.6);border-bottom-left-radius:4px;
   }
   .aic-msg.error{align-self:stretch;background:var(--red-bg,#fdeaea);color:var(--red,#dc2626);border:1px solid var(--red,#dc2626);font-size:12px;max-width:100%}
-  .aic-tool{align-self:flex-start;font-size:11px;color:var(--text-muted,#8590a6);background:var(--bg-card,#f0f1f4);
-    border:1px solid var(--border,#d5d9e2);border-radius:8px;padding:5px 9px;font-family:'JetBrains Mono',monospace}
+  .aic-tool{align-self:flex-start;font-size:11px;color:var(--text-muted,#8590a6);background:rgba(255,255,255,.4);
+    border:1px solid rgba(255,255,255,.6);border-radius:8px;padding:5px 9px;font-family:'JetBrains Mono',monospace}
   /* animated thinking dots */
   .aic-think{
     align-self:flex-start;display:flex;align-items:center;gap:5px;
-    padding:9px 14px;background:var(--bg-panel,#fff);
-    border:1px solid var(--border,#d5d9e2);border-radius:12px;border-bottom-left-radius:4px;
+    padding:9px 14px;background:rgba(255,255,255,.55);
+    border:1px solid rgba(255,255,255,.6);border-radius:12px;border-bottom-left-radius:4px;
   }
   @keyframes aic-dot-bounce{
     0%,80%,100%{transform:translateY(0);opacity:.4}
@@ -602,11 +625,12 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
   /* ── Footer ── */
   .aic-foot{
     display:flex;gap:8px;padding:10px;
-    border-top:1px solid var(--border,#d5d9e2);
-    background:var(--bg-panel,#fff);
+    border-top:1px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.28);
   }
   .aic-foot textarea{
-    flex:1;resize:none;border:1px solid var(--border,#d5d9e2);
+    flex:1;resize:none;border:1px solid rgba(255,255,255,.7);
+    background:rgba(255,255,255,.55);
     border-radius:10px;padding:9px 11px;font-size:13px;
     font-family:inherit;max-height:90px;min-height:38px;box-sizing:border-box;
     transition:border-color .15s ease,box-shadow .15s ease;
@@ -667,8 +691,10 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
   panel.innerHTML = `
     <div class="aic-head">
       <div class="aic-head-logo"></div><b>Trợ lý AI · IFC Delta</b>
-      <button class="aic-iconbtn" data-act="clear" title="Xoá hội thoại / Reset">↻</button>
-      <button class="aic-iconbtn" data-act="close" title="Đóng">✕</button>
+      <div class="aic-head-actions">
+        <button class="aic-iconbtn" data-act="clear" title="Xoá hội thoại / Reset">↻</button>
+        <button class="aic-iconbtn" data-act="close" title="Đóng">✕</button>
+      </div>
     </div>
     <div class="aic-msgs"></div>
     <div class="aic-foot">
@@ -865,7 +891,12 @@ console.log('      await listElements({category:"Columns", storey:"L3"})');
   inputEl.addEventListener('compositionend', () => { composing = false; });
 
   fab.onclick = () => {
-    panel.classList.add('open'); fab.style.display = 'none'; inputEl.focus();
+    panel.classList.add('open'); fab.style.display = 'none';
+    // Auto-focus only on devices with a real pointer (desktop). On touch
+    // devices, focusing immediately opens the on-screen keyboard, which
+    // resizes the visual viewport and made this fixed-position panel appear
+    // to "jump"/fly up right as it opened.
+    if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) inputEl.focus();
     buildAIIndex().catch(() => {});   // warm cache để lần gửi đầu không bị khựng
   };
   panel.querySelector('[data-act=close]')!.addEventListener('click', () => { panel.classList.remove('open'); fab.style.display = 'flex'; });

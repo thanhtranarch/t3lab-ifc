@@ -44,13 +44,14 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
 
 > ⚠️ **Hai proxy song song — phân biệt cái nào đang chạy production:**
 > - **`api/ai/chat.js` (Vercel serverless) — ĐANG DEPLOY.** Provider **DeepSeek**
->   (`DEEPSEEK_API_KEY`). Đây là endpoint `/api/ai/chat` mà bản `src/app/` (production)
->   thực sự gọi. Client gửi `provider` rỗng + `model` rỗng → proxy luôn dùng DeepSeek.
-> - **`backend/src/routes/ai.ts` (Express) — CHƯA DEPLOY.** Đa provider
->   (anthropic mặc định / openai / deepseek / google), có UI chọn `⚙` ở bản `frontend/`
->   (Vite). Dùng cho dev/thử nghiệm; chỉ lên production khi cắt deploy sang `frontend/`
->   (Giai đoạn R) hoặc host backend riêng. **Lưu ý:** "Haiku/Anthropic" trong báo cáo gốc
->   là ý định ban đầu — bản đang chạy production là **DeepSeek**, không phải Anthropic.
+>   (`DEEPSEEK_API_KEY`, cấu hình sẵn trên Vercel env). Client gửi `provider` rỗng +
+>   `model` rỗng → proxy luôn dùng DeepSeek.
+> - **`backend/src/routes/ai.ts` (Express) — CHƯA DEPLOY.** Đa provider (anthropic mặc
+>   định / openai / deepseek / google). Dùng cho dev/thử nghiệm cục bộ; chỉ lên production
+>   nếu host backend riêng.
+> - **UI chọn provider/model (nút `⚙`) đã bị GỠ khỏi panel AI** (2026-07-01) — vì key đã
+>   cấu hình sẵn trên Vercel, không cần người dùng chọn provider/model ở client nữa.
+>   `AI_CONFIG` giữ mặc định `deepseek` khi gọi proxy.
 
 - [x] Xác thực Firebase ID token qua REST `accounts:lookup` (không cần Admin SDK/service-account
       — Web API key vốn công khai). Từ chối 401 nếu thiếu/sai token hoặc email chưa xác minh.
@@ -91,11 +92,12 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
 
 ## Giai đoạn 2 — Trung bình (báo cáo §4)
 
-### 2.1 Cross-discipline checks
-- [ ] Căn chỉnh geo-reference giữa các bộ môn (so IfcSite/MapConversion).
-- [ ] Kiểm tra quy ước đặt tên tầng (storey) nhất quán giữa file.
-- [ ] Phát hiện xung đột GUID trùng giữa các bộ môn.
-- Liên quan: `frontend/src/components/compare/federation-load.ts`, `compare/compare.ts`.
+### 2.1 Cross-discipline checks ✅ Đã xong
+- [x] Căn chỉnh geo-reference giữa các bộ môn (so IfcSite RefLat/RefLon/RefElev, dung sai).
+- [x] Kiểm tra quy ước đặt tên tầng (storey) nhất quán giữa file (tầng nào thiếu ở model nào).
+- [x] Phát hiện xung đột GUID trùng giữa các bộ môn (GlobalId xuất hiện ở ≥2 model).
+- `compare/cross-discipline.ts` (thuần, 10 test) + `compare/cross-discipline-run.ts` (runner,
+  đọc AI index + spatial) → `window.crossDisciplineChecks()`.
 
 ### 2.2 BCF export cho Validator ✅ Đã xong (không còn là stub)
 - [x] `src/app/18-validator-export.ts:110-324`: export BCF 2.1 (zip) đầy đủ — markup/
@@ -103,32 +105,52 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
       PDF export (`:27-108`, qua jsPDF) cũng đã đầy đủ. Mục này từng bị ghi nhầm là "stub" —
       đã rà soát lại code thực tế (2026-06-30) và xác nhận hoàn thiện.
 
-### 2.3 Đào sâu thuộc tính vật liệu
-- [ ] `frontend/src/components/inspect/properties.ts`: đọc `IfcMaterialLayerSet`, hiển thị cấp độ/lớp vật liệu.
+### 2.3 Đào sâu thuộc tính vật liệu ✅ Đã xong
+- [x] `inspect/material-layers.ts` (thuần, 5 test): đọc `IfcMaterialLayerSet`, hiển thị từng
+      lớp + độ dày + tổng độ dày trong panel Properties (`properties.ts`).
 
-### 2.4 Snapshot kiểm tra theo thời gian
-- [ ] Lưu kết quả validate/clash theo mốc thời gian để theo dõi thay đổi.
+### 2.4 Snapshot kiểm tra theo thời gian ✅ Đã xong (validate; clash chưa làm)
+- [x] `validate/snapshots.ts` (4 test): tự lưu snapshot sau mỗi lần Validate (LocalStorage,
+      tối đa 50 bản) + so delta (findings/fail/warn/pass) với lần chạy trước.
+      `window.sgListSnapshots()`.
+- [ ] Snapshot cho **Clash** (chỉ Validate đã có) — làm sau nếu cần.
 
 ---
 
 ## Giai đoạn 3 — Khi có thời gian (báo cáo §4)
 
-- [ ] Chế độ so sánh dạng thanh trượt side-by-side (`frontend/src/components/compare/compare.ts`).
+- [x] Chế độ so sánh dạng thanh trượt side-by-side ✅ Đã xong — `compare/compare-slider.ts`,
+      nút ⟺ trên vp-toolbar, render 2 lần/frame bằng scissor theo `srcModelIdx`.
+      **Cần verify trực quan trên web** (chưa test được trên trình duyệt thật).
 - [x] Phân quyền tối thiểu (2026-06-30): app không có Firestore/DB nên không có tài
       nguyên dùng chung để bảo vệ bằng RBAC đầy đủ — mọi thao tác export/delete chỉ tác
-      động dữ liệu cục bộ của chính người dùng. Tài nguyên dùng chung thật sự duy nhất là
-      proxy AI (chi phí), nên chỉ phần đó được gate: ô chọn provider/model trong AI chat
-      (`⚙`) chỉ hiện cho admin (`window.isAdmin`, allowlist email trong
-      `frontend/src/lib/auth.ts`, dùng chung cho cả 2 codebase). Nếu sau này có dữ liệu
-      dùng chung qua backend/Firestore, cần thiết kế RBAC đầy đủ hơn lúc đó.
-- [ ] Tối ưu hiệu năng mô hình lớn; responsive di động (đã làm Field Mode — xem mục dưới); tinh chỉnh UI.
+      động dữ liệu cục bộ của chính người dùng. `window.isAdmin` (allowlist email trong
+      `frontend/src/lib/auth.ts`) vẫn còn dùng cho các chỗ khác cần phân quyền sau này.
+      *(Cập nhật 2026-07-01: ô chọn provider/model `⚙` từng được gate qua `isAdmin` đã bị
+      GỠ khỏi UI — xem ghi chú AI proxy ở trên — nên phần RBAC này hiện không còn gate gì.)*
+- [x] Tách vendor chunks — bundle app 5.5MB → 450KB (`frontend/vite.config.ts`, `manualChunks`).
+- [ ] Tối ưu hiệu năng mô hình lớn (>200MB); responsive di động (đã làm Field Mode); tinh chỉnh UI thêm.
 
 ---
 
 ## Bug đang theo dõi (báo cáo §5)
 
-- [ ] Chọn cấu kiện sau khi chạy Compare đôi khi không nhận → `frontend/src/components/compare/compare.ts` + `tools/focus-highlight.ts`.
+- [x] (Đã sửa) Chọn cấu kiện sau khi chạy Compare đôi khi không nhận — fallback expressID
+      giờ dò cả 3 đỉnh của face thay vì chỉ đỉnh đầu (`core/viewer-core.ts`).
+      **Cần verify trực quan** (không reproduce được không có browser/model thật).
+- [x] (Đã sửa) Nhấp vào issue-card không nhảy tới đúng element — `window.focusIssue` trước
+      đây trỏ vào một stub chỉ tô sáng card; giờ trỏ đúng `focusIssueGeometry`, quét lọc
+      theo đúng `modelIdx` của issue (`tools/focus-highlight.ts`).
+- [x] (Đã sửa) Xoay bị nhảy/giật khi click chọn cấu kiện — bỏ hẳn cơ chế dời tâm xoay tới
+      cấu kiện vừa click (giới hạn cấu trúc của OrbitControls: `update()` gọi
+      `camera.lookAt()` mỗi frame nên bất kỳ cách dời `target` nào cũng gây snap/teleport).
+      Camera giờ luôn xoay quanh tâm ổn định. **Cần verify trực quan.**
+- [x] (Đã sửa) Mất mặt công trình khi xoay (z-fighting) — bật `logarithmicDepthBuffer` +
+      nâng near-plane 0.01→0.05 (`core/viewer-core.ts`). **Cần verify trực quan.**
 - [ ] Xoay theo TrueNorth cho mặt bằng 2D → `frontend/src/components/tools/plan-overlay.ts`.
+      *(Đã khảo sát: hiện tại thiết kế là giữ trục màn hình cố định + chỉ xoay mũi tên Bắc —
+      là lựa chọn hợp lệ, không phải bug. Xoay cả bản vẽ cần viết lại `worldToPx` + mọi
+      overlay theo góc trueNorth — làm nếu người dùng xác nhận muốn kiểu này.)*
 - [x] (Đã sửa) Crash listener phím ở Walk mode.
 
 ---

@@ -807,7 +807,11 @@ export function initThree(): void {
     appState.controls.update();
     if((window as any).sectionBox)(window as any).updateSectionHandleSizes();
     if(typeof (window as any).updateViewCube==='function')(window as any).updateViewCube();
-    appState.renderer.render(appState.scene,appState.camera);
+    // Side-by-side compare slider (plan 3): if active it renders the scene
+    // itself (two scissored passes, A|B) and returns true → skip normal render.
+    const split=(window as any).__compareSplitRender;
+    if(!(typeof split==='function' && split()))
+      appState.renderer.render(appState.scene,appState.camera);
   })();
 }
 

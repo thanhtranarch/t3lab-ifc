@@ -74,11 +74,18 @@ Khoá API key ở server trước khi mở AI cho team. Không bao giờ deploy 
   ✅ Đạt — proxy production (`api/ai/chat.js`) đã có auth + rate-limit + audit từ 2026-06-30;
   chỉ còn giới hạn chi tiêu ở Console provider là tuỳ chọn bổ sung.
 
-### 1.2 Mở rộng tool AI
-- [ ] `frontend/src/components/integrations/ai.ts`: thêm lọc đa điều kiện (category + tầng + vật liệu + lớp IFC).
-- [ ] Tool liệt kê cấu kiện (trả danh sách, không chỉ con số).
-- [ ] Tool xuất bảng khối lượng (quantity takeoff) → CSV/markdown.
-- **Done khi:** trả lời được "liệt kê cột tầng L3 kèm khối lượng" và xuất bảng.
+### 1.2 Mở rộng tool AI ✅ Đã xong
+- [x] Lọc đa điều kiện (category + tầng + vật liệu + lớp IFC + tên + modelIdx) — `count_elements`/
+      `sum_quantity` và cả tool mới đều dùng chung `aiApplyFilter` trong
+      `frontend/src/components/integrations/ai-query.ts`.
+- [x] Tool `list_elements`: liệt kê cấu kiện (expressID/globalId/tên/category/lớp IFC/tầng/vật
+      liệu/khối lượng), cắt theo `limit` (mặc định 50, tối đa 500) + cờ `truncated`.
+- [x] Tool `quantity_takeoff`: bảng khối lượng nhóm theo category/storey/ifcClass/material,
+      cộng volume/area/length/count, kèm chuỗi **markdown** + **CSV** sẵn để trình bày.
+- [x] Logic thuần tách sang `ai-query.ts` (không side-effect) + unit test `ai-query.test.ts`
+      (17 test). Tool đăng ký trong `AI_TOOLS` + dispatch `runAITool`; expose `window.quantityTakeoff`,
+      `window.listElements` để thử trong console.
+- **Done khi:** trả lời được "liệt kê cột tầng L3 kèm khối lượng" và xuất bảng. ✅ Đạt.
 
 ---
 

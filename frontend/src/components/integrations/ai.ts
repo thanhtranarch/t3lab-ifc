@@ -10,6 +10,17 @@
 
 import { appState } from '../../store/index.js';
 import { log } from '../core/ifc-category.js';
+import {
+  aiNorm as _aiNorm,
+  aiApplyFilter as _aiApplyFilter,
+  aiGroupCount as _aiGroupCount,
+  resolveQuantityKey,
+  quantityUnit,
+  quantityTakeoff,
+  takeoffToMarkdown,
+  takeoffToCsv,
+  listElements,
+} from './ai-query.js';
 
 // Đọc giá trị thô từ wrapper của web-ifc ({value:x} hoặc primitive)
 function aiRaw(v: any): any {
@@ -246,40 +257,8 @@ window.buildAIIndex = buildAIIndex;
    IFC DELTA — AI QUERY TOOLS  (bước 2: tool chạy trên data index)
 ═══════════════════════════════════════════════════════════════════════ */
 
-// — chuẩn hoá chuỗi để so khớp không phân biệt hoa thường / khoảng trắng —
-function _aiNorm(s: any): string { return (s == null ? '' : String(s)).toLowerCase().trim(); }
-
-// — lọc danh sách element theo bộ lọc —
-function _aiApplyFilter(elements: any[], f: Record<string, any> = {}): any[] {
-  const cat = f.category != null ? _aiNorm(f.category) : null;
-  const sto = f.storey != null ? _aiNorm(f.storey) : null;
-  const cls = f.ifcClass != null ? _aiNorm(f.ifcClass) : null;
-  const mat = f.material != null ? _aiNorm(f.material) : null;
-  const nm = f.nameContains != null ? _aiNorm(f.nameContains) : null;
-  const mi = (f.modelIdx != null && f.modelIdx !== '') ? Number(f.modelIdx) : null;
-  return elements.filter(e => {
-    if (cat != null && !_aiNorm(e.category).includes(cat)) return false;
-    if (sto != null) {
-      const es = e.storey == null ? '' : _aiNorm(e.storey);
-      if (!es.includes(sto)) return false;
-    }
-    if (cls != null && !_aiNorm(e.ifcClass).includes(cls)) return false;
-    if (mat != null && !(e.materials || []).some((m: string) => _aiNorm(m).includes(mat!))) return false;
-    if (nm != null && !_aiNorm(e.name).includes(nm)) return false;
-    if (mi != null && e.modelIdx !== mi) return false;
-    return true;
-  });
-}
-
-// — phân nhóm + đếm, sắp giảm dần —
-function _aiGroupCount(els: any[], key: string): { name: string; count: number }[] {
-  const o: Record<string, number> = {};
-  for (const e of els) {
-    const k = (e[key] == null || e[key] === '') ? '(không xác định)' : e[key];
-    o[k] = (o[k] || 0) + 1;
-  }
-  return Object.entries(o).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
-}
+// Logic thuần (_aiNorm, _aiApplyFilter, _aiGroupCount, resolveQuantityKey,
+// quantityUnit, quantityTakeoff, listElements…) nằm ở ./ai-query.ts để unit-test được.
 
 // ── TOOL 1: đếm element ──
 async function countElements(filter: Record<string, any> = {}): Promise<any> {
@@ -296,12 +275,7 @@ async function countElements(filter: Record<string, any> = {}): Promise<any> {
 // ── TOOL 2: cộng khối lượng ──
 async function sumQuantity(filter: Record<string, any> = {}, quantity = 'volume'): Promise<any> {
   const idx = await buildAIIndex();
-  const q = _aiNorm(quantity);
-  const keyMap: Record<string, string> = {
-    volume: 'volume', 'thể tích': 'volume', area: 'area', 'diện tích': 'area',
-    length: 'length', 'chiều dài': 'length', count: 'count', 'số lượng': 'count'
-  };
-  const key = keyMap[q] || 'volume';
+  const key = resolveQuantityKey(quantity);
   const els = _aiApplyFilter((idx && idx.elements) || [], filter);
   let total = 0, withQty = 0, missing = 0;
   for (const e of els) {
@@ -309,7 +283,7 @@ async function sumQuantity(filter: Record<string, any> = {}, quantity = 'volume'
     if (typeof v === 'number' && isFinite(v)) { total += v; withQty++; }
     else missing++;
   }
-  const unit = key === 'volume' ? 'm³' : key === 'area' ? 'm²' : key === 'length' ? 'mm' : 'cái';
+  const unit = quantityUnit(key);
   return {
     quantity: key,
     total: Math.round(total * 1000) / 1000,
@@ -319,6 +293,21 @@ async function sumQuantity(filter: Record<string, any> = {}, quantity = 'volume'
     elementsMissing: missing,
     filter,
   };
+}
+
+// ── TOOL 3: bảng khối lượng (quantity takeoff) ──
+async function quantityTakeoffTool(input: Record<string, any> = {}): Promise<any> {
+  const idx = await buildAIIndex();
+  const { groupBy, quantity, ...filter } = input || {};
+  const r = quantityTakeoff((idx && idx.elements) || [], { groupBy, quantity, filter });
+  return { ...r, markdown: takeoffToMarkdown(r), csv: takeoffToCsv(r) };
+}
+
+// ── TOOL 4: liệt kê element ──
+async function listElementsTool(input: Record<string, any> = {}): Promise<any> {
+  const idx = await buildAIIndex();
+  const { limit, ...filter } = input || {};
+  return listElements((idx && idx.elements) || [], filter, limit != null ? Number(limit) : 50);
 }
 
 // — định nghĩa tool chuẩn Anthropic Tool Use —
@@ -352,6 +341,38 @@ const AI_TOOLS = [
       },
       required: ['quantity']
     }
+  },
+  {
+    name: 'quantity_takeoff',
+    description: 'Lập BẢNG khối lượng (quantity takeoff): cộng một đại lượng (volume/area/length/count) và phân nhóm theo category, tầng (storey), lớp IFC hoặc vật liệu. Trả về từng dòng {nhóm, số element, tổng, thiếu} kèm bảng markdown + CSV sẵn để trình bày. Dùng cho "bảng khối lượng bê tông theo tầng", "thống kê thể tích sàn theo vật liệu".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        quantity: { type: 'string', enum: ['volume', 'area', 'length', 'count'], description: 'Đại lượng cần cộng cho mỗi nhóm.' },
+        groupBy: { type: 'string', enum: ['category', 'storey', 'ifcClass', 'material'], description: 'Trường để phân nhóm (mặc định category).' },
+        category: { type: 'string', description: 'Category Revit để lọc trước khi lập bảng.' },
+        storey: { type: 'string', description: 'Tầng để lọc.' },
+        ifcClass: { type: 'string', description: 'Lớp IFC để lọc.' },
+        material: { type: 'string', description: 'Vật liệu để lọc.' },
+        nameContains: { type: 'string', description: 'Chuỗi con trong tên.' }
+      },
+      required: ['quantity']
+    }
+  },
+  {
+    name: 'list_elements',
+    description: 'Liệt kê DANH SÁCH element khớp bộ lọc (không chỉ con số): trả về expressID, globalId, tên, category, lớp IFC, tầng, vật liệu, khối lượng. Cắt bớt theo limit (mặc định 50, tối đa 500) kèm cờ truncated. Dùng cho "liệt kê các cột tầng L3", "cho tôi danh sách cửa ở basement".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        category: { type: 'string', description: 'Category Revit để lọc.' },
+        storey: { type: 'string', description: 'Tầng để lọc.' },
+        ifcClass: { type: 'string', description: 'Lớp IFC để lọc.' },
+        material: { type: 'string', description: 'Vật liệu để lọc.' },
+        nameContains: { type: 'string', description: 'Chuỗi con trong tên.' },
+        limit: { type: 'number', description: 'Số element tối đa trả về (mặc định 50, tối đa 500).' }
+      }
+    }
   }
 ];
 
@@ -363,18 +384,24 @@ async function runAITool(name: string, input: any): Promise<any> {
     const { quantity, ...f } = input;
     return await sumQuantity(f, quantity || 'volume');
   }
+  if (name === 'quantity_takeoff') return await quantityTakeoffTool(input);
+  if (name === 'list_elements') return await listElementsTool(input);
   throw new Error('Unknown AI tool: ' + name);
 }
 
 // expose để test trong console + dùng ở bước chat
 window.countElements = countElements;
 window.sumQuantity = sumQuantity;
+(window as any).quantityTakeoff = quantityTakeoffTool;
+(window as any).listElements = listElementsTool;
 window.runAITool = runAITool;
 window.AI_TOOLS = AI_TOOLS;
 
 console.log('%c═══ AI QUERY TOOLS sẵn sàng ═══', 'color:#16a34a;font-weight:700');
 console.log('Thử:  await countElements({category:"Columns"})');
 console.log('      await sumQuantity({category:"Floors"}, "volume")');
+console.log('      await quantityTakeoff({quantity:"volume", groupBy:"storey"})');
+console.log('      await listElements({category:"Columns", storey:"L3"})');
 
 /* ═══════════════════════════════════════════════════════════════════════
    IFC DELTA — AI CHAT UI  (bước 3a: ô chat + vòng lặp tool-use)

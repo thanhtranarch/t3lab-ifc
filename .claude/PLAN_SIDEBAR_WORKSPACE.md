@@ -5,7 +5,7 @@
 > bản khảo sát trước khi sửa. Đã verify: typecheck ✓, 75 unit test ✓, build ✓,
 > smoke test Playwright 29 kịch bản ✓ (điều hướng, reconcile, restore, field guard).
 >
-> **Bug phát hiện thêm khi verify** (ngoài danh sách dưới):
+> **Bug phát hiện thêm khi verify** (ngoài danh sách dưới) — vòng 1:
 > 1. `exitClashMode` xoá `#clashFiltersA/B` — ID chết từ khi redesign clash UI sang
 >    rule-row (`#clashRulesA/B`) → **throw TypeError mỗi lần thoát clash**, nuốt luôn
 >    `_vpResize()` (canvas không reflow) và làm gãy chuỗi chuyển page của router cũ.
@@ -14,6 +14,45 @@
 >    (search.ts chỉ expose `searchInit`/`searchRun`) → gõ chữ trong tab Search ném
 >    ReferenceError mỗi phím, live-search chết. Đã thêm vào `Object.assign(window…)`.
 >    (Phát hiện nhờ chạy đúng bước đối chiếu `onclick=` ↔ `window.*` ở mục §4.)
+>
+> **Bug phát hiện thêm — vòng 2 debug** (2026-07-02, quét có hệ thống toàn bộ
+> `getElementById`/`window.*` trong `frontend/src`, không giới hạn ở sidebar/router):
+> 3. **[Nghiêm trọng]** `(window as any).log(...)` được gọi **29 lần** trong
+>    `clash.ts` + `federation-load.ts` nhưng `window.log` **chưa từng được gán**
+>    ở bất kỳ đâu trong codebase — mọi lời gọi throw `TypeError: ... is not a
+>    function`. Vỡ gần như toàn bộ luồng Clash (apply preset, swap set, run
+>    clash, focus, export CSV/BCF) và một phần Compare/federation (category
+>    filter log, tạo subset, `getAllProps`) — kể cả nhánh `catch` cũng gọi
+>    `window.log` nên lỗi gốc bị nuốt bởi một `TypeError` khác. Sửa: import
+>    trực tiếp `log` từ `core/ifc-category.ts` ở cả 2 file, bỏ hẳn `window.`.
+> 4. `state-persist.ts` restore SG gateway vào `#sgGwSel` — id không tồn tại
+>    (thật ra là `#sgGateway`) → dead code, gateway không bao giờ được khôi
+>    phục sau reload. Đã sửa đúng id.
+> 5. **[Nghiêm trọng]** `appState.sgState.gateway` mặc định là `'BE'`
+>    (`store/index.ts`), nhưng dropdown `#sgGateway` chỉ có 4 option
+>    `design/piling/construction/completion` — và **toàn bộ rule built-in +
+>    JSON đều khai `gateway` bằng 1 trong 4 giá trị đó, không bao giờ có `'BE'`**.
+>    Hệ quả: dropdown UI hiển thị "Design Gateway" đã chọn (mặc định trình
+>    duyệt = option đầu), nhưng `appState.sgState.gateway` thật sự là `'BE'`
+>    cho tới khi người dùng tự tay đổi dropdown (kích hoạt `sgChangeGateway()`
+>    đồng bộ lại) — nếu bấm **Validate ngay lần đầu** (rất dễ xảy ra vì dropdown
+>    trông như đã chọn sẵn), `SG_ACTIVE_RULES.filter(r => r.gateway.includes('BE'))`
+>    trả về **0 rule**, hiển thị "0% compliance" không một cảnh báo nào — trông
+>    như validator hỏng hoặc model rỗng. Sửa: đổi default trong `store/index.ts`
+>    thành `'design'` (khớp option đầu của select) + đồng bộ fallback trong
+>    `state-persist.ts` (`|| 'BE'` → `|| 'design'`).
+> 6. Dọn 3 lookup chết `getElementById('userMenu'/'userMenuName'/'userMenuEmail')`
+>    trong `auth.ts` (đều có `if(el)` guard nên không crash, nhưng là dead code
+>    từ UI cũ — chỗ thật hiện dùng `.account-menu-name`/`.account-menu-status`/
+>    `#acMenuAv`).
+>
+> Verify vòng 2: quét chéo tự động toàn bộ `getElementById(...)` vs `id="..."`
+> thật trong `index.html` (0 lệch còn sót ngoài false-positive tự tạo bởi JS),
+> quét `window.X(...)` không có assignment tương ứng (đối chiếu cả
+> `Object.assign(window, {...})` nhiều dòng), test tương tác thật qua
+> Playwright (`applyClashPreset`, `swapClashSets`, `exitClashMode`,
+> `runClashDetection`, `fedRenderSlots`, chọn dropdown gateway thật + reload) —
+> 8/8 kịch bản mới pass, không page error. tsc + 75 test + build lại sạch.
 
 ## 1. Hiện trạng & lỗi đã xác nhận
 

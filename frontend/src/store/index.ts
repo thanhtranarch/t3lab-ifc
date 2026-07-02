@@ -60,7 +60,13 @@ export const appState = {
   // ── Validator ────────────────────────────────────────────────────────
   sgState: {
     results: null,
-    gateway: 'BE',
+    // Must match the #sgGateway <select>'s default-selected option (its
+    // first <option>, "design" — no `selected` attribute is set in HTML).
+    // 'BE' previously matched none of the design/piling/construction/
+    // completion values any rule declares, so running Validate before ever
+    // touching the dropdown silently filtered out every rule (0 rules, 0%
+    // compliance) despite the UI visibly showing "Design Gateway" selected.
+    gateway: 'design',
     cachedCtx: null,
     cachedCtxKey: null,
     selectedRuleIdx: -1,
